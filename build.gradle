@@ -13,20 +13,15 @@ java {
 }
 
 dependencies {
-    compileOnly "net.runelite:client:${runeliteVersion}"
+    implementation "net.runelite:client:${runeliteVersion}"
     compileOnly "org.projectlombok:lombok:1.18.34"
     annotationProcessor "org.projectlombok:lombok:1.18.34"
 
     testImplementation "junit:junit:4.13.2"
-    testImplementation "net.runelite:client:${runeliteVersion}"
 }
 
 application {
     mainClass = 'com.rancour.clan.RancourClanPluginTest'
-}
-
-run {
-    classpath = sourceSets.test.runtimeClasspath
 }
 
 tasks.withType(JavaCompile).configureEach {
