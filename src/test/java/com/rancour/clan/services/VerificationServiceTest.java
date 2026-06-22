@@ -21,6 +21,7 @@ import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
@@ -217,6 +218,9 @@ public class VerificationServiceTest
 		@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
+		@Override public CompletionStage<java.util.List<Team>> fetchStaffTeams(String sessionToken) { return failed(); }
+		@Override public CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> refreshEventCache(String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> closeTeam(String teamId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> lockTeam(String teamId, String sessionToken) { return failed(); }
@@ -255,6 +259,9 @@ public class VerificationServiceTest
 		@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
+		@Override public CompletionStage<java.util.List<Team>> fetchStaffTeams(String sessionToken) { return failed(); }
+		@Override public CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> refreshEventCache(String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> closeTeam(String teamId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> lockTeam(String teamId, String sessionToken) { return failed(); }

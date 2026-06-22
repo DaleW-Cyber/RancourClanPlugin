@@ -6,6 +6,8 @@ import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.StaffDropSubmission;
+import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamEditRequest;
 
 public interface StaffService
 {
@@ -16,5 +18,8 @@ public interface StaffService
 	CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request);
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId);
 	CompletionStage<com.rancour.clan.models.PluginSettings> setDropsPanelEnabled(boolean enabled);
+	CompletionStage<List<Team>> loadTeams();
+	CompletionStage<Team> editTeam(String teamId, TeamEditRequest request);
+	CompletionStage<ActionResult> closeTeam(String teamId);
 	CompletionStage<ActionResult> refreshEventCache();
 }

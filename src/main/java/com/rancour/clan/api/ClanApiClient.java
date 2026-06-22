@@ -13,6 +13,7 @@ import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
@@ -37,6 +38,9 @@ public interface ClanApiClient
 	CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken);
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken);
 	CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken);
+	CompletionStage<List<Team>> fetchStaffTeams(String sessionToken);
+	CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken);
+	CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken);
 
 	// TODO(Railway API): these actions need endpoints added to the agreed API contract.
 	CompletionStage<ActionResult> refreshEventCache(String sessionToken);

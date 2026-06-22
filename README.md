@@ -11,8 +11,8 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - Discord-backed, API role-filtered read-only event list
 - Valuable/untradeable game-chat and high-value NPC-loot detection with approved-catalogue filtering and 30-second duplicate prevention
 - Explicit drop confirmation before API submission
-- Team Finder with verified Join and Leave actions
-- Staff-only menu with compact announcement creation/deletion and Drops Panel toggle
+- Team Finder with verified Join/Leave actions, host display, and joined member names
+- Staff-only menu with compact announcement creation/deletion, Drops Panel toggle, and team edit/close controls
 - Explicit mock mode for local development
 
 The required backend contract is documented in [docs/API_CONTRACT.md](docs/API_CONTRACT.md). Release readiness is tracked in [docs/EARLY_RELEASE_CHECKLIST.md](docs/EARLY_RELEASE_CHECKLIST.md).
@@ -107,13 +107,17 @@ Staff can enable or disable member drop submissions from `Staff -> Drops Panel`.
 
 ### Staff access
 
-The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side. The current RuneLite Staff menu shows working announcement creation/deletion and the Drops Panel toggle; pending drop approval remains in Discord.
+The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side. The current RuneLite Staff menu shows working announcement creation/deletion, the Drops Panel toggle, and Staff -> Teams edit/close controls; pending drop approval remains in Discord.
 
 Staff announcement expiry is selected from fixed options: 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, or 7 days. RuneLite calculates `expiresAt` in UTC, and the API rejects any expiry longer than seven days.
 
 ### Event visibility
 
 The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. RuneLite Events are currently read-only. Joining/leaving events is handled in Discord.
+
+### Teams
+
+Team Finder shows active teams returned by the API, including host, joined members, world, capacity, and voice requirement. Teams expire two hours after creation. Full teams remain visible for five minutes after reaching capacity, then disappear from normal Team Finder responses. Staff can manage active teams from `Staff -> Teams`, including editing activity/capacity/world/voice/tags/status and closing teams with confirmation.
 
 ## Architecture
 

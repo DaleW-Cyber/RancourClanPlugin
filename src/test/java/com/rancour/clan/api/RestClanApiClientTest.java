@@ -158,6 +158,36 @@ public class RestClanApiClientTest
 	}
 
 	@Test
+	public void staffTeamEditAndCloseSendBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200,
+				"{\"id\":\"team-1\",\"activity\":\"Nex\",\"host\":\"Dale\",\"requiredRoles\":[],\"currentMembers\":1,\"capacity\":5,\"world\":420,\"voiceRequired\":true,\"status\":\"open\",\"staffHosted\":false,\"tags\":[],\"joined\":false,\"joinedMembers\":[\"Dale\"]}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.editStaffTeam("team-1", new com.rancour.clan.models.TeamEditRequest("Nex", 5, 420, true, java.util.Collections.emptyList(), "open"), "staff-session")
+			.toCompletableFuture().get();
+
+		assertEquals("PATCH", captured.get().method());
+		assertEquals("https://api.example.test/plugin/staff/teams/team-1", captured.get().url().toString());
+		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+
+		api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"success\":true,\"message\":\"Team closed\"}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+		api.closeStaffTeam("team-1", "staff-session").toCompletableFuture().get();
+
+		assertEquals("DELETE", captured.get().method());
+		assertEquals("https://api.example.test/plugin/staff/teams/team-1", captured.get().url().toString());
+		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+	}
+
+	@Test
 	public void nonSuccessIncludesStatusAndSafeApiMessage() throws Exception
 	{
 		RestClanApiClient api = new RestClanApiClient(

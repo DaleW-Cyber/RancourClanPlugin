@@ -30,6 +30,7 @@ import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
@@ -186,6 +187,24 @@ public final class RestClanApiClient implements ClanApiClient
 	}
 
 	@Override
+	public CompletionStage<List<Team>> fetchStaffTeams(String sessionToken)
+	{
+		return protectedGet(url("plugin", "staff", "teams"), sessionToken, TEAM_LIST);
+	}
+
+	@Override
+	public CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken)
+	{
+		return protectedPatch(url("plugin", "staff", "teams", teamId), request, sessionToken, Team.class);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken)
+	{
+		return protectedDelete(url("plugin", "staff", "teams", teamId), sessionToken, ActionResult.class);
+	}
+
+	@Override
 	public CompletionStage<ActionResult> refreshEventCache(String sessionToken)
 	{
 		return unsupported("Event cache refresh requires a Railway API endpoint");
@@ -228,6 +247,20 @@ public final class RestClanApiClient implements ClanApiClient
 	{
 		logProtected("POST", url, token);
 		return post(url, body, token, responseType);
+	}
+
+	private <T> CompletionStage<T> patch(HttpUrl url, Object body, String token, Type responseType)
+	{
+		RequestBody requestBody = RequestBody.create(JSON, gson.toJson(body));
+		Request.Builder request = new Request.Builder().url(url).patch(requestBody);
+		addAuthorization(request, token);
+		return execute(request.build(), responseType);
+	}
+
+	private <T> CompletionStage<T> protectedPatch(HttpUrl url, Object body, String token, Type responseType)
+	{
+		logProtected("PATCH", url, token);
+		return patch(url, body, token, responseType);
 	}
 
 	private <T> CompletionStage<T> delete(HttpUrl url, String token, Type responseType)

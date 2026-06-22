@@ -18,5 +18,8 @@ Use the normal RuneLite sidebar width. Do not drag the sidebar wider to make thi
 14. Log into an unlinked test account and confirm both Verification and Drops show the warning and Confirm Submit is disabled.
 15. Open Staff. Confirm the main Staff menu fits without scrolling and shows only working tools.
 16. Open Staff -> Announcements. Confirm Title, Body, Priority, Expiry, Create, current-announcement Delete buttons, status, and Back fit without clipped text.
-17. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, Close Team, or Lock Team. Drop approvals remain in Discord for now.
-18. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.
+17. Open Staff -> Teams. Confirm team cards show Activity, Host, World, Members current/capacity, Joined names, expiry, Edit, and Close without clipped text.
+18. Edit a team from Staff -> Teams and confirm the Team Finder refreshes with the new values.
+19. Close a team from Staff -> Teams, confirm the `Close this team?` prompt appears, and confirm the team disappears from normal Team Finder.
+20. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, or Lock Team. Drop approvals remain in Discord for now.
+21. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.

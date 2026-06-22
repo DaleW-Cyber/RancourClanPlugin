@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.function.Predicate;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -15,6 +16,8 @@ import javax.swing.SwingUtilities;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.PluginSettings;
+import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.services.StaffService;
 
 final class StaffPanel extends JPanel
@@ -27,6 +30,7 @@ final class StaffPanel extends JPanel
 	private boolean dropsPanelEnabled = true;
 	JButton announcementsButton;
 	JButton dropsPanelButton;
+	JButton teamsButton;
 	JTextField announcementTitle;
 	JTextArea announcementMessage;
 	JButton createAnnouncementButton;
@@ -63,10 +67,13 @@ final class StaffPanel extends JPanel
 		JPanel menu = UiComponents.card("Menu", "", "");
 		announcementsButton = UiComponents.compact(new JButton("Announcements"));
 		dropsPanelButton = UiComponents.compact(new JButton("Drops Panel"));
+		teamsButton = UiComponents.compact(new JButton("Teams"));
 		announcementsButton.addActionListener(event -> showAnnouncementPage());
 		dropsPanelButton.addActionListener(event -> showDropsPanelPage());
+		teamsButton.addActionListener(event -> showTeamsPage());
 		menu.add(announcementsButton);
 		menu.add(dropsPanelButton);
+		menu.add(teamsButton);
 		content.add(menu);
 		content.add(status);
 		refreshContent();
@@ -225,6 +232,138 @@ final class StaffPanel extends JPanel
 		}));
 	}
 
+	private void showTeamsPage()
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Teams"));
+		JButton back = UiComponents.compact(new JButton("Back"));
+		back.addActionListener(event -> showMenu());
+		content.add(back);
+		content.add(status);
+		status.setText("Loading teams...");
+		service.loadTeams().whenComplete((items, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				refreshContent();
+				return;
+			}
+			renderTeams(items);
+		}));
+		refreshContent();
+	}
+
+	private void renderTeams(List<Team> teams)
+	{
+		if (teams == null || teams.isEmpty())
+		{
+			content.add(UiComponents.card("Active Teams", "No active teams.", ""));
+			status.setText("No teams");
+		}
+		else
+		{
+			status.setText(teams.size() + " team(s)");
+			for (Team team : teams)
+			{
+				JPanel card = UiComponents.detailsCard(team.getActivity(), "",
+					"Host", team.getHost(),
+					"World", String.valueOf(team.getWorld()),
+					"Members", team.getCurrentMembers() + "/" + team.getCapacity(),
+					"Joined", joinedMembers(team),
+					"Expires", UiComponents.shortDate(team.getExpiresAt()));
+				JButton edit = UiComponents.compact(new JButton("Edit"));
+				JButton close = UiComponents.compact(new JButton("Close"));
+				edit.addActionListener(event -> showEditTeamPage(team));
+				close.addActionListener(event -> closeTeam(team));
+				card.add(edit);
+				card.add(close);
+				content.add(card);
+			}
+		}
+		refreshContent();
+	}
+
+	private void showEditTeamPage(Team team)
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Edit Team"));
+		JButton back = UiComponents.compact(new JButton("Back"));
+		back.addActionListener(event -> showTeamsPage());
+		content.add(back);
+		JPanel card = UiComponents.card("Team", "", "");
+		JTextField activity = UiComponents.compact(new JTextField(team.getActivity()));
+		JTextField capacity = UiComponents.compact(new JTextField(String.valueOf(team.getCapacity())));
+		JTextField world = UiComponents.compact(new JTextField(String.valueOf(team.getWorld())));
+		JCheckBox voice = UiComponents.compact(new JCheckBox("Voice required", team.isVoiceRequired()));
+		voice.setOpaque(false);
+		JTextField tags = UiComponents.compact(new JTextField(String.join(", ", team.getTags())));
+		JComboBox<String> statusBox = UiComponents.compact(new JComboBox<>(new String[] {"open", "closed"}));
+		statusBox.setSelectedItem(team.getStatus());
+		JButton save = UiComponents.compact(new JButton("Save"));
+		save.addActionListener(event -> saveTeam(team, activity, capacity, world, voice, tags, statusBox));
+		card.add(UiComponents.wrapped("Activity"));
+		card.add(activity);
+		card.add(UiComponents.wrapped("Capacity"));
+		card.add(capacity);
+		card.add(UiComponents.wrapped("World"));
+		card.add(world);
+		card.add(voice);
+		card.add(UiComponents.wrapped("Tags"));
+		card.add(tags);
+		card.add(UiComponents.wrapped("Status"));
+		card.add(statusBox);
+		card.add(save);
+		content.add(card);
+		content.add(status);
+		refreshContent();
+	}
+
+	private void saveTeam(Team team, JTextField activity, JTextField capacity, JTextField world,
+		JCheckBox voice, JTextField tags, JComboBox<String> statusBox)
+	{
+		Integer capacityValue = parseInt(capacity.getText(), "Capacity");
+		Integer worldValue = parseInt(world.getText(), "World");
+		if (capacityValue == null || worldValue == null)
+		{
+			return;
+		}
+		status.setText("Saving team...");
+		TeamEditRequest request = new TeamEditRequest(activity.getText().trim(), capacityValue, worldValue,
+			voice.isSelected(), splitCsv(tags.getText()), (String) statusBox.getSelectedItem());
+		service.editTeam(team.getId(), request).whenComplete((updated, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				return;
+			}
+			status.setText("Saved: " + updated.getActivity());
+			dataChanged.run();
+			showTeamsPage();
+		}));
+	}
+
+	private void closeTeam(Team team)
+	{
+		if (!confirm("Close this team?"))
+		{
+			return;
+		}
+		status.setText("Closing team...");
+		service.closeTeam(team.getId()).whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				return;
+			}
+			status.setText(result.getMessage());
+			dataChanged.run();
+			showTeamsPage();
+		}));
+	}
+
 	private void onAnnouncementCreated(
 		JTextField title,
 		JTextArea message,
@@ -277,6 +416,38 @@ final class StaffPanel extends JPanel
 	{
 		String text = UiComponents.value(value);
 		return text.length() <= 120 ? text : text.substring(0, 117) + "...";
+	}
+
+	private Integer parseInt(String value, String label)
+	{
+		try
+		{
+			return Integer.parseInt(value.trim());
+		}
+		catch (NumberFormatException error)
+		{
+			status.setText(label + " must be a number");
+			return null;
+		}
+	}
+
+	private static List<String> splitCsv(String value)
+	{
+		java.util.ArrayList<String> result = new java.util.ArrayList<>();
+		for (String item : UiComponents.value(value).split(","))
+		{
+			String trimmed = item.trim();
+			if (!trimmed.isEmpty())
+			{
+				result.add(trimmed);
+			}
+		}
+		return result;
+	}
+
+	private static String joinedMembers(Team team)
+	{
+		return team.getJoinedMembers().isEmpty() ? "None" : String.join(", ", team.getJoinedMembers());
 	}
 
 	private static final class ExpiryOption

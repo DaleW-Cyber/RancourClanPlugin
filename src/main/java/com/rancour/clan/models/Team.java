@@ -17,10 +17,24 @@ public final class Team
 	private final boolean staffHosted;
 	private final List<String> tags;
 	private final boolean joined;
+	private final List<String> joinedMembers;
+	private final String createdAt;
+	private final String expiresAt;
+	private final String fullAt;
+	private final String closedAt;
 
 	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
 		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
 		List<String> tags, boolean joined)
+	{
+		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
+			staffHosted, tags, joined, Collections.emptyList(), null, null, null, null);
+	}
+
+	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
+		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
+		List<String> tags, boolean joined, List<String> joinedMembers, String createdAt, String expiresAt,
+		String fullAt, String closedAt)
 	{
 		this.id = id;
 		this.activity = activity;
@@ -34,6 +48,11 @@ public final class Team
 		this.staffHosted = staffHosted;
 		this.tags = tags == null ? Collections.emptyList() : tags;
 		this.joined = joined;
+		this.joinedMembers = joinedMembers == null ? Collections.emptyList() : joinedMembers;
+		this.createdAt = createdAt;
+		this.expiresAt = expiresAt;
+		this.fullAt = fullAt;
+		this.closedAt = closedAt;
 	}
 
 	public String getId() { return id; }
@@ -48,4 +67,9 @@ public final class Team
 	public boolean isStaffHosted() { return staffHosted; }
 	public List<String> getTags() { return tags; }
 	public boolean isJoined() { return joined; }
+	public List<String> getJoinedMembers() { return joinedMembers; }
+	public String getCreatedAt() { return createdAt; }
+	public String getExpiresAt() { return expiresAt; }
+	public String getFullAt() { return fullAt; }
+	public String getClosedAt() { return closedAt; }
 }

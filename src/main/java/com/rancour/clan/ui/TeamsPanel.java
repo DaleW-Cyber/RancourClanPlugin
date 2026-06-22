@@ -66,6 +66,7 @@ final class TeamsPanel extends JPanel
 				JPanel card = UiComponents.detailsCard(item.getActivity(), "",
 					"Host", item.getHost(),
 					"Members", item.getCurrentMembers() + "/" + item.getCapacity(),
+					"Joined", item.getJoinedMembers().isEmpty() ? "None" : String.join(", ", item.getJoinedMembers()),
 					"World", String.valueOf(item.getWorld()),
 					"Voice", item.isVoiceRequired() ? "Required" : "Optional",
 					"Status", item.getStatus());

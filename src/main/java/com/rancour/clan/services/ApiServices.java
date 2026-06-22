@@ -20,6 +20,7 @@ import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
@@ -88,6 +89,9 @@ public final class ApiServices
 			@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request) { return withStaff("createAnnouncement", verification, token -> api.createAnnouncement(request, token)); }
 			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff("deleteAnnouncement", verification, token -> api.deleteAnnouncement(id, token)); }
 			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff("dropsPanelToggle", verification, token -> api.setDropsPanelEnabled(enabled, token)); }
+			@Override public CompletionStage<List<Team>> loadTeams() { return withStaff("loadStaffTeams", verification, api::fetchStaffTeams); }
+			@Override public CompletionStage<Team> editTeam(String id, TeamEditRequest request) { return withStaff("editTeam", verification, token -> api.editStaffTeam(id, request, token)); }
+			@Override public CompletionStage<ActionResult> closeTeam(String id) { return withStaff("closeTeam", verification, token -> api.closeStaffTeam(id, token)); }
 			@Override public CompletionStage<ActionResult> refreshEventCache() { return withStaff("refreshEventCache", verification, api::refreshEventCache); }
 		};
 	}

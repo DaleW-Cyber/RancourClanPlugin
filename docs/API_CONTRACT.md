@@ -224,7 +224,12 @@ Discord does not need to recognise a drop before RuneLite sees it; RuneLite dete
     "status": "open",
     "staffHosted": true,
     "tags": ["learner", "staff-hosted"],
-    "joined": false
+    "joined": false,
+    "joinedMembers": ["Host Name", "Member Name"],
+    "createdAt": "2026-06-22T18:30:00Z",
+    "expiresAt": "2026-06-22T20:30:00Z",
+    "fullAt": null,
+    "closedAt": null
   }
 ]
 ```
@@ -233,7 +238,7 @@ Discord does not need to recognise a drop before RuneLite sees it; RuneLite dete
 ### `POST /plugin/teams/{id}/leave`
 ### `POST /plugin/teams/{id}/close`
 
-Require authentication. Body is `{}`. Join and Leave return an `ActionResult` as used by event signup. The API must enforce capacity and role/signup rules. Close must be limited to the team host or staff.
+Require authentication. Body is `{}`. Join and Leave return an `ActionResult` as used by event signup. The API must enforce capacity, expiry, and role/signup rules. Close must be limited to the team host or staff. Expired teams return `This team has expired.` Full teams return `This team is full.`
 
 ### `POST /plugin/teams`
 
@@ -251,7 +256,13 @@ Requires authentication.
 }
 ```
 
-The API records the authenticated profile as host. Staff-hosted teams require API-derived staff status.
+The API records the authenticated profile as host. Staff-hosted teams require API-derived staff status. Teams expire two hours after creation. Full teams set `fullAt`, remain visible for five minutes, then disappear from normal Team Finder responses. If a member leaves before the grace window ends and the team is no longer full, `fullAt` is cleared.
+
+### `GET /plugin/staff/teams`
+### `PATCH /plugin/staff/teams/{id}`
+### `DELETE /plugin/staff/teams/{id}`
+
+Require staff authentication. Staff team cards use `GET /plugin/staff/teams`. `PATCH` can update `activity`, `capacity`, `world`, `voiceRequired`, `requiredRoles`, `tags`, and `status`. Capacity cannot be set below the current joined member count. `DELETE` closes the team and preserves audit history.
 
 Discord bot Team Finder actions use internal API routes with `X-Rancour-Bot-Token` and `discordUserId`. They do not use RuneLite bearer sessions. An unlinked Discord user should receive:
 
