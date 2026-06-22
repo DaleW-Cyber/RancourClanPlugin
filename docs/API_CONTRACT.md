@@ -148,7 +148,7 @@ Require authentication. Body is `{}`. Return:
 { "success": true, "message": "Event signup updated" }
 ```
 
-`visibility` is one of `public`, `member`, `staff`, or `restricted`. Anonymous callers receive only public events. Verified callers receive member events; staff events require API-derived staff status; restricted events require at least one `requiredRoleIds` match against the Discord roles stored during verification. `sourceChannelId` may be null for external Discord events.
+`visibility` is one of `public`, `member`, `staff`, or `restricted`. Anonymous callers receive only public events. Verified callers receive member events; staff events require API-derived staff status; restricted events require at least one `requiredRoleIds` match against the Discord roles stored during verification. `sourceChannelId` may be null for external Discord events. RuneLite labels staff events as `STAFF EVENT` and visible restricted events as `RESTRICTED`, but it does not display role IDs or permission internals.
 
 The API owns Discord event participation synchronization and idempotency. Join and Leave must enforce the same visibility rule as the list endpoint. A denied action returns HTTP `403` with:
 

@@ -27,7 +27,6 @@ import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import okhttp3.OkHttpClient;
 import com.rancour.clan.api.ClanApiClient;
-import com.rancour.clan.api.MockClanApiClient;
 import com.rancour.clan.api.RestClanApiClient;
 import com.rancour.clan.config.RancourClanConfig;
 import com.rancour.clan.models.DropCandidate;
@@ -38,7 +37,6 @@ import com.rancour.clan.services.DropService;
 import com.rancour.clan.services.DropDetector;
 import com.rancour.clan.services.DuplicateDropGuard;
 import com.rancour.clan.services.EventService;
-import com.rancour.clan.services.InMemorySessionStore;
 import com.rancour.clan.services.NotifyingAnnouncementService;
 import com.rancour.clan.services.PluginSettingsService;
 import com.rancour.clan.services.RuneLiteSessionStore;
@@ -110,8 +108,7 @@ public class RancourClanPlugin extends Plugin
 				teamService,
 				staffService,
 				settingsService,
-				config.mockMode(),
-				() -> config.mockMode() ? "Mock RSN" : activeRsn
+				() -> activeRsn
 			);
 			navigationButton = NavigationButton.builder()
 				.tooltip("Rancour Clan")
@@ -227,16 +224,16 @@ public class RancourClanPlugin extends Plugin
 
 	@Provides
 	@Singleton
-	SessionStore provideSessionStore(ConfigManager configManager, RancourClanConfig config)
+	SessionStore provideSessionStore(ConfigManager configManager)
 	{
-		return config.mockMode() ? new InMemorySessionStore() : new RuneLiteSessionStore(configManager);
+		return new RuneLiteSessionStore(configManager);
 	}
 
 	@Provides
 	@Singleton
-	ClanApiClient provideApiClient(OkHttpClient httpClient, Gson gson, RancourClanConfig config)
+	ClanApiClient provideApiClient(OkHttpClient httpClient, Gson gson)
 	{
-		return config.mockMode() ? new MockClanApiClient() : new RestClanApiClient(httpClient, gson, config.apiBaseUrl());
+		return new RestClanApiClient(httpClient, gson, RestClanApiClient.defaultBaseUrl());
 	}
 
 	@Provides
@@ -274,7 +271,7 @@ public class RancourClanPlugin extends Plugin
 	@Provides
 	TeamService provideTeamService(ClanApiClient api, VerificationService verification)
 	{
-		return ApiServices.teams(api, verification, () -> config.mockMode() ? "Mock RSN" : activeRsn);
+		return ApiServices.teams(api, verification, () -> activeRsn);
 	}
 
 	@Provides

@@ -25,7 +25,7 @@ public class RestClanApiClientTest
 	{
 		RestClanApiClient api = new RestClanApiClient(new OkHttpClient(), new Gson(), "not a URL");
 		ApiException error = failure(api.fetchAnnouncements("").toCompletableFuture());
-		assertTrue(error.getMessage().contains("API base URL is invalid"));
+		assertTrue(error.getMessage().contains("Rancour API URL is invalid"));
 	}
 
 	@Test
@@ -53,6 +53,45 @@ public class RestClanApiClientTest
 
 		assertEquals("ok", api.health().toCompletableFuture().get().getStatus());
 		assertEquals("https://api.example.test/health", captured.get().url().toString());
+	}
+
+	@Test
+	public void productionBaseUrlIsDefaultAndCanBeOverriddenForDevelopment()
+	{
+		String previous = System.getProperty("rancour.apiBaseUrl");
+		try
+		{
+			System.clearProperty("rancour.apiBaseUrl");
+			assertEquals(RestClanApiClient.PRODUCTION_API_BASE_URL, RestClanApiClient.defaultBaseUrl());
+			System.setProperty("rancour.apiBaseUrl", " https://local.example.test ");
+			assertEquals("https://local.example.test", RestClanApiClient.defaultBaseUrl());
+		}
+		finally
+		{
+			if (previous == null)
+			{
+				System.clearProperty("rancour.apiBaseUrl");
+			}
+			else
+			{
+				System.setProperty("rancour.apiBaseUrl", previous);
+			}
+		}
+	}
+
+	@Test
+	public void productionBaseUrlNormalizesWithoutDuplicateSlashes() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"status\":\"ok\"}"),
+			new Gson(),
+			RestClanApiClient.defaultBaseUrl()
+		);
+
+		api.health().toCompletableFuture().get();
+
+		assertEquals(RestClanApiClient.PRODUCTION_API_BASE_URL + "/health", captured.get().url().toString());
 	}
 
 	@Test
@@ -230,7 +269,7 @@ public class RestClanApiClientTest
 		RestClanApiClient api = new RestClanApiClient(client, new Gson(), "https://api.example.test");
 
 		ApiException error = failure(api.health().toCompletableFuture());
-		assertTrue(error.getMessage().contains("Check the API base URL, HTTPS address, and Railway service"));
+		assertTrue(error.getMessage().contains("Check your connection and the Railway API service"));
 		assertTrue(error.getMessage().contains("DNS lookup failed"));
 	}
 

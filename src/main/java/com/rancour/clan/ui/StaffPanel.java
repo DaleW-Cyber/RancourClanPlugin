@@ -64,10 +64,10 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Staff"));
-		JPanel menu = UiComponents.card("Menu", "", "");
-		announcementsButton = UiComponents.compact(new JButton("Announcements"));
-		dropsPanelButton = UiComponents.compact(new JButton("Drops Panel"));
-		teamsButton = UiComponents.compact(new JButton("Teams"));
+		JPanel menu = UiComponents.card("Menu", "", "", RancourTheme.BRAND_RED_MUTED);
+		announcementsButton = UiComponents.neutralButton("Announcements");
+		dropsPanelButton = UiComponents.neutralButton("Drops Panel");
+		teamsButton = UiComponents.neutralButton("Teams");
 		announcementsButton.addActionListener(event -> showAnnouncementPage());
 		dropsPanelButton.addActionListener(event -> showDropsPanelPage());
 		teamsButton.addActionListener(event -> showTeamsPage());
@@ -83,7 +83,7 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Announcements"));
-		JButton back = UiComponents.compact(new JButton("Back"));
+		JButton back = UiComponents.neutralButton("Back");
 		back.addActionListener(event -> showMenu());
 		content.add(back);
 		content.add(createAnnouncementForm());
@@ -94,7 +94,7 @@ final class StaffPanel extends JPanel
 
 	private JPanel createAnnouncementForm()
 	{
-		JPanel card = UiComponents.card("Create", "", "");
+		JPanel card = UiComponents.card("Create", "", "", RancourTheme.SUCCESS);
 		JTextField title = UiComponents.compact(new JTextField());
 		JTextArea message = new JTextArea(3, 12);
 		announcementTitle = title;
@@ -104,7 +104,7 @@ final class StaffPanel extends JPanel
 		UiComponents.compact(message);
 		JComboBox<String> priority = UiComponents.compact(new JComboBox<>(new String[] {"normal", "high", "urgent"}));
 		JComboBox<ExpiryOption> expiry = UiComponents.compact(new JComboBox<>(ExpiryOption.OPTIONS));
-		JButton create = UiComponents.compact(new JButton("Create"));
+		JButton create = UiComponents.successButton("Create");
 		createAnnouncementButton = create;
 		create.addActionListener(event ->
 		{
@@ -151,7 +151,7 @@ final class StaffPanel extends JPanel
 	{
 		if (items == null || items.isEmpty())
 		{
-			content.add(UiComponents.card("Existing Announcements", "No active announcements.", ""));
+			content.add(UiComponents.card("Existing Announcements", "No active announcements.", "", RancourTheme.DISABLED));
 			status.setText("No announcements");
 		}
 		else
@@ -160,8 +160,8 @@ final class StaffPanel extends JPanel
 			content.add(UiComponents.heading("Existing Announcements"));
 			for (Announcement item : items)
 			{
-				JPanel card = UiComponents.detailsCard(item.getTitle(), preview(item.getMessage()));
-				JButton delete = UiComponents.compact(new JButton("Delete"));
+				JPanel card = UiComponents.detailsCard(item.getTitle(), preview(item.getMessage()), announcementAccent(item.getPriority()));
+				JButton delete = UiComponents.dangerButton("Delete");
 				delete.addActionListener(event -> deleteAnnouncement(item));
 				card.add(delete);
 				content.add(card);
@@ -172,7 +172,7 @@ final class StaffPanel extends JPanel
 
 	private void deleteAnnouncement(Announcement item)
 	{
-		if (!confirm("Delete this announcement?"))
+		if (!confirm("Delete this announcement?", true))
 		{
 			return;
 		}
@@ -194,7 +194,7 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Drops Panel"));
-		JButton back = UiComponents.compact(new JButton("Back"));
+		JButton back = UiComponents.neutralButton("Back");
 		back.addActionListener(event -> showMenu());
 		content.add(back);
 		renderDropsPanelCard();
@@ -204,8 +204,13 @@ final class StaffPanel extends JPanel
 
 	private void renderDropsPanelCard()
 	{
-		JPanel card = UiComponents.card("State", dropsPanelEnabled ? "Enabled" : "Disabled", "");
-		JButton toggle = UiComponents.compact(new JButton(dropsPanelEnabled ? "Disable Drops Panel" : "Enable Drops Panel"));
+		JPanel card = UiComponents.card("State", dropsPanelEnabled ? "Enabled" : "Disabled", "",
+			dropsPanelEnabled ? RancourTheme.SUCCESS : RancourTheme.DANGER);
+		card.add(UiComponents.badge(dropsPanelEnabled ? "ENABLED" : "DISABLED",
+			dropsPanelEnabled ? RancourTheme.SUCCESS : RancourTheme.DANGER));
+		JButton toggle = dropsPanelEnabled
+			? UiComponents.dangerButton("Disable Drops Panel")
+			: UiComponents.successButton("Enable Drops Panel");
 		toggle.addActionListener(event -> toggleDropsPanel(!dropsPanelEnabled));
 		card.add(toggle);
 		content.add(card);
@@ -214,7 +219,7 @@ final class StaffPanel extends JPanel
 	private void toggleDropsPanel(boolean enabled)
 	{
 		String message = enabled ? "Enable drop submissions for members?" : "Disable drop submissions for members?";
-		if (!confirm(message))
+		if (!confirm(message, !enabled))
 		{
 			return;
 		}
@@ -236,7 +241,7 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Teams"));
-		JButton back = UiComponents.compact(new JButton("Back"));
+		JButton back = UiComponents.neutralButton("Back");
 		back.addActionListener(event -> showMenu());
 		content.add(back);
 		content.add(status);
@@ -258,7 +263,7 @@ final class StaffPanel extends JPanel
 	{
 		if (teams == null || teams.isEmpty())
 		{
-			content.add(UiComponents.card("Active Teams", "No active teams.", ""));
+			content.add(UiComponents.card("Active Teams", "No active teams.", "", RancourTheme.DISABLED));
 			status.setText("No teams");
 		}
 		else
@@ -266,14 +271,14 @@ final class StaffPanel extends JPanel
 			status.setText(teams.size() + " team(s)");
 			for (Team team : teams)
 			{
-				JPanel card = UiComponents.detailsCard(team.getActivity(), "",
+				JPanel card = UiComponents.detailsCard(team.getActivity(), "", teamAccent(team),
 					"Host", team.getHost(),
 					"World", String.valueOf(team.getWorld()),
 					"Members", team.getCurrentMembers() + "/" + team.getCapacity(),
 					"Joined", joinedMembers(team),
 					"Expires", UiComponents.shortDate(team.getExpiresAt()));
-				JButton edit = UiComponents.compact(new JButton("Edit"));
-				JButton close = UiComponents.compact(new JButton("Close"));
+				JButton edit = UiComponents.neutralButton("Edit");
+				JButton close = UiComponents.dangerButton("Close");
 				edit.addActionListener(event -> showEditTeamPage(team));
 				close.addActionListener(event -> closeTeam(team));
 				card.add(edit);
@@ -288,10 +293,10 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Edit Team"));
-		JButton back = UiComponents.compact(new JButton("Back"));
+		JButton back = UiComponents.neutralButton("Back");
 		back.addActionListener(event -> showTeamsPage());
 		content.add(back);
-		JPanel card = UiComponents.card("Team", "", "");
+		JPanel card = UiComponents.card("Team", "", "", RancourTheme.INFO);
 		JTextField activity = UiComponents.compact(new JTextField(team.getActivity()));
 		JTextField capacity = UiComponents.compact(new JTextField(String.valueOf(team.getCapacity())));
 		JTextField world = UiComponents.compact(new JTextField(String.valueOf(team.getWorld())));
@@ -300,7 +305,7 @@ final class StaffPanel extends JPanel
 		JTextField tags = UiComponents.compact(new JTextField(String.join(", ", team.getTags())));
 		JComboBox<String> statusBox = UiComponents.compact(new JComboBox<>(new String[] {"open", "closed"}));
 		statusBox.setSelectedItem(team.getStatus());
-		JButton save = UiComponents.compact(new JButton("Save"));
+		JButton save = UiComponents.successButton("Save");
 		save.addActionListener(event -> saveTeam(team, activity, capacity, world, voice, tags, statusBox));
 		card.add(UiComponents.wrapped("Activity"));
 		card.add(activity);
@@ -346,7 +351,7 @@ final class StaffPanel extends JPanel
 
 	private void closeTeam(Team team)
 	{
-		if (!confirm("Close this team?"))
+		if (!confirm("Close this team?", true))
 		{
 			return;
 		}
@@ -398,11 +403,17 @@ final class StaffPanel extends JPanel
 
 	private boolean confirm(String message)
 	{
+		return confirm(message, false);
+	}
+
+	private boolean confirm(String message, boolean danger)
+	{
 		if (confirmer != null)
 		{
 			return confirmer.test(message);
 		}
-		return JOptionPane.showConfirmDialog(this, message, "Confirm", JOptionPane.YES_NO_OPTION)
+		return JOptionPane.showConfirmDialog(this, message, danger ? "Confirm destructive action" : "Confirm",
+			JOptionPane.YES_NO_OPTION, danger ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE)
 			== JOptionPane.YES_OPTION;
 	}
 
@@ -448,6 +459,36 @@ final class StaffPanel extends JPanel
 	private static String joinedMembers(Team team)
 	{
 		return team.getJoinedMembers().isEmpty() ? "None" : String.join(", ", team.getJoinedMembers());
+	}
+
+	private static java.awt.Color announcementAccent(String priority)
+	{
+		if ("urgent".equalsIgnoreCase(priority))
+		{
+			return RancourTheme.BRAND_RED;
+		}
+		if ("high".equalsIgnoreCase(priority))
+		{
+			return RancourTheme.WARNING;
+		}
+		return RancourTheme.BRAND_RED_MUTED;
+	}
+
+	private static java.awt.Color teamAccent(Team team)
+	{
+		if ("closed".equalsIgnoreCase(team.getStatus()) || "expired".equalsIgnoreCase(team.getStatus()))
+		{
+			return RancourTheme.DISABLED;
+		}
+		if (team.getCurrentMembers() >= team.getCapacity())
+		{
+			return RancourTheme.DISABLED;
+		}
+		if (team.getCapacity() > 0 && team.getCurrentMembers() >= Math.max(1, team.getCapacity() - 1))
+		{
+			return RancourTheme.WARNING;
+		}
+		return team.isStaffHosted() ? RancourTheme.BRAND_RED : RancourTheme.SUCCESS;
 	}
 
 	private static final class ExpiryOption

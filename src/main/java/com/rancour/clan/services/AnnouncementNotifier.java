@@ -38,8 +38,7 @@ public final class AnnouncementNotifier
 			}
 			if (enabled && minimumPriority.includes(announcement.getPriority()))
 			{
-				chatSink.accept("[Rancour] New announcement: " + shortTitle(announcement.getTitle())
-					+ ". Open the Rancour panel for details.");
+				chatSink.accept("[Rancour] <col=cc4040>ANNOUNCEMENT:</col> " + shortTitle(announcement.getTitle()));
 			}
 		}
 		while (seen.size() > MAX_SEEN_IDS)

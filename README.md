@@ -1,6 +1,6 @@
 # Rancour Clan Plugin
 
-An early-release RuneLite plugin for Rancour clan verification, announcements, events, drop submissions, team finding, and staff workflows. All external communication goes through the configured Rancour REST API. The plugin contains no Discord bot token, Google credentials, Railway secret, or direct Google Sheets integration.
+An early-release RuneLite plugin for Rancour clan verification, announcements, events, drop submissions, team finding, and staff workflows. All external communication goes through the Rancour REST API. The plugin contains no Discord bot token, Google credentials, Railway secret, or direct Google Sheets integration.
 
 ## Current MVP
 
@@ -13,7 +13,7 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - Explicit drop confirmation before API submission
 - Team Finder with verified Create/Join/Leave actions, host display, and joined member RSN aliases
 - Staff-only menu with compact announcement creation/deletion, Drops Panel toggle, and team edit/close controls
-- Explicit mock mode for local development
+- Production API connection by default with developer-only system-property override
 
 The required backend contract is documented in [docs/API_CONTRACT.md](docs/API_CONTRACT.md). Release readiness is tracked in [docs/EARLY_RELEASE_CHECKLIST.md](docs/EARLY_RELEASE_CHECKLIST.md).
 
@@ -64,21 +64,19 @@ Do not add a RuneLite client JAR manually.
 
 ## Configuration
 
-`API base URL` controls the only network destination used by the plugin. It defaults to:
+Plugin Hub users do not need to configure backend settings. The plugin uses the production API by default:
 
 ```text
-https://api.rancourpvm.com
+https://rancourdiscordbot-production.up.railway.app
 ```
 
-The value is trimmed and normalized so trailing slashes do not create duplicate slashes in request URLs. Use **Test API Connection** on the Verification page to call `GET /health` and display the result without creating a verification attempt.
+Local developers can override the API with the JVM system property `rancour.apiBaseUrl`; this is intentionally not exposed in RuneLite settings. The value is trimmed and normalized so trailing slashes do not create duplicate slashes in request URLs. Use **Test API Connection** on the Verification page to call `GET /health` and display the result without creating a verification attempt.
 
 When running with `./gradlew run`, API diagnostics are written to the Gradle/IntelliJ run console. Verification start logs the complete request URL. Failed HTTP responses log the status and a redacted, size-limited response body, while connection failures include their stack trace. Authorization values, session tokens, and common secret fields are never intentionally logged.
 
 `Show announcement notifications in chat` enables short `[Rancour]` game-chat notices for announcement IDs not previously seen on this RuneLite profile. `Minimum announcement priority` can be `normal`, `high`, or `urgent`. Seen IDs are stored locally; announcement bodies and session credentials are never written to chat.
 
 `Enable automatic refresh` is on by default. `Refresh interval seconds` defaults to 60 and is clamped to a minimum of 30 seconds. Background refresh updates verification, announcements, events, and teams without blocking the RuneLite client thread. Manual Refresh buttons remain available as a fallback.
-
-`Mock mode` is disabled by default. When enabled, every page uses clearly labelled local mock data and an in-memory mock session. Mock mode never writes its session token to RuneLite configuration.
 
 `Minimum drop value` defaults to 1,000,000 GP and controls which NPC loot events create a confirmation prompt. Game-chat valuable/untradeable notifications are also detected independently of this threshold.
 
@@ -88,10 +86,11 @@ The live verification session token and pending verification ID are stored under
 
 ### Verification
 
-1. Select `Generate Link Code`, then optionally use `Copy Code`.
-2. Use `/plugin_link CODE` in Discord before expiry.
-3. Select `Refresh Status`.
-4. The returned API session and member profile are stored/displayed.
+1. Install and enable the Plugin Hub plugin named `Rancour PvM`.
+2. Select `Generate Link Code`, then optionally use `Copy Code`.
+3. In Discord, click the staff-posted `Link RuneLite Plugin` panel button and enter the code. `/plugin_link CODE` remains available as a slash-command fallback.
+4. Select `Refresh Status`.
+5. The returned API session and member profile are stored/displayed.
 
 Protected actions such as Team Join, Drop Submit, and Staff tools require the stored API session token and send `Authorization: Bearer <sessionToken>`. If that token is missing, the panel shows `Verification session missing. Please refresh verification or link again.` If the API reports an expired/revoked session, RuneLite clears the local session and asks the user to refresh or link again.
 
@@ -113,7 +112,7 @@ Staff announcement expiry is selected from fixed options: 1 hour, 6 hours, 12 ho
 
 ### Event visibility
 
-The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. RuneLite Events are currently read-only. Joining/leaving events is handled in Discord.
+The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. RuneLite Events are currently read-only. Joining/leaving events is handled in Discord. Staff-only events show a compact `STAFF EVENT` badge, and restricted events visible to the user may show `RESTRICTED`; role IDs are not displayed.
 
 ### Teams
 

@@ -1,6 +1,7 @@
 package com.rancour.clan.ui;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.Component;
@@ -90,20 +91,59 @@ public class RancourClanPanelTest
 	}
 
 	@Test
+	public void verifiedUserDefaultsToNewsPage() throws Exception
+	{
+		assertEquals("announcements", panelFor(profile(false)).currentPage());
+	}
+
+	@Test
+	public void unverifiedUserDefaultsToVerifyPage() throws Exception
+	{
+		assertEquals("verification", panelFor(null).currentPage());
+	}
+
+	@Test
+	public void successfulVerificationNavigatesToNewsPage() throws Exception
+	{
+		MutableVerificationService verification = new MutableVerificationService();
+		MockClanApiClient api = new MockClanApiClient();
+		RancourClanPanel panel = new RancourClanPanel(
+			verification,
+			ApiServices.announcements(api, verification),
+			ApiServices.events(api, verification),
+			ApiServices.drops(api, verification),
+			ApiServices.teams(api, verification),
+			ApiServices.staff(api, verification),
+			api::fetchSettings,
+			() -> "RSN");
+		SwingUtilities.invokeAndWait(() -> { });
+
+		assertEquals("verification", panel.currentPage());
+		verification.set(profile(false), "session");
+		SwingUtilities.invokeAndWait(() -> { });
+
+		assertEquals("announcements", panel.currentPage());
+	}
+
+	@Test
+	public void refreshDoesNotOverrideManualTabSelection() throws Exception
+	{
+		RancourClanPanel panel = panelFor(profile(false));
+		button(panel, "Teams").doClick();
+		SwingUtilities.invokeAndWait(() -> { });
+
+		assertEquals("teams", panel.currentPage());
+		assertTrue(panel.hasUserSelectedPage());
+		panel.refreshAll();
+		SwingUtilities.invokeAndWait(() -> { });
+
+		assertEquals("teams", panel.currentPage());
+	}
+
+	@Test
 	public void eventsPanelIsReadOnly() throws Exception
 	{
-		EventsPanel panel = new EventsPanel(new EventService()
-		{
-			@Override public CompletionStage<java.util.List<ClanEvent>> loadEvents()
-			{
-				return CompletableFuture.completedFuture(java.util.Collections.singletonList(
-					new ClanEvent("event", "Raid night", "2026-06-22T20:00:00Z", "Bring supplies",
-						"Host", "open", 3, false, "member", java.util.Collections.emptyList(), null)));
-			}
-
-			@Override public CompletionStage<ActionResult> join(String eventId) { throw new AssertionError("RuneLite events are read-only"); }
-			@Override public CompletionStage<ActionResult> leave(String eventId) { throw new AssertionError("RuneLite events are read-only"); }
-		});
+		EventsPanel panel = eventsPanelFor(event("Raid night", "member"));
 		SwingUtilities.invokeAndWait(() -> { });
 
 		Set<String> buttons = new HashSet<>();
@@ -114,6 +154,41 @@ public class RancourClanPanelTest
 		assertFalse(allText(panel).contains("Host"));
 		assertFalse(allText(panel).contains("Status"));
 		assertFalse(allText(panel).contains("Tags"));
+	}
+
+	@Test
+	public void eventsPanelShowsStaffBadgeForStaffVisibility() throws Exception
+	{
+		EventsPanel panel = eventsPanelFor(event("Staff meeting", "staff"));
+		SwingUtilities.invokeAndWait(() -> { });
+
+		String text = allText(panel);
+		assertTrue(text.contains("STAFF EVENT"));
+		assertFalse(text.contains("visibility=staff"));
+		assertFalse(text.contains("123456789"));
+	}
+
+	@Test
+	public void eventsPanelShowsRestrictedBadgeForRestrictedVisibility() throws Exception
+	{
+		EventsPanel panel = eventsPanelFor(event("Restricted raid", "restricted"));
+		SwingUtilities.invokeAndWait(() -> { });
+
+		String text = allText(panel);
+		assertTrue(text.contains("RESTRICTED"));
+		assertFalse(text.contains("visibility=restricted"));
+		assertFalse(text.contains("123456789"));
+	}
+
+	@Test
+	public void eventsPanelDoesNotBadgeNormalEvents() throws Exception
+	{
+		EventsPanel panel = eventsPanelFor(event("Clan mass", "member"));
+		SwingUtilities.invokeAndWait(() -> { });
+
+		String text = allText(panel);
+		assertFalse(text.contains("STAFF EVENT"));
+		assertFalse(text.contains("RESTRICTED"));
 	}
 
 	private static RancourClanPanel panelFor(MemberProfile profile) throws Exception
@@ -153,6 +228,26 @@ public class RancourClanPanelTest
 		return new MemberProfile("Discord", "RSN", "Member", staff, "later", "now");
 	}
 
+	private static ClanEvent event(String name, String visibility)
+	{
+		return new ClanEvent("event", name, "2026-06-22T20:00:00Z", "Bring supplies",
+			"Host", "open", 3, false, visibility, java.util.Collections.singletonList("123456789"), null);
+	}
+
+	private static EventsPanel eventsPanelFor(ClanEvent event)
+	{
+		return new EventsPanel(new EventService()
+		{
+			@Override public CompletionStage<java.util.List<ClanEvent>> loadEvents()
+			{
+				return CompletableFuture.completedFuture(java.util.Collections.singletonList(event));
+			}
+
+			@Override public CompletionStage<ActionResult> join(String eventId) { throw new AssertionError("RuneLite events are read-only"); }
+			@Override public CompletionStage<ActionResult> leave(String eventId) { throw new AssertionError("RuneLite events are read-only"); }
+		});
+	}
+
 	private static final class FixedVerificationService implements VerificationService
 	{
 		private final MemberProfile profile;
@@ -190,6 +285,29 @@ public class RancourClanPanelTest
 		}
 	}
 
+	private static JButton button(Container container, String label)
+	{
+		for (Component component : container.getComponents())
+		{
+			if (component instanceof JButton && label.equals(((JButton) component).getText()))
+			{
+				return (JButton) component;
+			}
+			if (component instanceof Container)
+			{
+				try
+				{
+					return button((Container) component, label);
+				}
+				catch (AssertionError ignored)
+				{
+					// Keep searching sibling containers.
+				}
+			}
+		}
+		throw new AssertionError("Button not found: " + label);
+	}
+
 	private static String allText(Container container)
 	{
 		StringBuilder text = new StringBuilder();
@@ -209,5 +327,31 @@ public class RancourClanPanelTest
 			}
 		}
 		return text.toString();
+	}
+
+	private static final class MutableVerificationService implements VerificationService
+	{
+		private MemberProfile profile;
+		private String token = "";
+		private Consumer<MemberProfile> listener;
+
+		private void set(MemberProfile profile, String token)
+		{
+			this.profile = profile;
+			this.token = token;
+			if (listener != null)
+			{
+				listener.accept(profile);
+			}
+		}
+
+		@Override public CompletionStage<ApiHealth> testConnection() { return CompletableFuture.completedFuture(new ApiHealth("ok")); }
+		@Override public CompletionStage<VerificationStartResponse> generateLinkCode() { return CompletableFuture.completedFuture(null); }
+		@Override public CompletionStage<VerificationStatus> refreshStatus() { return CompletableFuture.completedFuture(new VerificationStatus(profile == null ? "pending" : "verified", null, profile, "later", "now")); }
+		@Override public MemberProfile getCurrentProfile() { return profile; }
+		@Override public boolean isVerified() { return profile != null; }
+		@Override public String getSessionToken() { return token; }
+		@Override public void addProfileListener(Consumer<MemberProfile> listener) { this.listener = listener; }
+		@Override public void clearSession() { set(null, ""); }
 	}
 }

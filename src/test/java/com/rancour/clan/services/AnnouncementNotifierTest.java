@@ -28,7 +28,7 @@ public class AnnouncementNotifierTest
 		notifier.accept(announcements, true, AnnouncementPriority.NORMAL);
 
 		assertEquals(2, messages.size());
-		assertEquals("[Rancour] New announcement: First update. Open the Rancour panel for details.", messages.get(0));
+		assertEquals("[Rancour] <col=cc4040>ANNOUNCEMENT:</col> First update", messages.get(0));
 	}
 
 	@Test

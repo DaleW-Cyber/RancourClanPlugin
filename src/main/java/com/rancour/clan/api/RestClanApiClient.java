@@ -39,6 +39,8 @@ import com.rancour.clan.models.VerificationStatus;
 @Slf4j
 public final class RestClanApiClient implements ClanApiClient
 {
+	public static final String PRODUCTION_API_BASE_URL = "https://rancourdiscordbot-production.up.railway.app";
+	private static final String API_BASE_URL_PROPERTY = "rancour.apiBaseUrl";
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 	private static final int MAX_LOGGED_BODY_LENGTH = 2000;
 	private static final Pattern JSON_SECRET = Pattern.compile(
@@ -61,7 +63,13 @@ public final class RestClanApiClient implements ClanApiClient
 		this.gson = gson;
 		HttpUrl parsed = HttpUrl.parse(normalizeBaseUrl(baseUrl));
 		this.baseUrl = parsed == null ? HttpUrl.parse("http://invalid.local/") : parsed;
-		this.configurationError = parsed == null ? new ApiException("API base URL is invalid; update the Rancour Clan configuration") : null;
+		this.configurationError = parsed == null ? new ApiException("Rancour API URL is invalid; check the local development override") : null;
+	}
+
+	public static String defaultBaseUrl()
+	{
+		String override = System.getProperty(API_BASE_URL_PROPERTY, "").trim();
+		return hasText(override) ? override : PRODUCTION_API_BASE_URL;
 	}
 
 	@Override
@@ -305,7 +313,7 @@ public final class RestClanApiClient implements ClanApiClient
 			{
 				log.error("Rancour API network failure for {} {}", request.method(), request.url(), exception);
 				future.completeExceptionally(new ApiException(
-					"Cannot connect to the Rancour API. Check the API base URL, HTTPS address, and Railway service. "
+					"Cannot connect to the Rancour API. Check your connection and the Railway API service. "
 						+ "Details: " + safeExceptionMessage(exception)
 				));
 			}

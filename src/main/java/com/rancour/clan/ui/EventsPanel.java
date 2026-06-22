@@ -1,6 +1,10 @@
 package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -60,8 +64,13 @@ final class EventsPanel extends JPanel
 			status.setText(items.size() + " event(s)");
 			for (ClanEvent item : items)
 			{
-				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(),
+				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(), eventAccent(item),
 					"Starts", UiComponents.shortDate(item.getStartTime()));
+				JTextArea badge = visibilityBadge(item);
+				if (badge != null)
+				{
+					card.add(badge);
+				}
 				content.add(card);
 			}
 			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
@@ -70,4 +79,43 @@ final class EventsPanel extends JPanel
 		content.repaint();
 	}
 
+	private static Color eventAccent(ClanEvent event)
+	{
+		if ("cancelled".equalsIgnoreCase(event.getStatus()) || "closed".equalsIgnoreCase(event.getStatus()))
+		{
+			return RancourTheme.DISABLED;
+		}
+		try
+		{
+			Instant start = Instant.parse(event.getStartTime());
+			Duration until = Duration.between(Instant.now(), start);
+			if (!until.isNegative() && until.toHours() <= 24)
+			{
+				return RancourTheme.WARNING;
+			}
+			if (until.isNegative())
+			{
+				return RancourTheme.DISABLED;
+			}
+		}
+		catch (DateTimeParseException ignored)
+		{
+			return RancourTheme.INFO;
+		}
+		return RancourTheme.INFO;
+	}
+
+	private static JTextArea visibilityBadge(ClanEvent event)
+	{
+		String visibility = UiComponents.value(event.getVisibility()).trim();
+		if ("staff".equalsIgnoreCase(visibility))
+		{
+			return UiComponents.badge("STAFF EVENT", RancourTheme.BRAND_RED);
+		}
+		if ("restricted".equalsIgnoreCase(visibility))
+		{
+			return UiComponents.badge("RESTRICTED", RancourTheme.WARNING);
+		}
+		return null;
+	}
 }

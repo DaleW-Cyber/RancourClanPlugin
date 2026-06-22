@@ -1,6 +1,7 @@
 package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.util.List;
@@ -27,8 +28,8 @@ final class TeamsPanel extends JPanel
 	{
 		super(new BorderLayout());
 		this.service = service;
-		JButton refresh = new JButton("Refresh");
-		JButton create = new JButton("Create Team");
+		JButton refresh = UiComponents.neutralButton("Refresh");
+		JButton create = UiComponents.successButton("Create Team");
 		refresh.addActionListener(event -> refresh());
 		create.addActionListener(event -> showCreateForm());
 		JPanel buttons = new JPanel(new GridLayout(2, 1, 0, 4));
@@ -56,7 +57,7 @@ final class TeamsPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Create Team"));
-		JPanel card = UiComponents.card("Team", "", "");
+		JPanel card = UiComponents.card("Team", "", "", RancourTheme.INFO);
 		JTextField activity = UiComponents.compact(new JTextField());
 		JTextField capacity = UiComponents.compact(new JTextField("5"));
 		JTextField world = UiComponents.compact(new JTextField("416"));
@@ -65,8 +66,8 @@ final class TeamsPanel extends JPanel
 		notes.setLineWrap(true);
 		notes.setWrapStyleWord(true);
 		notes.setAlignmentX(Component.LEFT_ALIGNMENT);
-		JButton create = UiComponents.compact(new JButton("Create"));
-		JButton back = UiComponents.compact(new JButton("Back"));
+		JButton create = UiComponents.successButton("Create");
+		JButton back = UiComponents.neutralButton("Back");
 		card.add(UiComponents.fieldRow("Activity", ""));
 		card.add(activity);
 		card.add(UiComponents.fieldRow("Capacity", ""));
@@ -139,15 +140,20 @@ final class TeamsPanel extends JPanel
 			status.setText(items.size() + " team(s)");
 			for (Team item : items)
 			{
-				JPanel card = UiComponents.detailsCard(item.getActivity(), "",
+				JPanel card = UiComponents.detailsCard(item.getActivity(), "", teamAccent(item),
 					"Host", item.getHost(),
 					"Members", item.getCurrentMembers() + "/" + item.getCapacity(),
 					"Joined", item.getJoinedMembers().isEmpty() ? "None" : String.join(", ", item.getJoinedMembers()),
 					"World", String.valueOf(item.getWorld()),
 					"Voice", item.isVoiceRequired() ? "Required" : "Optional");
+				card.add(UiComponents.badge(teamBadge(item), teamAccent(item)));
+				if (item.isStaffHosted())
+				{
+					card.add(UiComponents.badge("STAFF HOSTED", RancourTheme.BRAND_RED));
+				}
 				JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
-				JButton join = new JButton("Join");
-				JButton leave = new JButton("Leave");
+				JButton join = UiComponents.successButton("Join");
+				JButton leave = UiComponents.dangerButton("Leave");
 				join.addActionListener(event -> action(service.join(item.getId())));
 				leave.addActionListener(event -> action(service.leave(item.getId())));
 				actions.add(join);
@@ -159,6 +165,42 @@ final class TeamsPanel extends JPanel
 		}
 		content.revalidate();
 		content.repaint();
+	}
+
+	private static Color teamAccent(Team team)
+	{
+		String status = UiComponents.value(team.getStatus());
+		if ("closed".equalsIgnoreCase(status) || "expired".equalsIgnoreCase(status) || "filled".equalsIgnoreCase(status))
+		{
+			return RancourTheme.DISABLED;
+		}
+		if (team.getCurrentMembers() >= team.getCapacity())
+		{
+			return RancourTheme.DISABLED;
+		}
+		if (team.getCapacity() > 0 && team.getCurrentMembers() >= Math.max(1, team.getCapacity() - 1))
+		{
+			return RancourTheme.WARNING;
+		}
+		return RancourTheme.SUCCESS;
+	}
+
+	private static String teamBadge(Team team)
+	{
+		String status = UiComponents.value(team.getStatus());
+		if ("closed".equalsIgnoreCase(status) || "expired".equalsIgnoreCase(status) || "filled".equalsIgnoreCase(status))
+		{
+			return status.toUpperCase();
+		}
+		if (team.getCurrentMembers() >= team.getCapacity())
+		{
+			return "FULL";
+		}
+		if (team.getCapacity() > 0 && team.getCurrentMembers() >= Math.max(1, team.getCapacity() - 1))
+		{
+			return "NEARLY FULL";
+		}
+		return "OPEN";
 	}
 
 	private void action(CompletionStage<ActionResult> action)

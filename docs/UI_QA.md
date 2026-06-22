@@ -11,7 +11,7 @@ Use the normal RuneLite sidebar width. Do not drag the sidebar wider to make thi
 7. Confirm News cards show only title and body with visible borders/separators.
 8. Confirm a one-line News announcement uses a small card, and a three-line announcement grows only enough to fit the wrapped text.
 9. Confirm Staff menu and Staff -> Announcements cards fit their contents without large blank blocks.
-10. Confirm Events cards show only title/name, start date/time, and description; no Tags, Join, Leave, Host, Status, or Signup Count fields should be visible.
+10. Confirm Events cards show only title/name, start date/time, description, and compact `STAFF EVENT` or `RESTRICTED` badges where applicable; no Tags, Join, Leave, Host, Status, Signup Count, role IDs, or visibility text should be visible.
 11. Log into a linked alt and confirm drop submission is enabled when Staff -> Drops Panel is enabled.
 12. Detect or mock an approved catalogue drop and confirm it appears in Drops. Detect or mock an unknown high-value item and confirm it does not appear.
 13. Disable Staff -> Drops Panel with confirmation and confirm the Drops tab hides or shows `Drop submissions are currently disabled.`
@@ -24,4 +24,4 @@ Use the normal RuneLite sidebar width. Do not drag the sidebar wider to make thi
 20. Open Teams -> Create Team. Confirm Activity, Capacity, World, Voice required, Notes, Create, and Back fit the sidebar.
 21. Create a team while logged into a linked RSN and confirm Host and Joined show the RSN.
 22. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, or Lock Team. Drop approvals remain in Discord for now.
-21. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.
+23. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.

@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JSeparator;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -25,9 +26,6 @@ import com.rancour.clan.api.ApiException;
 final class UiComponents
 {
 	private static final int TEXT_WIDTH = 172;
-	private static final Color CARD_BACKGROUND = new Color(45, 45, 45);
-	private static final Color CARD_BORDER = new Color(105, 105, 105);
-	private static final Color CARD_SEPARATOR = new Color(125, 125, 125);
 	private static final DateTimeFormatter SHORT_DATE =
 		DateTimeFormatter.ofPattern("dd MMM HH:mm").withZone(ZoneId.systemDefault());
 
@@ -36,7 +34,7 @@ final class UiComponents
 	static JLabel heading(String text)
 	{
 		JLabel label = new JLabel("<html><b>" + html(text) + "</b></html>");
-		label.setForeground(Color.WHITE);
+		label.setForeground(RancourTheme.TEXT);
 		label.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		return label;
 	}
@@ -49,13 +47,19 @@ final class UiComponents
 	static JTextArea statusLabel(String text)
 	{
 		JTextArea label = new WrappingTextArea(text, false);
-		label.setForeground(Color.LIGHT_GRAY);
+		label.setForeground(RancourTheme.MUTED);
 		return label;
 	}
 
 	static JPanel card(String title, String body, String footer)
 	{
+		return card(title, body, footer, null);
+	}
+
+	static JPanel card(String title, String body, String footer, Color accent)
+	{
 		JPanel card = card(title);
+		applyAccent(card, accent);
 		if (!value(body).isEmpty())
 		{
 			card.add(wrapped(body));
@@ -63,7 +67,7 @@ final class UiComponents
 		if (!value(footer).isEmpty())
 		{
 			JTextArea footerLabel = wrapped(footer);
-			footerLabel.setForeground(Color.GRAY);
+			footerLabel.setForeground(RancourTheme.MUTED);
 			card.add(Box.createVerticalStrut(4));
 			card.add(footerLabel);
 		}
@@ -72,7 +76,13 @@ final class UiComponents
 
 	static JPanel detailsCard(String title, String body, String... fields)
 	{
+		return detailsCard(title, body, null, fields);
+	}
+
+	static JPanel detailsCard(String title, String body, Color accent, String... fields)
+	{
 		JPanel card = card(title);
+		applyAccent(card, accent);
 		if (!value(body).isEmpty())
 		{
 			card.add(wrapped(body));
@@ -92,7 +102,7 @@ final class UiComponents
 		row.setOpaque(false);
 		row.setAlignmentX(Component.LEFT_ALIGNMENT);
 		JLabel name = new JLabel("<html><b>" + html(label) + "</b></html>");
-		name.setForeground(Color.GRAY);
+		name.setForeground(RancourTheme.MUTED);
 		name.setAlignmentX(Component.LEFT_ALIGNMENT);
 		row.add(name);
 		row.add(wrapped(fieldValue));
@@ -105,14 +115,14 @@ final class UiComponents
 	{
 		JPanel card = new CompactPanel();
 		card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-		card.setBackground(CARD_BACKGROUND);
+		card.setBackground(RancourTheme.CARD_BACKGROUND);
 		card.setAlignmentX(Component.LEFT_ALIGNMENT);
 		JTextArea titleLabel = new WrappingTextArea(title, true);
-		titleLabel.setForeground(Color.WHITE);
+		titleLabel.setForeground(RancourTheme.TEXT);
 		card.add(titleLabel);
 		JSeparator separator = new JSeparator();
-		separator.setForeground(CARD_SEPARATOR);
-		separator.setBackground(CARD_SEPARATOR);
+		separator.setForeground(RancourTheme.CARD_SEPARATOR);
+		separator.setBackground(RancourTheme.CARD_SEPARATOR);
 		separator.setAlignmentX(Component.LEFT_ALIGNMENT);
 		separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
 		card.add(separator);
@@ -120,9 +130,69 @@ final class UiComponents
 		card.setBorder(BorderFactory.createCompoundBorder(
 			BorderFactory.createEmptyBorder(0, 0, 7, 0),
 			BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(CARD_BORDER),
+				BorderFactory.createLineBorder(RancourTheme.CARD_BORDER),
 				BorderFactory.createEmptyBorder(5, 6, 5, 6))));
 		return card;
+	}
+
+	static JTextArea badge(String text, Color color)
+	{
+		JTextArea badge = new WrappingTextArea(text, true);
+		badge.setForeground(color);
+		return badge;
+	}
+
+	static JButton successButton(String text)
+	{
+		JButton button = compact(new JButton(text));
+		styleButton(button, RancourTheme.SUCCESS);
+		return button;
+	}
+
+	static JButton dangerButton(String text)
+	{
+		JButton button = compact(new JButton(text));
+		styleButton(button, RancourTheme.DANGER);
+		return button;
+	}
+
+	static JButton warningButton(String text)
+	{
+		JButton button = compact(new JButton(text));
+		styleButton(button, RancourTheme.WARNING);
+		return button;
+	}
+
+	static JButton neutralButton(String text)
+	{
+		JButton button = compact(new JButton(text));
+		styleButton(button, RancourTheme.CARD_BORDER);
+		return button;
+	}
+
+	private static void styleButton(JButton button, Color color)
+	{
+		button.setForeground(RancourTheme.TEXT);
+		button.setBackground(color.darker());
+		button.setOpaque(true);
+		button.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(color),
+			BorderFactory.createEmptyBorder(3, 5, 3, 5)));
+	}
+
+	private static void applyAccent(JPanel card, Color accent)
+	{
+		if (accent == null)
+		{
+			return;
+		}
+		card.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createEmptyBorder(0, 0, 7, 0),
+			BorderFactory.createCompoundBorder(
+				BorderFactory.createMatteBorder(0, 4, 0, 0, accent),
+				BorderFactory.createCompoundBorder(
+					BorderFactory.createLineBorder(RancourTheme.CARD_BORDER),
+					BorderFactory.createEmptyBorder(5, 6, 5, 6)))));
 	}
 
 	static <T extends JComponent> T compact(T component)
@@ -223,7 +293,7 @@ final class UiComponents
 	static JTextArea small(String text)
 	{
 		JTextArea label = wrapped(text);
-		label.setForeground(Color.GRAY);
+		label.setForeground(RancourTheme.MUTED);
 		label.setFont(label.getFont().deriveFont(10f));
 		return label;
 	}
@@ -246,7 +316,7 @@ final class UiComponents
 			setWrapStyleWord(true);
 			setBorder(null);
 			setFont(getFont().deriveFont(bold ? Font.BOLD : Font.PLAIN));
-			setForeground(Color.LIGHT_GRAY);
+			setForeground(RancourTheme.TEXT);
 			setAlignmentX(Component.LEFT_ALIGNMENT);
 			setSize(new Dimension(TEXT_WIDTH, Short.MAX_VALUE));
 		}

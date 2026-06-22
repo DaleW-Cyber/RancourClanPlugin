@@ -9,7 +9,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import net.runelite.client.ui.PluginPanel;
@@ -38,29 +37,46 @@ public final class RancourClanPanel extends PluginPanel
 	private final VerificationService verificationService;
 	private final CardLayout cardLayout;
 	private final JPanel cards;
+	private volatile String currentPage = "verification";
+	private volatile boolean userSelectedPage;
+	private volatile boolean lastVerifiedWithSession;
 	private volatile boolean dropsPanelEnabled = true;
 	private volatile Set<String> approvedDropKeys = Collections.emptySet();
 
 	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
 		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
-		boolean mockMode)
+		boolean ignoredMockMode)
+	{
+		this(verificationService, announcementService, eventService, dropService, teamService, staffService);
+	}
+
+	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
+		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService)
 	{
 		this(verificationService, announcementService, eventService, dropService, teamService,
 			staffService, () -> java.util.concurrent.CompletableFuture.completedFuture(new PluginSettings(true, Collections.emptyList())),
-			mockMode, () -> "");
+			() -> "");
 	}
 
 	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
 		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
-		PluginSettingsService settingsService, boolean mockMode)
+		PluginSettingsService settingsService, boolean ignoredMockMode)
 	{
 		this(verificationService, announcementService, eventService, dropService, teamService,
-			staffService, settingsService, mockMode, () -> "");
+			staffService, settingsService, () -> "");
 	}
 
 	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
 		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
-		PluginSettingsService settingsService, boolean mockMode, Supplier<String> activeRsn)
+		PluginSettingsService settingsService)
+	{
+		this(verificationService, announcementService, eventService, dropService, teamService,
+			staffService, settingsService, () -> "");
+	}
+
+	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
+		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
+		PluginSettingsService settingsService, Supplier<String> activeRsn)
 	{
 		super(false);
 		this.verificationService = verificationService;
@@ -86,25 +102,23 @@ public final class RancourClanPanel extends PluginPanel
 		cards.add(staffPanel, "staff");
 
 		JPanel navigation = new JPanel(new GridLayout(3, 2, 4, 4));
-		navigation.add(button("Verify", cardLayout, cards, "verification"));
-		navigation.add(button("News", cardLayout, cards, "announcements"));
-		navigation.add(button("Events", cardLayout, cards, "events"));
-		dropsButton = button("Drops", cardLayout, cards, "drops");
+		navigation.add(button("Verify", "verification"));
+		navigation.add(button("News", "announcements"));
+		navigation.add(button("Events", "events"));
+		dropsButton = button("Drops", "drops");
 		navigation.add(dropsButton);
-		navigation.add(button("Teams", cardLayout, cards, "teams"));
-		staffButton = button("Staff", cardLayout, cards, "staff");
+		navigation.add(button("Teams", "teams"));
+		staffButton = button("Staff", "staff");
 		staffButton.setVisible(false);
 		navigation.add(staffButton);
 
 		JPanel top = new JPanel(new BorderLayout());
-		if (mockMode)
-		{
-			top.add(new JLabel("MOCK MODE - local data only"), BorderLayout.NORTH);
-		}
 		top.add(navigation, BorderLayout.CENTER);
 		add(top, BorderLayout.NORTH);
 		add(cards, BorderLayout.CENTER);
 		verificationService.addProfileListener(profile -> SwingUtilities.invokeLater(() -> updateStaffAccess(profile)));
+		lastVerifiedWithSession = verifiedWithSession(verificationService.getCurrentProfile());
+		showPage(lastVerifiedWithSession ? "announcements" : "verification", false);
 		verificationPanel.refresh();
 		refreshSettings();
 	}
@@ -135,16 +149,26 @@ public final class RancourClanPanel extends PluginPanel
 	private void updateStaffAccess(MemberProfile profile)
 	{
 		dropsPanel.setProfile(profile);
-		boolean staff = profile != null && profile.isStaff() && !UiComponents.value(verificationService.getSessionToken()).trim().isEmpty();
+		boolean verifiedWithSession = verifiedWithSession(profile);
+		boolean becameVerified = verifiedWithSession && !lastVerifiedWithSession;
+		boolean lostVerification = !verifiedWithSession && lastVerifiedWithSession;
+		lastVerifiedWithSession = verifiedWithSession;
+		boolean staff = profile != null && profile.isStaff() && verifiedWithSession;
 		staffButton.setVisible(staff);
 		staffButton.getParent().revalidate();
 		if (staff)
 		{
 			staffPanel.refreshPending();
 		}
-		else
+		if (becameVerified)
 		{
-			cardLayout.show(cards, "verification");
+			showPage("announcements", false);
+			userSelectedPage = false;
+		}
+		else if (lostVerification)
+		{
+			showPage("verification", false);
+			userSelectedPage = false;
 		}
 	}
 
@@ -189,10 +213,35 @@ public final class RancourClanPanel extends PluginPanel
 		return dropsButton.isVisible();
 	}
 
-	private static JButton button(String label, CardLayout layout, JPanel cards, String page)
+	private boolean verifiedWithSession(MemberProfile profile)
+	{
+		return profile != null && !UiComponents.value(verificationService.getSessionToken()).trim().isEmpty();
+	}
+
+	private void showPage(String page, boolean manual)
+	{
+		currentPage = page;
+		if (manual)
+		{
+			userSelectedPage = true;
+		}
+		cardLayout.show(cards, page);
+	}
+
+	String currentPage()
+	{
+		return currentPage;
+	}
+
+	boolean hasUserSelectedPage()
+	{
+		return userSelectedPage;
+	}
+
+	private JButton button(String label, String page)
 	{
 		JButton button = new JButton(label);
-		button.addActionListener(event -> layout.show(cards, page));
+		button.addActionListener(event -> showPage(page, true));
 		return button;
 	}
 }

@@ -1,6 +1,7 @@
 package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -60,11 +61,24 @@ final class AnnouncementsPanel extends JPanel
 			status.setText(items.size() + " announcement(s)");
 			for (Announcement item : items)
 			{
-				content.add(UiComponents.detailsCard(item.getTitle(), item.getMessage()));
+				content.add(UiComponents.detailsCard(item.getTitle(), item.getMessage(), announcementAccent(item.getPriority())));
 			}
 			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
 		}
 		content.revalidate();
 		content.repaint();
+	}
+
+	private static Color announcementAccent(String priority)
+	{
+		if ("urgent".equalsIgnoreCase(priority))
+		{
+			return RancourTheme.BRAND_RED;
+		}
+		if ("high".equalsIgnoreCase(priority))
+		{
+			return RancourTheme.WARNING;
+		}
+		return RancourTheme.BRAND_RED_MUTED;
 	}
 }

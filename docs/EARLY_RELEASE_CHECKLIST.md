@@ -5,8 +5,8 @@
 - [x] Java 11-compatible external plugin foundation
 - [x] Gradle wrapper, build, local launcher, and Plugin Hub metadata
 - [x] Async typed REST client using RuneLite's OkHttp client
-- [x] Configurable API base URL
-- [x] Explicit opt-in mock mode with in-memory mock sessions
+- [x] Production API URL hidden from public settings with developer-only system-property override
+- [x] Mock clients retained for tests only, not exposed in RuneLite settings
 - [x] Verification code generation and status refresh UI
 - [x] RuneLite config-backed live session persistence
 - [x] Announcement loading, refresh, empty, loading, and error states
@@ -25,7 +25,7 @@
 ## Railway API required
 
 - [x] Deploy Backend Alpha endpoints in `API_CONTRACT.md`
-- [ ] Configure TLS and production API base URL
+- [x] Configure TLS and production API base URL
 - [ ] Implement short-lived plugin sessions, expiry, rotation, and revocation
 - [x] Enforce authenticated linked-RSN ownership on drop submissions
 - [x] Enforce approved drop-catalogue validation on drop submissions
@@ -38,6 +38,7 @@
 ## Discord bot required
 
 - [x] Add `/plugin_link code`
+- [x] Add persistent Discord verification panel and modal
 - [ ] Complete and expire link attempts safely
 - [ ] Feed public/restricted announcements through the API
 - [ ] Synchronize Discord events and event participation; RuneLite event display remains read-only

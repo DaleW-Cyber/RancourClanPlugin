@@ -32,7 +32,7 @@ final class DropsPanel extends JPanel
 		this.service = service;
 		this.activeRsn = activeRsn;
 		content.add(UiComponents.heading("Drops"));
-		content.add(UiComponents.card("Confirm drops", "Detected drops appear here.", ""));
+		content.add(UiComponents.card("Confirm drops", "Detected drops appear here.", "", RancourTheme.INFO));
 		JPanel controls = new JPanel(new BorderLayout());
 		controls.add(status, BorderLayout.CENTER);
 		add(UiComponents.page(controls, content), BorderLayout.CENTER);
@@ -51,7 +51,7 @@ final class DropsPanel extends JPanel
 		boolean linked = loggedIn && profile != null && profile.isLinkedRsn(currentRsn);
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
-		JPanel card = UiComponents.detailsCard(newCandidate.getItemName(), "",
+		JPanel card = UiComponents.detailsCard(newCandidate.getItemName(), "", RancourTheme.WARNING,
 			"Source", newCandidate.getSource(),
 			"RSN", newCandidate.getRsn(),
 			"Detected", UiComponents.shortDate(newCandidate.getDetectedAt()),
@@ -65,8 +65,8 @@ final class DropsPanel extends JPanel
 			card.add(UiComponents.wrapped("This RuneLite account is not linked to your Discord profile."));
 		}
 		JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
-		JButton confirm = new JButton("Confirm Submit");
-		JButton dismiss = new JButton("Dismiss");
+		JButton confirm = UiComponents.successButton("Confirm Submit");
+		JButton dismiss = UiComponents.neutralButton("Dismiss");
 		confirm.addActionListener(event -> submit());
 		dismiss.addActionListener(event -> clear("Candidate dismissed"));
 		actions.add(confirm);
@@ -75,6 +75,7 @@ final class DropsPanel extends JPanel
 		card.add(actions);
 		content.add(card);
 		status.setText(linked ? "Review candidate before submitting" : "Drop submission is disabled");
+		status.setForeground(linked ? RancourTheme.WARNING : RancourTheme.DANGER);
 		content.revalidate();
 		content.repaint();
 	}
@@ -98,8 +99,9 @@ final class DropsPanel extends JPanel
 		candidate = null;
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
-		content.add(UiComponents.wrapped("Drop submissions are currently disabled."));
+		content.add(UiComponents.card("Drops disabled", "Drop submissions are currently disabled.", "", RancourTheme.DANGER));
 		status.setText("Disabled");
+		status.setForeground(RancourTheme.DANGER);
 		content.revalidate();
 		content.repaint();
 	}
@@ -112,11 +114,13 @@ final class DropsPanel extends JPanel
 			return;
 		}
 		status.setText("Submitting confirmed drop...");
+		status.setForeground(RancourTheme.WARNING);
 		service.submit(pending.toSubmission()).whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
 		{
 			if (error != null)
 			{
 				status.setText("Error: " + UiComponents.errorMessage(error));
+				status.setForeground(RancourTheme.DANGER);
 				return;
 			}
 			clear("Submitted: " + result.getStatus() + " - " + result.getMessage());
@@ -128,8 +132,10 @@ final class DropsPanel extends JPanel
 		candidate = null;
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
-		content.add(UiComponents.wrapped("No candidate drop is awaiting confirmation."));
+		content.add(UiComponents.card("No pending drop", "No candidate drop is awaiting confirmation.", "",
+			message.startsWith("Submitted:") ? RancourTheme.SUCCESS : RancourTheme.DISABLED));
 		status.setText(message);
+		status.setForeground(message.startsWith("Submitted:") ? RancourTheme.SUCCESS : RancourTheme.MUTED);
 		content.revalidate();
 		content.repaint();
 	}

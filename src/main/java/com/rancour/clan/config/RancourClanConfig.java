@@ -10,26 +10,6 @@ public interface RancourClanConfig extends Config
 	String GROUP = "rancourclan";
 
 	@ConfigItem(
-		keyName = "apiBaseUrl",
-		name = "API base URL",
-		description = "Base URL for the future Rancour REST API"
-	)
-	default String apiBaseUrl()
-	{
-		return "https://api.rancourpvm.com";
-	}
-
-	@ConfigItem(
-		keyName = "mockMode",
-		name = "Mock mode",
-		description = "Use clearly labelled local development data instead of the Rancour API"
-	)
-	default boolean mockMode()
-	{
-		return false;
-	}
-
-	@ConfigItem(
 		keyName = "announcementChatNotifications",
 		name = "Show announcement notifications in chat",
 		description = "Show a short game-chat message when the API returns a new announcement"
