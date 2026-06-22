@@ -56,6 +56,23 @@ public class RestClanApiClientTest
 	}
 
 	@Test
+	public void protectedEventJoinSendsBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"success\":true,\"message\":\"joined\"}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.joinEvent("event-1", "session-value").toCompletableFuture().get();
+
+		assertEquals("POST", captured.get().method());
+		assertEquals("https://api.example.test/plugin/events/event-1/join", captured.get().url().toString());
+		assertEquals("Bearer session-value", captured.get().header("Authorization"));
+	}
+
+	@Test
 	public void nonSuccessIncludesStatusAndSafeApiMessage() throws Exception
 	{
 		RestClanApiClient api = new RestClanApiClient(

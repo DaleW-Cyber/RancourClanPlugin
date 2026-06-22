@@ -83,7 +83,11 @@ public final class ApiServices
 
 	private static <T> CompletionStage<T> withToken(VerificationService verification, AsyncCall<T> call)
 	{
-		if (!verification.isVerified())
+		if (!hasText(verification.getSessionToken()))
+		{
+			return failed("Your verification session has expired. Refresh verification or link again.");
+		}
+		if (verification.getCurrentProfile() == null)
 		{
 			return failed("Verify your clan account before using this action");
 		}
@@ -101,7 +105,11 @@ public final class ApiServices
 	private static <T> CompletionStage<T> withStaff(VerificationService verification, AsyncCall<T> call)
 	{
 		MemberProfile profile = verification.getCurrentProfile();
-		if (!verification.isVerified() || profile == null || !profile.isStaff())
+		if (!hasText(verification.getSessionToken()))
+		{
+			return failed("Your verification session has expired. Refresh verification or link again.");
+		}
+		if (profile == null || !profile.isStaff())
 		{
 			return failed("Staff verification is required for this action");
 		}

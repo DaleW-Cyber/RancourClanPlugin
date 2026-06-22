@@ -7,7 +7,7 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - Discord link-code generation and verification status refresh
 - RuneLite config-backed API session persistence
 - Verified profile display: Discord name, active RSN, trusted linked RSNs, clan rank, staff status, expiry, and last checked time
-- Public and restricted announcement feed with loading, empty, refresh, error, and optional non-duplicating chat notifications
+- Compact announcement feed that shows only title/body, with loading, empty, refresh, error, and optional non-duplicating chat notifications
 - Discord-backed, API role-filtered event list with visibility-checked Join and Leave actions
 - Valuable/untradeable game-chat and high-value NPC-loot detection with 30-second duplicate prevention
 - Explicit drop confirmation before API submission
@@ -76,6 +76,8 @@ When running with `./gradlew run`, API diagnostics are written to the Gradle/Int
 
 `Show announcement notifications in chat` enables short `[Rancour]` game-chat notices for announcement IDs not previously seen on this RuneLite profile. `Minimum announcement priority` can be `normal`, `high`, or `urgent`. Seen IDs are stored locally; announcement bodies and session credentials are never written to chat.
 
+`Enable automatic refresh` is on by default. `Refresh interval seconds` defaults to 60 and is clamped to a minimum of 30 seconds. Background refresh updates verification, announcements, events, teams, and staff pending drops without blocking the RuneLite client thread. Manual Refresh buttons remain available as a fallback.
+
 `Mock mode` is disabled by default. When enabled, every page uses clearly labelled local mock data and an in-memory mock session. Mock mode never writes its session token to RuneLite configuration.
 
 `Minimum drop value` defaults to 1,000,000 GP and controls which NPC loot events create a confirmation prompt. Game-chat valuable/untradeable notifications are also detected independently of this threshold.
@@ -91,6 +93,8 @@ The live verification session token and pending verification ID are stored under
 3. Select `Refresh Status`.
 4. The returned API session and member profile are stored/displayed.
 
+Protected actions such as Event Join, Team Join, Drop Submit, and Staff tools require both a verified profile and the stored API session token. If that token is missing or expired, the panel shows `Your verification session has expired. Refresh verification or link again.`
+
 The plugin compares the currently logged-in RuneLite account with `linkedRsns` from the API. Unknown accounts show a warning and cannot confirm a drop. When logged out, the panel asks the player to log in before confirming the active RSN.
 
 ### Drops
@@ -102,6 +106,8 @@ Each submission includes item name, source, current RuneLite RSN, UTC timestamp,
 ### Staff access
 
 The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side.
+
+Staff announcement expiry is selected from fixed options: 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, or 7 days. RuneLite calculates `expiresAt` in UTC, and the API rejects any expiry longer than seven days.
 
 ### Event visibility
 
@@ -136,9 +142,8 @@ src/main/java/com/rancour/clan/
 - Staff-approved Discord commands/workflow to add, set-primary, and revoke linked alts
 - Discord event participation write-back
 - Approved plugin-drop integration with the legacy Google Sheet/log workflow
-- Team state persistence and Discord signup synchronization
 - Staff event-cache refresh endpoint
-- Staff team close/lock endpoints
+- Staff team lock endpoint
 
 See [docs/UI_QA.md](docs/UI_QA.md) for the normal-sidebar-width manual check.
 

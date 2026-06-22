@@ -17,6 +17,7 @@ final class TeamsPanel extends JPanel
 	private final TeamService service;
 	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
+	private boolean loading;
 
 	TeamsPanel(TeamService service)
 	{
@@ -31,14 +32,20 @@ final class TeamsPanel extends JPanel
 		refresh();
 	}
 
-	private void refresh()
+	void refresh()
 	{
+		if (loading)
+		{
+			return;
+		}
+		loading = true;
 		status.setText("Loading teams...");
 		service.loadTeams().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> render(items, error)));
 	}
 
 	private void render(List<Team> items, Throwable error)
 	{
+		loading = false;
 		content.removeAll();
 		content.add(UiComponents.heading("Team Finder"));
 		if (error != null)
@@ -56,15 +63,12 @@ final class TeamsPanel extends JPanel
 			status.setText(items.size() + " team(s)");
 			for (Team item : items)
 			{
-				String tags = (item.isStaffHosted() ? "Staff-hosted, " : "") + String.join(", ", item.getTags());
 				JPanel card = UiComponents.detailsCard(item.getActivity(), "",
 					"Host", item.getHost(),
-					"Required roles", String.join(", ", item.getRequiredRoles()),
 					"Members", item.getCurrentMembers() + "/" + item.getCapacity(),
 					"World", String.valueOf(item.getWorld()),
 					"Voice", item.isVoiceRequired() ? "Required" : "Optional",
-					"Status", item.getStatus(),
-					"Tags", tags);
+					"Status", item.getStatus());
 				JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
 				JButton join = new JButton("Join");
 				JButton leave = new JButton("Leave");
@@ -75,6 +79,7 @@ final class TeamsPanel extends JPanel
 				card.add(actions);
 				content.add(card);
 			}
+			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
 		}
 		content.revalidate();
 		content.repaint();

@@ -105,19 +105,19 @@ public final class RestClanApiClient implements ClanApiClient
 	@Override
 	public CompletionStage<ActionResult> joinEvent(String eventId, String sessionToken)
 	{
-		return post(url("plugin", "events", eventId, "join"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "events", eventId, "join"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
 	public CompletionStage<ActionResult> leaveEvent(String eventId, String sessionToken)
 	{
-		return post(url("plugin", "events", eventId, "leave"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "events", eventId, "leave"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
 	public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken)
 	{
-		return post(url("plugin", "drops"), submission, sessionToken, DropSubmissionResult.class);
+		return protectedPost(url("plugin", "drops"), submission, sessionToken, DropSubmissionResult.class);
 	}
 
 	@Override
@@ -129,37 +129,37 @@ public final class RestClanApiClient implements ClanApiClient
 	@Override
 	public CompletionStage<ActionResult> joinTeam(String teamId, String sessionToken)
 	{
-		return post(url("plugin", "teams", teamId, "join"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "teams", teamId, "join"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
 	public CompletionStage<ActionResult> leaveTeam(String teamId, String sessionToken)
 	{
-		return post(url("plugin", "teams", teamId, "leave"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "teams", teamId, "leave"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
 	public CompletionStage<List<StaffDropSubmission>> fetchPendingDrops(String sessionToken)
 	{
-		return get(url("plugin", "staff", "drop-submissions"), sessionToken, STAFF_DROP_LIST);
+		return protectedGet(url("plugin", "staff", "drop-submissions"), sessionToken, STAFF_DROP_LIST);
 	}
 
 	@Override
 	public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken)
 	{
-		return post(url("plugin", "staff", "drop-submissions", submissionId, "approve"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "staff", "drop-submissions", submissionId, "approve"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
 	public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken)
 	{
-		return post(url("plugin", "staff", "drop-submissions", submissionId, "reject"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "staff", "drop-submissions", submissionId, "reject"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
 	public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken)
 	{
-		return post(url("plugin", "staff", "announcements"), request, sessionToken, Announcement.class);
+		return protectedPost(url("plugin", "staff", "announcements"), request, sessionToken, Announcement.class);
 	}
 
 	@Override
@@ -171,7 +171,7 @@ public final class RestClanApiClient implements ClanApiClient
 	@Override
 	public CompletionStage<ActionResult> closeTeam(String teamId, String sessionToken)
 	{
-		return unsupported("Team closing requires a Railway API endpoint");
+		return protectedPost(url("plugin", "teams", teamId, "close"), new Object(), sessionToken, ActionResult.class);
 	}
 
 	@Override
@@ -187,12 +187,29 @@ public final class RestClanApiClient implements ClanApiClient
 		return execute(request.build(), responseType);
 	}
 
+	private <T> CompletionStage<T> protectedGet(HttpUrl url, String token, Type responseType)
+	{
+		logProtected("GET", url, token);
+		return get(url, token, responseType);
+	}
+
 	private <T> CompletionStage<T> post(HttpUrl url, Object body, String token, Type responseType)
 	{
 		RequestBody requestBody = RequestBody.create(JSON, gson.toJson(body));
 		Request.Builder request = new Request.Builder().url(url).post(requestBody);
 		addAuthorization(request, token);
 		return execute(request.build(), responseType);
+	}
+
+	private <T> CompletionStage<T> protectedPost(HttpUrl url, Object body, String token, Type responseType)
+	{
+		logProtected("POST", url, token);
+		return post(url, body, token, responseType);
+	}
+
+	private static void logProtected(String method, HttpUrl url, String token)
+	{
+		log.info("Rancour API protected action: {} {} authorization={}", method, url, hasText(token) ? "bearer-present" : "missing");
 	}
 
 	private <T> CompletionStage<T> execute(Request request, Type responseType)

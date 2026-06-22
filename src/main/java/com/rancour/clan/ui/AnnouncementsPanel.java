@@ -14,6 +14,7 @@ final class AnnouncementsPanel extends JPanel
 	private final AnnouncementService service;
 	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
+	private boolean loading;
 
 	AnnouncementsPanel(AnnouncementService service)
 	{
@@ -28,14 +29,20 @@ final class AnnouncementsPanel extends JPanel
 		refresh();
 	}
 
-	private void refresh()
+	void refresh()
 	{
+		if (loading)
+		{
+			return;
+		}
+		loading = true;
 		status.setText("Loading announcements...");
 		service.loadAnnouncements().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> render(items, error)));
 	}
 
 	private void render(List<Announcement> items, Throwable error)
 	{
+		loading = false;
 		content.removeAll();
 		content.add(UiComponents.heading("Announcements"));
 		if (error != null)
@@ -53,12 +60,9 @@ final class AnnouncementsPanel extends JPanel
 			status.setText(items.size() + " announcement(s)");
 			for (Announcement item : items)
 			{
-				content.add(UiComponents.detailsCard(item.getTitle(), item.getMessage(),
-					"Priority", item.getPriority(),
-					"Author", item.getAuthor(),
-					"Created", UiComponents.shortDate(item.getCreatedAt()),
-					"Expires", UiComponents.shortDate(item.getExpiresAt())));
+				content.add(UiComponents.detailsCard(item.getTitle(), item.getMessage()));
 			}
+			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
 		}
 		content.revalidate();
 		content.repaint();

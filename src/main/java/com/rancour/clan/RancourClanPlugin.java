@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.time.Duration;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.events.ChatMessage;
@@ -86,6 +87,7 @@ public class RancourClanPlugin extends Plugin
 	private NavigationButton navigationButton;
 	private volatile RancourClanPanel panel;
 	private volatile String activeRsn = "";
+	private Timer autoRefreshTimer;
 	private final DropDetector dropDetector = new DropDetector();
 	private final DuplicateDropGuard duplicateDropGuard = new DuplicateDropGuard(Duration.ofSeconds(30));
 
@@ -112,6 +114,7 @@ public class RancourClanPlugin extends Plugin
 				.panel(panel)
 				.build();
 			clientToolbar.addNavigation(navigationButton);
+			startAutoRefresh();
 		});
 	}
 
@@ -131,8 +134,32 @@ public class RancourClanPlugin extends Plugin
 				clientToolbar.removeNavigation(navigationButton);
 				navigationButton = null;
 			}
+			if (autoRefreshTimer != null)
+			{
+				autoRefreshTimer.stop();
+				autoRefreshTimer = null;
+			}
 			panel = null;
 		});
+	}
+
+	private void startAutoRefresh()
+	{
+		if (!config.automaticRefresh())
+		{
+			return;
+		}
+		int seconds = Math.max(30, config.refreshIntervalSeconds());
+		autoRefreshTimer = new Timer(seconds * 1000, event ->
+		{
+			RancourClanPanel currentPanel = panel;
+			if (currentPanel != null)
+			{
+				currentPanel.refreshAll();
+			}
+		});
+		autoRefreshTimer.setRepeats(true);
+		autoRefreshTimer.start();
 	}
 
 	@Subscribe

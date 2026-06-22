@@ -50,6 +50,26 @@ public interface RancourClanConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "automaticRefresh",
+		name = "Enable automatic refresh",
+		description = "Periodically refresh verification, announcements, events, teams, and staff queues"
+	)
+	default boolean automaticRefresh()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "refreshIntervalSeconds",
+		name = "Refresh interval seconds",
+		description = "Automatic refresh interval. Values below 30 seconds are treated as 30."
+	)
+	default int refreshIntervalSeconds()
+	{
+		return 60;
+	}
+
+	@ConfigItem(
 		keyName = "minimumDropValue",
 		name = "Minimum drop value",
 		description = "Minimum total GE value for NPC loot confirmation prompts"

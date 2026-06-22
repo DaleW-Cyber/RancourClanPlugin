@@ -17,6 +17,7 @@ final class EventsPanel extends JPanel
 	private final EventService service;
 	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
+	private boolean loading;
 
 	EventsPanel(EventService service)
 	{
@@ -31,14 +32,20 @@ final class EventsPanel extends JPanel
 		refresh();
 	}
 
-	private void refresh()
+	void refresh()
 	{
+		if (loading)
+		{
+			return;
+		}
+		loading = true;
 		status.setText("Loading events...");
 		service.loadEvents().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> render(items, error)));
 	}
 
 	private void render(List<ClanEvent> items, Throwable error)
 	{
+		loading = false;
 		content.removeAll();
 		content.add(UiComponents.heading("Event Centre"));
 		if (error != null)
@@ -71,6 +78,7 @@ final class EventsPanel extends JPanel
 				card.add(actions);
 				content.add(card);
 			}
+			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
 		}
 		content.revalidate();
 		content.repaint();

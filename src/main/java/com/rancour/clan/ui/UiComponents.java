@@ -190,6 +190,19 @@ final class UiComponents
 		}
 	}
 
+	static String nowShort()
+	{
+		return SHORT_DATE.format(Instant.now());
+	}
+
+	static JTextArea small(String text)
+	{
+		JTextArea label = wrapped(text);
+		label.setForeground(Color.GRAY);
+		label.setFont(label.getFont().deriveFont(10f));
+		return label;
+	}
+
 	private static String html(String value)
 	{
 		return value(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

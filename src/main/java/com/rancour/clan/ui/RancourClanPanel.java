@@ -21,6 +21,10 @@ import com.rancour.clan.services.VerificationService;
 public final class RancourClanPanel extends PluginPanel
 {
 	private final DropsPanel dropsPanel;
+	private final VerificationPanel verificationPanel;
+	private final AnnouncementsPanel announcementsPanel;
+	private final EventsPanel eventsPanel;
+	private final TeamsPanel teamsPanel;
 	private final JButton staffButton;
 	private final StaffPanel staffPanel;
 	private final CardLayout cardLayout;
@@ -42,14 +46,17 @@ public final class RancourClanPanel extends PluginPanel
 		setLayout(new BorderLayout());
 		cardLayout = new CardLayout();
 		cards = new JPanel(cardLayout);
-		VerificationPanel verificationPanel = new VerificationPanel(verificationService, activeRsn);
+		verificationPanel = new VerificationPanel(verificationService, activeRsn);
+		announcementsPanel = new AnnouncementsPanel(announcementService);
+		eventsPanel = new EventsPanel(eventService);
+		teamsPanel = new TeamsPanel(teamService);
 		dropsPanel = new DropsPanel(dropService, activeRsn);
-		staffPanel = new StaffPanel(staffService);
+		staffPanel = new StaffPanel(staffService, announcementsPanel::refresh);
 		cards.add(verificationPanel, "verification");
-		cards.add(new AnnouncementsPanel(announcementService), "announcements");
-		cards.add(new EventsPanel(eventService), "events");
+		cards.add(announcementsPanel, "announcements");
+		cards.add(eventsPanel, "events");
 		cards.add(dropsPanel, "drops");
-		cards.add(new TeamsPanel(teamService), "teams");
+		cards.add(teamsPanel, "teams");
 		cards.add(staffPanel, "staff");
 
 		JPanel navigation = new JPanel(new GridLayout(3, 2, 4, 4));
@@ -77,6 +84,18 @@ public final class RancourClanPanel extends PluginPanel
 	public void offerDropCandidate(DropCandidate candidate)
 	{
 		SwingUtilities.invokeLater(() -> dropsPanel.offerCandidate(candidate));
+	}
+
+	public void refreshAll()
+	{
+		verificationPanel.refresh();
+		announcementsPanel.refresh();
+		eventsPanel.refresh();
+		teamsPanel.refresh();
+		if (staffButton.isVisible())
+		{
+			staffPanel.refreshPending();
+		}
 	}
 
 	private void updateStaffAccess(MemberProfile profile)

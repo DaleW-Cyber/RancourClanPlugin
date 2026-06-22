@@ -20,6 +20,7 @@ final class VerificationPanel extends JPanel
 	private final JPanel content = UiComponents.contentPanel();
 	private final ClipboardWriter clipboard;
 	private final Supplier<String> activeRsn;
+	private boolean loading;
 
 	VerificationPanel(VerificationService service)
 	{
@@ -79,9 +80,15 @@ final class VerificationPanel extends JPanel
 
 	void refresh()
 	{
+		if (loading)
+		{
+			return;
+		}
+		loading = true;
 		setStatus("Checking verification...");
 		service.refreshStatus().whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
 		{
+			loading = false;
 			if (error != null)
 			{
 				setStatus("Error: " + UiComponents.errorMessage(error));

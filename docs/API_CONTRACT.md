@@ -98,6 +98,8 @@ Returns a JSON array. Public items are available without verification. Restricte
 ]
 ```
 
+RuneLite announcement cards render only `title` and `message`. The remaining fields stay in the model for API filtering, chat-notification priority checks, and staff tools.
+
 ## Events
 
 ### `GET /plugin/events`
@@ -200,8 +202,27 @@ RuneLite must not create or modify linked accounts. The authenticated Discord bo
 
 ### `POST /plugin/teams/{id}/join`
 ### `POST /plugin/teams/{id}/leave`
+### `POST /plugin/teams/{id}/close`
 
-Require authentication. Body is `{}`. Return an `ActionResult` as used by event signup. The API must enforce capacity and role/signup rules.
+Require authentication. Body is `{}`. Join and Leave return an `ActionResult` as used by event signup. The API must enforce capacity and role/signup rules. Close must be limited to the team host or staff.
+
+### `POST /plugin/teams`
+
+Requires authentication.
+
+```json
+{
+  "activity": "Theatre of Blood",
+  "capacity": 5,
+  "world": 416,
+  "voiceRequired": true,
+  "requiredRoles": ["Freeze", "Melee"],
+  "tags": ["learner"],
+  "staffHosted": false
+}
+```
+
+The API records the authenticated profile as host. Staff-hosted teams require API-derived staff status.
 
 ## Staff drop review
 
@@ -244,12 +265,13 @@ Body is `{}`. Return an `ActionResult`. Decisions should be idempotent and audit
 
 Return the created `Announcement` model. The API owns Discord publication and persistence.
 
+`expiresAt` must be in the future and no more than seven days after the API server's current UTC time. RuneLite uses a dropdown with 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, and 7 days options instead of manual date entry.
+
 ## Missing backend contracts
 
 The client contains typed methods and disabled/clear UI states for these requested staff capabilities, but no URL is invented because the supplied contract does not define one:
 
 - Refresh Discord event cache
-- Close a team
 - Lock a team
 
 Before enabling them, agree endpoint paths, authorization, request bodies, response models, audit rules, and idempotency. Suggested routes must be approved on the Railway/Discord side rather than assumed by the RuneLite client.
