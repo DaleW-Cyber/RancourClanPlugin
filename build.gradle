@@ -24,6 +24,10 @@ application {
     mainClass = 'com.rancour.clan.RancourClanPluginTest'
 }
 
+run {
+    jvmArgs = ['-ea']
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
