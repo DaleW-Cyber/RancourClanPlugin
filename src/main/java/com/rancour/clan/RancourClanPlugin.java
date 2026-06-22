@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.time.Duration;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import net.runelite.api.ChatMessageType;
@@ -225,18 +226,21 @@ public class RancourClanPlugin extends Plugin
 	}
 
 	@Provides
+	@Singleton
 	SessionStore provideSessionStore(ConfigManager configManager, RancourClanConfig config)
 	{
 		return config.mockMode() ? new InMemorySessionStore() : new RuneLiteSessionStore(configManager);
 	}
 
 	@Provides
+	@Singleton
 	ClanApiClient provideApiClient(OkHttpClient httpClient, Gson gson, RancourClanConfig config)
 	{
 		return config.mockMode() ? new MockClanApiClient() : new RestClanApiClient(httpClient, gson, config.apiBaseUrl());
 	}
 
 	@Provides
+	@Singleton
 	VerificationService provideVerificationService(ClanApiClient api, SessionStore sessions)
 	{
 		return ApiServices.verification(api, sessions);

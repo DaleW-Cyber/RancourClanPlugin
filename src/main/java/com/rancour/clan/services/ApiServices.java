@@ -87,7 +87,7 @@ public final class ApiServices
 			@Override public CompletionStage<ActionResult> rejectDrop(String id) { return withStaff("rejectDrop", verification, token -> api.rejectDrop(id, token)); }
 			@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request) { return withStaff("createAnnouncement", verification, token -> api.createAnnouncement(request, token)); }
 			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff("deleteAnnouncement", verification, token -> api.deleteAnnouncement(id, token)); }
-			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff("setDropsPanelEnabled", verification, token -> api.setDropsPanelEnabled(enabled, token)); }
+			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff("dropsPanelToggle", verification, token -> api.setDropsPanelEnabled(enabled, token)); }
 			@Override public CompletionStage<ActionResult> refreshEventCache() { return withStaff("refreshEventCache", verification, api::refreshEventCache); }
 		};
 	}

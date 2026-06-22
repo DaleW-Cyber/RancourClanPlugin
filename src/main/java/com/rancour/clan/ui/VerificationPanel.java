@@ -145,6 +145,11 @@ final class VerificationPanel extends JPanel
 			"Staff", profile.isStaff() ? "Yes" : "No",
 			"Expires", UiComponents.shortDate(profile.getExpiresAt()),
 			"Last checked", UiComponents.shortDate(profile.getLastCheckedAt())));
+		content.add(UiComponents.detailsCard("Session diagnostics", "",
+			"Profile loaded", "Yes",
+			"Staff profile", profile.isStaff() ? "Yes" : "No",
+			"Session token stored", UiComponents.value(service.getSessionToken()).trim().isEmpty() ? "No" : "Yes",
+			"Session expiry", UiComponents.shortDate(profile.getExpiresAt())));
 		if (!warning.isEmpty())
 		{
 			content.add(UiComponents.card("Account not linked", warning, "Drop submission is disabled."));

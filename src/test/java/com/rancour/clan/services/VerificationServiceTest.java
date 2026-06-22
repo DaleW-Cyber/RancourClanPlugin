@@ -43,6 +43,20 @@ public class VerificationServiceTest
 	}
 
 	@Test
+	public void profileRefreshWithoutNewSessionTokenKeepsStoredToken() throws Exception
+	{
+		InMemorySessionStore sessions = new InMemorySessionStore();
+		sessions.setSessionToken("existing-token");
+		VerificationService service = ApiServices.verification(new ProfileWithoutTokenApi(), sessions);
+
+		service.refreshStatus().toCompletableFuture().get();
+
+		assertEquals("existing-token", sessions.getSessionToken());
+		assertTrue(service.isVerified());
+		assertTrue(service.getCurrentProfile().isStaff());
+	}
+
+	@Test
 	public void protectedActionWithProfileButMissingTokenShowsExpiredSessionMessage() throws Exception
 	{
 		VerificationService service = new VerificationService()
@@ -109,6 +123,17 @@ public class VerificationServiceTest
 
 		assertEquals("Title", created.getTitle());
 		assertEquals("Announcement deleted", deleted.getMessage());
+	}
+
+	@Test
+	public void staffProfileWithValidTokenCanToggleDropsPanel() throws Exception
+	{
+		FakeVerificationService service = new FakeVerificationService(new MemberProfile("Discord", "RSN", "Admin", true, "later", "now"), "staff-token");
+		PluginSettings settings = ApiServices.staff(new MockClanApiClient(), service)
+			.setDropsPanelEnabled(false)
+			.toCompletableFuture().get();
+
+		assertTrue(!settings.isDropsPanelEnabled());
 	}
 
 	@Test
@@ -200,6 +225,44 @@ public class VerificationServiceTest
 		{
 			CompletableFuture<T> future = new CompletableFuture<>();
 			future.completeExceptionally(new ApiException("Verification session expired. Please refresh verification or link again.", 401));
+			return future;
+		}
+	}
+
+	private static final class ProfileWithoutTokenApi implements ClanApiClient
+	{
+		private final MemberProfile profile = new MemberProfile("Dale", "Mutable", "Server Admin", true, "2026-06-29T18:30:00Z", "2026-06-22T18:30:00Z");
+
+		@Override public CompletionStage<ApiHealth> health() { return failed(); }
+		@Override public CompletionStage<VerificationStartResponse> startVerification() { return failed(); }
+		@Override public CompletionStage<VerificationStatus> fetchVerificationStatus(String verificationId, String sessionToken)
+		{
+			return CompletableFuture.completedFuture(new VerificationStatus("verified", null, profile, profile.getExpiresAt(), profile.getLastCheckedAt()));
+		}
+		@Override public CompletionStage<MemberProfile> fetchProfile(String sessionToken) { return CompletableFuture.completedFuture(profile); }
+		@Override public CompletionStage<PluginSettings> fetchSettings() { return failed(); }
+		@Override public CompletionStage<java.util.List<Announcement>> fetchAnnouncements(String sessionToken) { return failed(); }
+		@Override public CompletionStage<java.util.List<ClanEvent>> fetchEvents(String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> joinEvent(String eventId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> leaveEvent(String eventId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken) { return failed(); }
+		@Override public CompletionStage<java.util.List<Team>> fetchTeams(String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<java.util.List<StaffDropSubmission>> fetchPendingDrops(String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> refreshEventCache(String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> closeTeam(String teamId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> lockTeam(String teamId, String sessionToken) { return failed(); }
+
+		private static <T> CompletionStage<T> failed()
+		{
+			CompletableFuture<T> future = new CompletableFuture<>();
+			future.completeExceptionally(new AssertionError("Unexpected API call"));
 			return future;
 		}
 	}

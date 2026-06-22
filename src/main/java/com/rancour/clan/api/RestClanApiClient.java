@@ -179,8 +179,10 @@ public final class RestClanApiClient implements ClanApiClient
 	@Override
 	public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken)
 	{
-		return protectedPost(url("plugin", "staff", "settings", "drops-panel"), new DropsPanelSettingRequest(enabled),
-			sessionToken, PluginSettings.class);
+		HttpUrl endpoint = url("plugin", "staff", "settings", "drops-panel");
+		log.info("Rancour API staff action request: action=dropsPanelToggle endpoint={} hasSessionToken={}",
+			endpoint, hasText(sessionToken));
+		return protectedPost(endpoint, new DropsPanelSettingRequest(enabled), sessionToken, PluginSettings.class);
 	}
 
 	@Override
@@ -282,6 +284,8 @@ public final class RestClanApiClient implements ClanApiClient
 						future.completeExceptionally(new ApiException(message, response.code()));
 						return;
 					}
+					log.info("Rancour API response: {} {} -> HTTP {} body={}",
+						request.method(), request.url(), response.code(), safeResponseMessage(json));
 					if (json.isEmpty())
 					{
 						log.error("Rancour API returned an empty response: {} {} -> HTTP {}", request.method(), request.url(), response.code());
@@ -337,6 +341,16 @@ public final class RestClanApiClient implements ClanApiClient
 			return redacted.substring(0, MAX_LOGGED_BODY_LENGTH) + "...<truncated>";
 		}
 		return redacted;
+	}
+
+	private static String safeResponseMessage(String value)
+	{
+		String redacted = redactForLog(value);
+		if (redacted.length() <= 240)
+		{
+			return redacted;
+		}
+		return redacted.substring(0, 240) + "...<truncated>";
 	}
 
 	private static String safeExceptionMessage(Exception exception)
