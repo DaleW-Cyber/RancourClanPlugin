@@ -1,32 +1,19 @@
 package com.rancour.clan.models;
 
-import java.time.Instant;
-
-public class ClanEvent
+public final class ClanEvent
 {
-    private final String title;
-    private final String description;
-    private final Instant startTime;
+	private final String name;
+	private final String schedule;
+	private final String details;
 
-    public ClanEvent(String title, String description, Instant startTime)
-    {
-        this.title = title;
-        this.description = description;
-        this.startTime = startTime;
-    }
+	public ClanEvent(String name, String schedule, String details)
+	{
+		this.name = name;
+		this.schedule = schedule;
+		this.details = details;
+	}
 
-    public String getTitle()
-    {
-        return title;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public Instant getStartTime()
-    {
-        return startTime;
-    }
+	public String getName() { return name; }
+	public String getSchedule() { return schedule; }
+	public String getDetails() { return details; }
 }

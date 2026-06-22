@@ -1,9 +1,5 @@
 .gradle/
+.idea/
 build/
 out/
-.idea/
 *.iml
-*.ipr
-*.iws
-.vscode/
-.DS_Store

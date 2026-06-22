@@ -1,85 +1,130 @@
 # Rancour Clan Plugin
 
-RuneLite side-panel plugin for Rancour PvM clan integrations.
+An external RuneLite plugin foundation for Rancour clan tools. Phase 1 provides a local, offline UI with placeholder verification, announcements, events, and drop submission pages. No Discord, Railway, Google Sheets, or other external service is contacted yet.
 
-## Current milestone
+## Requirements
 
-Milestone 1 creates a basic RuneLite plugin skeleton with placeholder sections for:
+- Java Development Kit 11
+- Git
+- An internet connection for the first Gradle dependency download
 
-- Verification
-- Announcements
-- Events
-- Drop Submission
+The repository includes the Gradle 8.10 wrapper. A system Gradle installation is not required.
 
-No live API calls are implemented yet.
+## Local development
 
-## Intended future behaviour
+Clone the repository and enter it:
 
-The plugin will eventually connect to a Rancour API service that integrates with the Discord bot and clan data sources.
+```bash
+git clone https://github.com/DaleW-Cyber/RancourClanPlugin.git
+cd RancourClanPlugin
+```
 
-Planned first features:
+Build and test the plugin:
 
-1. Verified member linking through Discord.
-2. Announcement feed from staff-created clan announcements.
-3. Event list linked to Discord events.
-4. Automatic drop submission prompt for eligible drops.
+```bash
+./gradlew clean build
+```
+
+On Windows PowerShell, use:
+
+```powershell
+.\gradlew.bat clean build
+```
+
+## Run RuneLite locally
+
+Launch RuneLite in developer mode with the external plugin loaded:
+
+```bash
+./gradlew run
+```
+
+On Windows PowerShell:
+
+```powershell
+.\gradlew.bat run
+```
+
+RuneLite opens as a normal desktop application. Enable `Rancour Clan` in the configuration panel if needed, then select its `R` icon in the sidebar. The local launcher lives in `src/test` and is not included in the published plugin artifact.
+
+## IntelliJ IDEA
+
+1. Install a Java 11 JDK.
+2. Open the repository folder in IntelliJ IDEA.
+3. Import the project using the Gradle wrapper when prompted.
+4. Set the project SDK and Gradle JVM to Java 11.
+5. Allow Gradle synchronization to finish.
+6. Run the Gradle `run` task, or run `com.rancour.clan.RancourClanPluginTest` from `src/test/java`.
+
+Do not add the RuneLite client JAR manually. Gradle supplies the correct compile and local development classpaths.
 
 ## Project structure
 
 ```text
-src/main/java/com/rancour/clan/
-├── RancourClanPlugin.java
-├── RancourClanConfig.java
-├── RancourClanPanel.java
-├── api/
-│   └── RancourApiClient.java
-├── drops/
-│   └── DropDetector.java
-└── models/
-    ├── Announcement.java
-    ├── ClanEvent.java
-    └── MemberProfile.java
+RancourClanPlugin/
+|-- build.gradle
+|-- settings.gradle
+|-- runelite-plugin.properties
+|-- gradlew
+|-- gradlew.bat
+|-- gradle/wrapper/
+`-- src/
+    |-- main/java/com/rancour/clan/
+    |   |-- RancourClanPlugin.java
+    |   |-- api/
+    |   |   |-- ClanApiClient.java
+    |   |   `-- RestClanApiClient.java
+    |   |-- config/
+    |   |   `-- RancourClanConfig.java
+    |   |-- models/
+    |   |   |-- Announcement.java
+    |   |   |-- ClanEvent.java
+    |   |   |-- DropSubmission.java
+    |   |   `-- VerificationStatus.java
+    |   |-- services/
+    |   |   |-- AnnouncementService.java
+    |   |   |-- DropService.java
+    |   |   |-- EventService.java
+    |   |   |-- VerificationService.java
+    |   |   `-- Placeholder*Service.java
+    |   `-- ui/
+    |       |-- RancourClanPanel.java
+    |       |-- VerificationPanel.java
+    |       |-- AnnouncementsPanel.java
+    |       |-- EventsPanel.java
+    |       `-- DropsPanel.java
+    `-- test/java/com/rancour/clan/
+        `-- RancourClanPluginTest.java
 ```
 
-## Local development
+## Architecture
 
-This project is structured as an external RuneLite plugin with a local test launcher.
+`RancourClanPlugin` owns the RuneLite lifecycle and sidebar navigation. Swing components are isolated in `ui`, while domain data lives in `models`. UI pages depend on small interfaces from `services`, not on HTTP or third-party integrations.
 
-Build:
+`ClanApiClient` defines the future asynchronous REST boundary. `RestClanApiClient` currently makes no network requests and returns an explicit unsupported-operation failure if called. Phase 1 service implementations return local placeholder content. During Phase 2, API-backed service implementations can replace them without changing the page structure.
 
-```bash
-gradle build
-```
+The only current configuration value is the future API base URL. It defaults to `https://api.rancourpvm.com` but is unused until REST integration begins.
 
-Run RuneLite with the plugin loaded:
+## Plugin Hub conventions
 
-```bash
-gradle run
-```
+- Production sources compile for Java 11.
+- RuneLite is a `compileOnly` dependency and is supplied by the client at runtime.
+- `runelite-plugin.properties` identifies the single plugin entry point.
+- The local RuneLite launcher remains under `src/test`.
+- The Gradle `run` task launches RuneLite with developer mode and assertions enabled.
+- Published code must not bundle credentials, API secrets, Discord tokens, or member data.
 
-In IntelliJ IDEA:
+## Phase 2 roadmap
 
-1. Open the repository as a Gradle project.
-2. Use Java 11.
-3. Run `com.rancour.clan.RancourClanPluginTest` from `src/test/java`.
-4. Open RuneLite and confirm the `Rancour Clan` side panel appears.
+1. Discord-based clan verification
+2. Announcement feed from Discord
+3. Event centre linked to Discord events
+4. Automatic drop submission prompts
+5. Team finder and signup system
+6. Staff administration tools
 
-## Configuration
+Future design work will place Discord bot, Railway API, Google Sheets, drop logging, clan verification, and event participation logic behind the REST API. The RuneLite plugin should not receive direct service credentials or write to those systems itself.
 
-The plugin has one initial configuration value:
+## License
 
-```text
-API Base URL
-```
-
-Default:
-
-```text
-https://api.rancourpvm.com
-```
-
-This is a placeholder until the Railway plugin API service is created.
-
-## Next development step
-
-Confirm the plugin launches locally, then add the first real API-backed feature: verified member linking.
+See [LICENSE](LICENSE).

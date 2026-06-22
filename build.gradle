@@ -1,33 +1,74 @@
 plugins {
-    id 'java'
-    id 'application'
+	id 'java'
 }
 
-group = pluginGroup
-version = pluginVersion
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
-    }
+repositories {
+	mavenLocal {
+		content {
+			includeGroupByRegex("net\\.runelite.*")
+		}
+	}
+	maven {
+		url = 'https://repo.runelite.net'
+		content {
+			includeGroupByRegex("net\\.runelite.*")
+		}
+	}
+	mavenCentral()
 }
+
+def runeLiteVersion = 'latest.release'
+def pluginMainClass = 'com.rancour.clan.RancourClanPluginTest'
 
 dependencies {
-    implementation "net.runelite:client:${runeliteVersion}"
-    compileOnly "org.projectlombok:lombok:1.18.34"
-    annotationProcessor "org.projectlombok:lombok:1.18.34"
+	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
-    testImplementation "junit:junit:4.13.2"
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+	testImplementation 'junit:junit:4.13.2'
+	testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+	testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
 }
 
-application {
-    mainClass = 'com.rancour.clan.RancourClanPluginTest'
-}
-
-run {
-    jvmArgs = ['-ea']
-}
+group = 'com.rancour.clan'
+version = '1.0.0'
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+	options.encoding = 'UTF-8'
+	options.release.set(11)
+}
+
+tasks.register('run', JavaExec) {
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = pluginMainClass
+
+	jvmArgs '-ea'
+	args '--developer-mode', '--debug'
+}
+
+tasks.register('shadowJar', Jar) {
+	dependsOn configurations.testRuntimeClasspath
+	manifest {
+		attributes('Main-Class': pluginMainClass, 'Multi-Release': true)
+	}
+
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from sourceSets.main.output
+	from sourceSets.test.output
+	from {
+		configurations.testRuntimeClasspath.collect { file ->
+			file.isDirectory() ? file : zipTree(file)
+		}
+	}
+
+	exclude 'META-INF/INDEX.LIST'
+	exclude 'META-INF/*.SF'
+	exclude 'META-INF/*.DSA'
+	exclude 'META-INF/*.RSA'
+	exclude '**/module-info.class'
+
+	group = BasePlugin.BUILD_GROUP
+	archiveClassifier.set('shadow')
+	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
 }
