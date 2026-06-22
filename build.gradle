@@ -20,9 +20,8 @@ repositories {
 
 dependencies {
     compileOnly "net.runelite:client:${runeliteVersion}"
-    compileOnly "com.google.inject:guice:5.1.0"
-    annotationProcessor "org.projectlombok:lombok:1.18.34"
     compileOnly "org.projectlombok:lombok:1.18.34"
+    annotationProcessor "org.projectlombok:lombok:1.18.34"
 
     testImplementation "junit:junit:4.13.2"
 }
