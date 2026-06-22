@@ -15,10 +15,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.awt.Component;
 import java.awt.Container;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.AbstractButton;
@@ -92,6 +94,55 @@ public class StaffPanelTest
 		assertFalse(hasDisabledButton(panel));
 	}
 
+	@Test
+	public void staffCanSeeDeleteButtonForCurrentAnnouncements() throws Exception
+	{
+		RecordingStaffService service = new RecordingStaffService();
+		service.announcements.add(new Announcement("ann-1", "Update", "One line body",
+			"normal", "now", "later", "Staff", false));
+		StaffPanel panel = new StaffPanel(service);
+
+		SwingUtilities.invokeAndWait(panel::showAnnouncementPage);
+		SwingUtilities.invokeAndWait(() -> { });
+
+		String text = allText(panel);
+		assertTrue(text.contains("Existing Announcements"));
+		assertTrue(text.contains("Update"));
+		assertTrue(text.contains("One line body"));
+		assertTrue(text.contains("Delete"));
+	}
+
+	@Test
+	public void deleteAnnouncementRequiresConfirmationAndRefreshes() throws Exception
+	{
+		RecordingStaffService service = new RecordingStaffService();
+		service.announcements.add(new Announcement("ann-1", "Update", "Body",
+			"normal", "now", "later", "Staff", false));
+		AtomicInteger refreshes = new AtomicInteger();
+		AtomicReference<String> prompt = new AtomicReference<>();
+		AtomicBoolean allow = new AtomicBoolean(false);
+		StaffPanel panel = new StaffPanel(service, refreshes::incrementAndGet, message ->
+		{
+			prompt.set(message);
+			return allow.get();
+		});
+
+		SwingUtilities.invokeAndWait(panel::showAnnouncementPage);
+		SwingUtilities.invokeAndWait(() -> assertTrue(clickButton(panel, "Delete")));
+		SwingUtilities.invokeAndWait(() -> { });
+		assertEquals("Delete this announcement?", prompt.get());
+		assertEquals(null, service.deleted.get());
+
+		allow.set(true);
+		SwingUtilities.invokeAndWait(() -> assertTrue(clickButton(panel, "Delete")));
+		SwingUtilities.invokeAndWait(() -> { });
+		SwingUtilities.invokeAndWait(() -> { });
+
+		assertEquals("ann-1", service.deleted.get());
+		assertEquals(1, refreshes.get());
+		assertFalse(allText(panel).contains("Update"));
+	}
+
 	private static String allText(Container container)
 	{
 		StringBuilder text = new StringBuilder();
@@ -133,14 +184,36 @@ public class StaffPanelTest
 		return false;
 	}
 
+	private static boolean clickButton(Container container, String label)
+	{
+		for (Component component : container.getComponents())
+		{
+			if (component instanceof AbstractButton && label.equals(((AbstractButton) component).getText()))
+			{
+				((AbstractButton) component).doClick();
+				return true;
+			}
+			if (component instanceof Container)
+			{
+				if (clickButton((Container) component, label))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private static final class RecordingStaffService implements StaffService
 	{
 		private final AtomicReference<CreateAnnouncementRequest> created = new AtomicReference<>();
+		private final AtomicReference<String> deleted = new AtomicReference<>();
+		private final List<Announcement> announcements = new ArrayList<>();
 
 		@Override
 		public CompletionStage<List<Announcement>> loadAnnouncements()
 		{
-			return CompletableFuture.completedFuture(Collections.emptyList());
+			return CompletableFuture.completedFuture(new ArrayList<>(announcements));
 		}
 
 		@Override
@@ -165,13 +238,17 @@ public class StaffPanelTest
 		public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request)
 		{
 			created.set(request);
-			return CompletableFuture.completedFuture(new Announcement("id", request.getTitle(), request.getMessage(),
-				request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Staff", false));
+			Announcement item = new Announcement("id", request.getTitle(), request.getMessage(),
+				request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Staff", false);
+			announcements.add(item);
+			return CompletableFuture.completedFuture(item);
 		}
 
 		@Override
 		public CompletionStage<ActionResult> deleteAnnouncement(String announcementId)
 		{
+			deleted.set(announcementId);
+			announcements.removeIf(item -> announcementId.equals(item.getId()));
 			return CompletableFuture.completedFuture(new ActionResult(true, "Announcement deleted"));
 		}
 

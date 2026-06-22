@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.function.Predicate;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -20,6 +21,7 @@ final class StaffPanel extends JPanel
 {
 	private final StaffService service;
 	private final Runnable dataChanged;
+	private final Predicate<String> confirmer;
 	private final JTextArea status = UiComponents.statusLabel("Ready");
 	private final JPanel content = UiComponents.contentPanel();
 	private boolean dropsPanelEnabled = true;
@@ -36,9 +38,15 @@ final class StaffPanel extends JPanel
 
 	StaffPanel(StaffService service, Runnable dataChanged)
 	{
+		this(service, dataChanged, null);
+	}
+
+	StaffPanel(StaffService service, Runnable dataChanged, Predicate<String> confirmer)
+	{
 		super(new BorderLayout());
 		this.service = service;
 		this.dataChanged = dataChanged;
+		this.confirmer = confirmer;
 		add(UiComponents.page(null, content), BorderLayout.CENTER);
 		showMenu();
 	}
@@ -53,8 +61,8 @@ final class StaffPanel extends JPanel
 		content.removeAll();
 		content.add(UiComponents.heading("Staff"));
 		JPanel menu = UiComponents.card("Menu", "", "");
-		announcementsButton = new JButton("Announcements");
-		dropsPanelButton = new JButton("Drops Panel");
+		announcementsButton = UiComponents.compact(new JButton("Announcements"));
+		dropsPanelButton = UiComponents.compact(new JButton("Drops Panel"));
 		announcementsButton.addActionListener(event -> showAnnouncementPage());
 		dropsPanelButton.addActionListener(event -> showDropsPanelPage());
 		menu.add(announcementsButton);
@@ -68,7 +76,7 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Announcements"));
-		JButton back = new JButton("Back");
+		JButton back = UiComponents.compact(new JButton("Back"));
 		back.addActionListener(event -> showMenu());
 		content.add(back);
 		content.add(createAnnouncementForm());
@@ -80,15 +88,16 @@ final class StaffPanel extends JPanel
 	private JPanel createAnnouncementForm()
 	{
 		JPanel card = UiComponents.card("Create", "", "");
-		JTextField title = new JTextField();
+		JTextField title = UiComponents.compact(new JTextField());
 		JTextArea message = new JTextArea(3, 12);
 		announcementTitle = title;
 		announcementMessage = message;
 		message.setLineWrap(true);
 		message.setWrapStyleWord(true);
-		JComboBox<String> priority = new JComboBox<>(new String[] {"normal", "high", "urgent"});
-		JComboBox<ExpiryOption> expiry = new JComboBox<>(ExpiryOption.OPTIONS);
-		JButton create = new JButton("Create");
+		UiComponents.compact(message);
+		JComboBox<String> priority = UiComponents.compact(new JComboBox<>(new String[] {"normal", "high", "urgent"}));
+		JComboBox<ExpiryOption> expiry = UiComponents.compact(new JComboBox<>(ExpiryOption.OPTIONS));
+		JButton create = UiComponents.compact(new JButton("Create"));
 		createAnnouncementButton = create;
 		create.addActionListener(event ->
 		{
@@ -133,19 +142,19 @@ final class StaffPanel extends JPanel
 
 	private void renderAnnouncementList(List<Announcement> items)
 	{
-		content.add(UiComponents.heading("Current"));
 		if (items == null || items.isEmpty())
 		{
-			content.add(UiComponents.wrapped("No active announcements."));
+			content.add(UiComponents.card("Existing Announcements", "No active announcements.", ""));
 			status.setText("No announcements");
 		}
 		else
 		{
 			status.setText(items.size() + " active");
+			content.add(UiComponents.heading("Existing Announcements"));
 			for (Announcement item : items)
 			{
 				JPanel card = UiComponents.detailsCard(item.getTitle(), preview(item.getMessage()));
-				JButton delete = new JButton("Delete");
+				JButton delete = UiComponents.compact(new JButton("Delete"));
 				delete.addActionListener(event -> deleteAnnouncement(item));
 				card.add(delete);
 				content.add(card);
@@ -178,7 +187,7 @@ final class StaffPanel extends JPanel
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Drops Panel"));
-		JButton back = new JButton("Back");
+		JButton back = UiComponents.compact(new JButton("Back"));
 		back.addActionListener(event -> showMenu());
 		content.add(back);
 		renderDropsPanelCard();
@@ -189,7 +198,7 @@ final class StaffPanel extends JPanel
 	private void renderDropsPanelCard()
 	{
 		JPanel card = UiComponents.card("State", dropsPanelEnabled ? "Enabled" : "Disabled", "");
-		JButton toggle = new JButton(dropsPanelEnabled ? "Disable Drops Panel" : "Enable Drops Panel");
+		JButton toggle = UiComponents.compact(new JButton(dropsPanelEnabled ? "Disable Drops Panel" : "Enable Drops Panel"));
 		toggle.addActionListener(event -> toggleDropsPanel(!dropsPanelEnabled));
 		card.add(toggle);
 		content.add(card);
@@ -250,6 +259,10 @@ final class StaffPanel extends JPanel
 
 	private boolean confirm(String message)
 	{
+		if (confirmer != null)
+		{
+			return confirmer.test(message);
+		}
 		return JOptionPane.showConfirmDialog(this, message, "Confirm", JOptionPane.YES_NO_OPTION)
 			== JOptionPane.YES_OPTION;
 	}

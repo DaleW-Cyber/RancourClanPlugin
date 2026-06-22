@@ -97,6 +97,58 @@ public class VerificationServiceTest
 		throw new AssertionError("Expected expired session failure");
 	}
 
+	@Test
+	public void staffProfileWithValidTokenCanCreateAndDeleteAnnouncement() throws Exception
+	{
+		FakeVerificationService service = new FakeVerificationService(new MemberProfile("Discord", "RSN", "Admin", true, "later", "now"), "staff-token");
+		StaffService staff = ApiServices.staff(new MockClanApiClient(), service);
+
+		Announcement created = staff.createAnnouncement(new CreateAnnouncementRequest("Title", "Body", "normal", "later"))
+			.toCompletableFuture().get();
+		ActionResult deleted = staff.deleteAnnouncement(created.getId()).toCompletableFuture().get();
+
+		assertEquals("Title", created.getTitle());
+		assertEquals("Announcement deleted", deleted.getMessage());
+	}
+
+	@Test
+	public void staffProfileWithMissingTokenGetsStaffSessionMessage() throws Exception
+	{
+		FakeVerificationService service = new FakeVerificationService(new MemberProfile("Discord", "RSN", "Admin", true, "later", "now"), "");
+
+		try
+		{
+			ApiServices.staff(new MockClanApiClient(), service)
+				.createAnnouncement(new CreateAnnouncementRequest("Title", "Body", "normal", "later"))
+				.toCompletableFuture().get();
+		}
+		catch (ExecutionException error)
+		{
+			assertEquals("Staff session missing. Refresh verification or link again.", error.getCause().getMessage());
+			return;
+		}
+		throw new AssertionError("Expected staff action to fail without a session token");
+	}
+
+	@Test
+	public void nonStaffCannotUseStaffActions() throws Exception
+	{
+		FakeVerificationService service = new FakeVerificationService(new MemberProfile("Discord", "RSN", "Member", false, "later", "now"), "member-token");
+
+		try
+		{
+			ApiServices.staff(new MockClanApiClient(), service)
+				.deleteAnnouncement("announcement")
+				.toCompletableFuture().get();
+		}
+		catch (ExecutionException error)
+		{
+			assertEquals("Staff verification is required for this action", error.getCause().getMessage());
+			return;
+		}
+		throw new AssertionError("Expected non-staff action to fail");
+	}
+
 	private static final class FakeVerificationService implements VerificationService
 	{
 		private final MemberProfile profile;

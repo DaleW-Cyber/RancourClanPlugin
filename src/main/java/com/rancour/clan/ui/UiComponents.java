@@ -13,6 +13,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JSeparator;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -24,6 +25,9 @@ import com.rancour.clan.api.ApiException;
 final class UiComponents
 {
 	private static final int TEXT_WIDTH = 172;
+	private static final Color CARD_BACKGROUND = new Color(45, 45, 45);
+	private static final Color CARD_BORDER = new Color(105, 105, 105);
+	private static final Color CARD_SEPARATOR = new Color(125, 125, 125);
 	private static final DateTimeFormatter SHORT_DATE =
 		DateTimeFormatter.ofPattern("dd MMM HH:mm").withZone(ZoneId.systemDefault());
 
@@ -87,37 +91,51 @@ final class UiComponents
 		row.setLayout(new BoxLayout(row, BoxLayout.Y_AXIS));
 		row.setOpaque(false);
 		row.setAlignmentX(Component.LEFT_ALIGNMENT);
-		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 		JLabel name = new JLabel("<html><b>" + html(label) + "</b></html>");
 		name.setForeground(Color.GRAY);
 		name.setAlignmentX(Component.LEFT_ALIGNMENT);
 		row.add(name);
 		row.add(wrapped(fieldValue));
 		row.add(Box.createVerticalStrut(3));
+		limitHeight(row);
 		return row;
 	}
 
 	private static JPanel card(String title)
 	{
-		JPanel card = new JPanel();
+		JPanel card = new CompactPanel();
 		card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-		card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		card.setBackground(CARD_BACKGROUND);
 		card.setAlignmentX(Component.LEFT_ALIGNMENT);
-		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 		JTextArea titleLabel = new WrappingTextArea(title, true);
 		titleLabel.setForeground(Color.WHITE);
 		card.add(titleLabel);
 		JSeparator separator = new JSeparator();
-		separator.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		separator.setForeground(CARD_SEPARATOR);
+		separator.setBackground(CARD_SEPARATOR);
 		separator.setAlignmentX(Component.LEFT_ALIGNMENT);
+		separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
 		card.add(separator);
 		card.add(Box.createVerticalStrut(3));
 		card.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createEmptyBorder(0, 0, 6, 0),
+			BorderFactory.createEmptyBorder(0, 0, 7, 0),
 			BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR),
-				BorderFactory.createEmptyBorder(6, 6, 6, 6))));
+				BorderFactory.createLineBorder(CARD_BORDER),
+				BorderFactory.createEmptyBorder(5, 6, 5, 6))));
 		return card;
+	}
+
+	static <T extends JComponent> T compact(T component)
+	{
+		component.setAlignmentX(Component.LEFT_ALIGNMENT);
+		limitHeight(component);
+		return component;
+	}
+
+	private static void limitHeight(JComponent component)
+	{
+		Dimension preferred = component.getPreferredSize();
+		component.setMaximumSize(new Dimension(Integer.MAX_VALUE, preferred.height));
 	}
 
 	static JPanel contentPanel()
@@ -231,7 +249,6 @@ final class UiComponents
 			setForeground(Color.LIGHT_GRAY);
 			setAlignmentX(Component.LEFT_ALIGNMENT);
 			setSize(new Dimension(TEXT_WIDTH, Short.MAX_VALUE));
-			setMaximumSize(new Dimension(TEXT_WIDTH, Integer.MAX_VALUE));
 		}
 
 		@Override
@@ -240,6 +257,22 @@ final class UiComponents
 			setSize(new Dimension(TEXT_WIDTH, Short.MAX_VALUE));
 			Dimension preferred = super.getPreferredSize();
 			return new Dimension(TEXT_WIDTH, preferred.height);
+		}
+
+		@Override
+		public Dimension getMaximumSize()
+		{
+			return getPreferredSize();
+		}
+	}
+
+	private static final class CompactPanel extends JPanel
+	{
+		@Override
+		public Dimension getMaximumSize()
+		{
+			Dimension preferred = getPreferredSize();
+			return new Dimension(Integer.MAX_VALUE, preferred.height);
 		}
 	}
 }

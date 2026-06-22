@@ -35,6 +35,7 @@ public final class RancourClanPanel extends PluginPanel
 	private final JButton staffButton;
 	private final StaffPanel staffPanel;
 	private final PluginSettingsService settingsService;
+	private final VerificationService verificationService;
 	private final CardLayout cardLayout;
 	private final JPanel cards;
 	private volatile boolean dropsPanelEnabled = true;
@@ -62,6 +63,7 @@ public final class RancourClanPanel extends PluginPanel
 		PluginSettingsService settingsService, boolean mockMode, Supplier<String> activeRsn)
 	{
 		super(false);
+		this.verificationService = verificationService;
 		this.settingsService = settingsService;
 		setLayout(new BorderLayout());
 		cardLayout = new CardLayout();
@@ -133,7 +135,7 @@ public final class RancourClanPanel extends PluginPanel
 	private void updateStaffAccess(MemberProfile profile)
 	{
 		dropsPanel.setProfile(profile);
-		boolean staff = profile != null && profile.isStaff();
+		boolean staff = profile != null && profile.isStaff() && !UiComponents.value(verificationService.getSessionToken()).trim().isEmpty();
 		staffButton.setVisible(staff);
 		staffButton.getParent().revalidate();
 		if (staff)

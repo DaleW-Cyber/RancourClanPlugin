@@ -6,6 +6,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import com.rancour.clan.api.ClanApiClient;
 import com.rancour.clan.api.ApiException;
 import com.rancour.clan.models.ActionResult;
@@ -22,6 +23,7 @@ import com.rancour.clan.models.Team;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
+@Slf4j
 public final class ApiServices
 {
 	private ApiServices()
@@ -79,14 +81,14 @@ public final class ApiServices
 	{
 		return new StaffService()
 		{
-			@Override public CompletionStage<List<Announcement>> loadAnnouncements() { return withStaff(verification, token -> api.fetchAnnouncements(token)); }
-			@Override public CompletionStage<List<StaffDropSubmission>> loadPendingDrops() { return withStaff(verification, token -> api.fetchPendingDrops(token)); }
-			@Override public CompletionStage<ActionResult> approveDrop(String id) { return withStaff(verification, token -> api.approveDrop(id, token)); }
-			@Override public CompletionStage<ActionResult> rejectDrop(String id) { return withStaff(verification, token -> api.rejectDrop(id, token)); }
-			@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request) { return withStaff(verification, token -> api.createAnnouncement(request, token)); }
-			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff(verification, token -> api.deleteAnnouncement(id, token)); }
-			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff(verification, token -> api.setDropsPanelEnabled(enabled, token)); }
-			@Override public CompletionStage<ActionResult> refreshEventCache() { return withStaff(verification, api::refreshEventCache); }
+			@Override public CompletionStage<List<Announcement>> loadAnnouncements() { return withStaff("loadAnnouncements", verification, token -> api.fetchAnnouncements(token)); }
+			@Override public CompletionStage<List<StaffDropSubmission>> loadPendingDrops() { return withStaff("loadPendingDrops", verification, token -> api.fetchPendingDrops(token)); }
+			@Override public CompletionStage<ActionResult> approveDrop(String id) { return withStaff("approveDrop", verification, token -> api.approveDrop(id, token)); }
+			@Override public CompletionStage<ActionResult> rejectDrop(String id) { return withStaff("rejectDrop", verification, token -> api.rejectDrop(id, token)); }
+			@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request) { return withStaff("createAnnouncement", verification, token -> api.createAnnouncement(request, token)); }
+			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff("deleteAnnouncement", verification, token -> api.deleteAnnouncement(id, token)); }
+			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff("setDropsPanelEnabled", verification, token -> api.setDropsPanelEnabled(enabled, token)); }
+			@Override public CompletionStage<ActionResult> refreshEventCache() { return withStaff("refreshEventCache", verification, api::refreshEventCache); }
 		};
 	}
 
@@ -107,18 +109,24 @@ public final class ApiServices
 		return result;
 	}
 
-	private static <T> CompletionStage<T> withStaff(VerificationService verification, AsyncCall<T> call)
+	private static <T> CompletionStage<T> withStaff(String action, VerificationService verification, AsyncCall<T> call)
 	{
 		MemberProfile profile = verification.getCurrentProfile();
-		if (!hasText(verification.getSessionToken()))
+		String token = verification.getSessionToken();
+		boolean hasProfile = profile != null;
+		boolean profileStaff = hasProfile && profile.isStaff();
+		boolean hasSessionToken = hasText(token);
+		log.info("Rancour staff action: action={} hasProfile={} profileStaff={} hasSessionToken={}",
+			action, hasProfile, profileStaff, hasSessionToken);
+		if (profileStaff && !hasSessionToken)
 		{
-			return failed("Verification session missing. Please refresh verification or link again.");
+			return failed("Staff session missing. Refresh verification or link again.");
 		}
-		if (profile == null || !profile.isStaff())
+		if (!profileStaff)
 		{
 			return failed("Staff verification is required for this action");
 		}
-		CompletionStage<T> result = call.invoke(verification.getSessionToken());
+		CompletionStage<T> result = call.invoke(token);
 		result.whenComplete((value, error) ->
 		{
 			if (isUnauthorized(error))

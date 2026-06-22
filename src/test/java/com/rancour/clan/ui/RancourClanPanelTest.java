@@ -64,6 +64,12 @@ public class RancourClanPanelTest
 	}
 
 	@Test
+	public void staffButtonRequiresSessionToken() throws Exception
+	{
+		assertFalse(panelFor(profile(true), new PluginSettings(true, java.util.Collections.emptyList()), "").isStaffButtonVisible());
+	}
+
+	@Test
 	public void dropsButtonFollowsBackendSetting() throws Exception
 	{
 		RancourClanPanel panel = panelFor(profile(true), new PluginSettings(false, java.util.Collections.singletonList("Twisted bow")));
@@ -106,6 +112,7 @@ public class RancourClanPanelTest
 		assertFalse(buttons.contains("Leave"));
 		assertFalse(allText(panel).contains("Host"));
 		assertFalse(allText(panel).contains("Status"));
+		assertFalse(allText(panel).contains("Tags"));
 	}
 
 	private static RancourClanPanel panelFor(MemberProfile profile) throws Exception
@@ -115,8 +122,13 @@ public class RancourClanPanelTest
 
 	private static RancourClanPanel panelFor(MemberProfile profile, PluginSettings settings) throws Exception
 	{
+		return panelFor(profile, settings, profile == null ? "" : "token");
+	}
+
+	private static RancourClanPanel panelFor(MemberProfile profile, PluginSettings settings, String token) throws Exception
+	{
 		MockClanApiClient api = new MockClanApiClient();
-		VerificationService verification = new FixedVerificationService(profile);
+		VerificationService verification = new FixedVerificationService(profile, token);
 		RancourClanPanel panel = new RancourClanPanel(
 			verification,
 			ApiServices.announcements(api, verification),
@@ -143,9 +155,11 @@ public class RancourClanPanelTest
 	private static final class FixedVerificationService implements VerificationService
 	{
 		private final MemberProfile profile;
+		private final String token;
 		private Consumer<MemberProfile> listener;
 
-		private FixedVerificationService(MemberProfile profile) { this.profile = profile; }
+		private FixedVerificationService(MemberProfile profile) { this(profile, profile == null ? "" : "token"); }
+		private FixedVerificationService(MemberProfile profile, String token) { this.profile = profile; this.token = token; }
 		@Override public CompletionStage<ApiHealth> testConnection() { return CompletableFuture.completedFuture(new ApiHealth("ok")); }
 		@Override public CompletionStage<VerificationStartResponse> generateLinkCode() { return CompletableFuture.completedFuture(null); }
 		@Override public CompletionStage<VerificationStatus> refreshStatus()
@@ -155,7 +169,7 @@ public class RancourClanPanelTest
 		}
 		@Override public MemberProfile getCurrentProfile() { return profile; }
 		@Override public boolean isVerified() { return profile != null; }
-		@Override public String getSessionToken() { return profile == null ? "" : "token"; }
+		@Override public String getSessionToken() { return token; }
 		@Override public void addProfileListener(Consumer<MemberProfile> listener) { this.listener = listener; }
 		@Override public void clearSession() { }
 	}
