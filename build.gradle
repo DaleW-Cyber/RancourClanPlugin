@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+group = pluginGroup
+version = pluginVersion
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri('https://repo.runelite.net')
+    }
+}
+
+dependencies {
+    compileOnly "net.runelite:client:${runeliteVersion}"
+    compileOnly "com.google.inject:guice:5.1.0"
+    annotationProcessor "org.projectlombok:lombok:1.18.34"
+    compileOnly "org.projectlombok:lombok:1.18.34"
+
+    testImplementation "junit:junit:4.13.2"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
