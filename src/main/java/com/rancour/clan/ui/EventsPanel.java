@@ -23,7 +23,7 @@ final class EventsPanel extends JPanel
 	{
 		super(new BorderLayout());
 		this.service = service;
-		JButton refresh = new JButton("Refresh Events");
+		JButton refresh = new JButton("Refresh");
 		refresh.addActionListener(event -> refresh());
 		JPanel controls = new JPanel(new BorderLayout());
 		controls.add(refresh, BorderLayout.CENTER);
@@ -47,11 +47,11 @@ final class EventsPanel extends JPanel
 	{
 		loading = false;
 		content.removeAll();
-		content.add(UiComponents.heading("Event Centre"));
+		content.add(UiComponents.heading("Events"));
 		if (error != null)
 		{
 			status.setText("Error: " + UiComponents.errorMessage(error));
-			content.add(UiComponents.wrapped("Events are unavailable. Try refresh when the API is online."));
+			content.add(UiComponents.wrapped("Events are unavailable."));
 		}
 		else if (items == null || items.isEmpty())
 		{

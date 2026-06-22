@@ -17,8 +17,8 @@
 - [x] Conditional staff page based on verified profile
 - [x] Active RuneLite account matching against API-provided linked RSNs
 - [x] Normal-width wrapping cards and shortened timestamps across all pages
-- [x] Staff announcement and pending-drop review UI
-- [x] Disabled/typed boundaries for staff actions missing an API route
+- [x] Compact Staff announcement sub-page
+- [x] Broken/unimplemented Staff controls hidden from RuneLite
 - [x] Tests for pages, verification state, detection, and duplicate prevention
 
 ## Railway API required
@@ -29,7 +29,7 @@
 - [x] Enforce authenticated linked-RSN ownership on drop submissions
 - [ ] Enforce staff authorization server-side
 - [ ] Add rate limiting, validation, audit logging, and durable idempotency
-- [ ] Decide contracts for event-cache refresh and team close/lock
+- [ ] Decide contracts for event-cache refresh and team lock
 - [ ] Return user-safe JSON errors consistently
 
 ## Discord bot required

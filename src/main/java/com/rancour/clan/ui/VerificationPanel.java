@@ -45,9 +45,9 @@ final class VerificationPanel extends JPanel
 		this.service = service;
 		this.activeRsn = activeRsn;
 		this.clipboard = clipboard;
-		JButton generate = new JButton("Generate Link Code");
-		JButton refresh = new JButton("Refresh Status");
-		JButton testConnection = new JButton("Test API Connection");
+		JButton generate = new JButton("Generate Code");
+		JButton refresh = new JButton("Refresh");
+		JButton testConnection = new JButton("Test API");
 		generate.addActionListener(event -> generateCode());
 		refresh.addActionListener(event -> refresh());
 		testConnection.addActionListener(event -> testConnection());
@@ -59,7 +59,7 @@ final class VerificationPanel extends JPanel
 		controls.add(buttons, BorderLayout.CENTER);
 		controls.add(status, BorderLayout.SOUTH);
 		content.add(UiComponents.heading("Verification"));
-		content.add(UiComponents.card("Clan account", "Generate a short-lived code, then use /plugin_link in Discord.", "No Discord token is stored in RuneLite"));
+		content.add(UiComponents.card("Link account", "Use /plugin_link in Discord.", ""));
 		add(UiComponents.page(controls, content), BorderLayout.CENTER);
 		service.addProfileListener(profile -> SwingUtilities.invokeLater(() -> showProfile(profile)));
 	}
@@ -115,9 +115,9 @@ final class VerificationPanel extends JPanel
 			setStatus("Code generated");
 			content.removeAll();
 			content.add(UiComponents.heading("Verification"));
-			JPanel card = UiComponents.detailsCard("Link code", "Use this short-lived code in Discord.",
+			JPanel card = UiComponents.detailsCard("Link code", "",
 				"Code", result.getCode(),
-				"Discord command", "/plugin_link " + result.getCode(),
+				"Discord", "/plugin_link " + result.getCode(),
 				"Expires", UiComponents.shortDate(result.getExpiresAt()));
 			JButton copy = new JButton("Copy Code");
 			copy.addActionListener(event -> copyCode(result.getCode()));
@@ -137,7 +137,7 @@ final class VerificationPanel extends JPanel
 			: "Warning: this RuneLite account is not linked to your Discord profile.";
 		content.removeAll();
 		content.add(UiComponents.heading("Verification"));
-		content.add(UiComponents.detailsCard("Verified member", "Your RuneLite session is linked to Discord.",
+		content.add(UiComponents.detailsCard("Verified", "",
 			"Discord", profile.getDiscordName(),
 			"Active RSN", active,
 			"Linked RSNs", String.join(", ", profile.getLinkedRsns()),

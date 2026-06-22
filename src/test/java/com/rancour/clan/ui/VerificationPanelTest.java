@@ -26,7 +26,7 @@ public class VerificationPanelTest
 		AtomicReference<String> copied = new AtomicReference<>();
 		VerificationPanel panel = new VerificationPanel(new LinkService(), copied::set);
 
-		button(panel, "Generate Link Code").doClick();
+		button(panel, "Generate Code").doClick();
 		SwingUtilities.invokeAndWait(() -> { });
 		button(panel, "Copy Code").doClick();
 

@@ -209,7 +209,7 @@ public final class RestClanApiClient implements ClanApiClient
 
 	private static void logProtected(String method, HttpUrl url, String token)
 	{
-		log.info("Rancour API protected action: {} {} authorization={}", method, url, hasText(token) ? "bearer-present" : "missing");
+		log.info("Rancour API protected action: {} {} hasSessionToken={}", method, url, hasText(token));
 	}
 
 	private <T> CompletionStage<T> execute(Request request, Type responseType)

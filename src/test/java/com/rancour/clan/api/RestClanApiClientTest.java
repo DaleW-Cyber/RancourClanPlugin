@@ -73,6 +73,42 @@ public class RestClanApiClientTest
 	}
 
 	@Test
+	public void protectedTeamJoinSendsBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"success\":true,\"message\":\"joined\"}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.joinTeam("team-1", "team-session").toCompletableFuture().get();
+
+		assertEquals("POST", captured.get().method());
+		assertEquals("https://api.example.test/plugin/teams/team-1/join", captured.get().url().toString());
+		assertEquals("Bearer team-session", captured.get().header("Authorization"));
+	}
+
+	@Test
+	public void protectedStaffCreateAnnouncementSendsBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200,
+				"{\"id\":\"id\",\"title\":\"Title\",\"message\":\"Body\",\"priority\":\"normal\",\"createdAt\":\"now\",\"expiresAt\":\"later\",\"author\":\"Staff\",\"restricted\":false}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.createAnnouncement(new com.rancour.clan.models.CreateAnnouncementRequest("Title", "Body", "normal", "later"), "staff-session")
+			.toCompletableFuture().get();
+
+		assertEquals("POST", captured.get().method());
+		assertEquals("https://api.example.test/plugin/staff/announcements", captured.get().url().toString());
+		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+	}
+
+	@Test
 	public void nonSuccessIncludesStatusAndSafeApiMessage() throws Exception
 	{
 		RestClanApiClient api = new RestClanApiClient(

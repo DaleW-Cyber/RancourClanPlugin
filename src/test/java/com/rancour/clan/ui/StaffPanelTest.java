@@ -12,12 +12,16 @@ import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.services.StaffService;
 import java.time.Duration;
 import java.time.Instant;
+import java.awt.Component;
+import java.awt.Container;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.swing.AbstractButton;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
 
@@ -32,6 +36,7 @@ public class StaffPanelTest
 
 		SwingUtilities.invokeAndWait(() ->
 		{
+			panel.showAnnouncementPage();
 			panel.announcementTitle.setText("Clan update");
 			panel.announcementMessage.setText("Body for the news page");
 			panel.createAnnouncementButton.doClick();
@@ -60,9 +65,66 @@ public class StaffPanelTest
 		RecordingStaffService service = new RecordingStaffService();
 		StaffPanel panel = new StaffPanel(service);
 
-		SwingUtilities.invokeAndWait(() -> panel.createAnnouncementButton.doClick());
+		SwingUtilities.invokeAndWait(() ->
+		{
+			panel.showAnnouncementPage();
+			panel.createAnnouncementButton.doClick();
+		});
 
 		assertFalse(service.created.get() != null);
+	}
+
+	@Test
+	public void staffMenuHidesBrokenOrDiscordOnlyTools() throws Exception
+	{
+		StaffPanel panel = new StaffPanel(new RecordingStaffService());
+		SwingUtilities.invokeAndWait(() -> { });
+
+		String text = allText(panel);
+		assertTrue(text.contains("Staff"));
+		assertTrue(text.contains("Announcements"));
+		assertFalse(text.contains("Pending Drops"));
+		assertFalse(text.contains("Refresh Event Cache"));
+		assertFalse(text.contains("Close Team"));
+		assertFalse(text.contains("Lock Team"));
+		assertFalse(hasDisabledButton(panel));
+	}
+
+	private static String allText(Container container)
+	{
+		StringBuilder text = new StringBuilder();
+		for (Component component : container.getComponents())
+		{
+			if (component instanceof JTextArea)
+			{
+				text.append(((JTextArea) component).getText()).append('\n');
+			}
+			if (component instanceof AbstractButton)
+			{
+				text.append(((AbstractButton) component).getText()).append('\n');
+			}
+			if (component instanceof Container)
+			{
+				text.append(allText((Container) component));
+			}
+		}
+		return text.toString();
+	}
+
+	private static boolean hasDisabledButton(Container container)
+	{
+		for (Component component : container.getComponents())
+		{
+			if (component instanceof AbstractButton && !component.isEnabled())
+			{
+				return true;
+			}
+			if (component instanceof Container && hasDisabledButton((Container) component))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static final class RecordingStaffService implements StaffService

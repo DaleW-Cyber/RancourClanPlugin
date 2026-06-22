@@ -12,7 +12,7 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - Valuable/untradeable game-chat and high-value NPC-loot detection with 30-second duplicate prevention
 - Explicit drop confirmation before API submission
 - Team Finder with verified Join and Leave actions
-- Staff-only navigation for announcements and pending-drop review
+- Staff-only menu with compact announcement creation
 - Explicit mock mode for local development
 
 The required backend contract is documented in [docs/API_CONTRACT.md](docs/API_CONTRACT.md). Release readiness is tracked in [docs/EARLY_RELEASE_CHECKLIST.md](docs/EARLY_RELEASE_CHECKLIST.md).
@@ -76,7 +76,7 @@ When running with `./gradlew run`, API diagnostics are written to the Gradle/Int
 
 `Show announcement notifications in chat` enables short `[Rancour]` game-chat notices for announcement IDs not previously seen on this RuneLite profile. `Minimum announcement priority` can be `normal`, `high`, or `urgent`. Seen IDs are stored locally; announcement bodies and session credentials are never written to chat.
 
-`Enable automatic refresh` is on by default. `Refresh interval seconds` defaults to 60 and is clamped to a minimum of 30 seconds. Background refresh updates verification, announcements, events, teams, and staff pending drops without blocking the RuneLite client thread. Manual Refresh buttons remain available as a fallback.
+`Enable automatic refresh` is on by default. `Refresh interval seconds` defaults to 60 and is clamped to a minimum of 30 seconds. Background refresh updates verification, announcements, events, and teams without blocking the RuneLite client thread. Manual Refresh buttons remain available as a fallback.
 
 `Mock mode` is disabled by default. When enabled, every page uses clearly labelled local mock data and an in-memory mock session. Mock mode never writes its session token to RuneLite configuration.
 
@@ -93,7 +93,7 @@ The live verification session token and pending verification ID are stored under
 3. Select `Refresh Status`.
 4. The returned API session and member profile are stored/displayed.
 
-Protected actions such as Event Join, Team Join, Drop Submit, and Staff tools require both a verified profile and the stored API session token. If that token is missing or expired, the panel shows `Your verification session has expired. Refresh verification or link again.`
+Protected actions such as Event Join, Team Join, Drop Submit, and Staff tools require the stored API session token and send `Authorization: Bearer <sessionToken>`. If that token is missing, the panel shows `Verification session missing. Please refresh verification or link again.` If the API reports an expired/revoked session, RuneLite clears the local session and asks the user to refresh or link again.
 
 The plugin compares the currently logged-in RuneLite account with `linkedRsns` from the API. Unknown accounts show a warning and cannot confirm a drop. When logged out, the panel asks the player to log in before confirming the active RSN.
 
@@ -105,7 +105,7 @@ Each submission includes item name, source, current RuneLite RSN, UTC timestamp,
 
 ### Staff access
 
-The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side.
+The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side. The current RuneLite Staff menu shows only working announcement creation; pending drop approval remains in Discord.
 
 Staff announcement expiry is selected from fixed options: 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, or 7 days. RuneLite calculates `expiresAt` in UTC, and the API rejects any expiry longer than seven days.
 
@@ -127,13 +127,13 @@ src/main/java/com/rancour/clan/
 
 `ClanApiClient` is the transport boundary. `RestClanApiClient` uses RuneLite's shared `OkHttpClient` asynchronously and parses typed Gson models. UI components only call services and marshal completion updates back to Swing's event thread. No HTTP request blocks the RuneLite client thread.
 
-`ApiServices` centralizes verification checks. Events, drops, and team membership require a verified profile and session. Staff operations additionally require `profile.staff=true`. The Railway API remains the final authority.
+`ApiServices` centralizes session checks. Events, drops, and team membership require a stored plugin session token; Staff operations additionally require the current profile to report `staff=true`. The Railway API remains the final authority.
 
 ## What works without the backend
 
 - Plugin compilation and local RuneLite launch
 - All six pages and their loading/error/empty layouts
-- Mock verification, announcements, events, drops, teams, and staff review
+- Mock verification, announcements, events, drops, teams, and staff announcement creation
 - Chat drop candidate detection, duplicate prevention, confirmation, and dismissal
 - Client-side verified/staff action guards
 

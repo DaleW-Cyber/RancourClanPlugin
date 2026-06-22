@@ -85,11 +85,7 @@ public final class ApiServices
 	{
 		if (!hasText(verification.getSessionToken()))
 		{
-			return failed("Your verification session has expired. Refresh verification or link again.");
-		}
-		if (verification.getCurrentProfile() == null)
-		{
-			return failed("Verify your clan account before using this action");
+			return failed("Verification session missing. Please refresh verification or link again.");
 		}
 		CompletionStage<T> result = call.invoke(verification.getSessionToken());
 		result.whenComplete((value, error) ->
@@ -107,7 +103,7 @@ public final class ApiServices
 		MemberProfile profile = verification.getCurrentProfile();
 		if (!hasText(verification.getSessionToken()))
 		{
-			return failed("Your verification session has expired. Refresh verification or link again.");
+			return failed("Verification session missing. Please refresh verification or link again.");
 		}
 		if (profile == null || !profile.isStaff())
 		{

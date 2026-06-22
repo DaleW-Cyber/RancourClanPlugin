@@ -31,9 +31,7 @@ final class DropsPanel extends JPanel
 		this.service = service;
 		this.activeRsn = activeRsn;
 		content.add(UiComponents.heading("Drops"));
-		content.add(UiComponents.card("Confirmation required",
-			"Candidate drops detected from game chat appear here. Nothing is submitted automatically.",
-			"Duplicate detections are suppressed briefly"));
+		content.add(UiComponents.card("Confirm drops", "Detected drops appear here.", ""));
 		JPanel controls = new JPanel(new BorderLayout());
 		controls.add(status, BorderLayout.CENTER);
 		add(UiComponents.page(controls, content), BorderLayout.CENTER);
@@ -47,7 +45,7 @@ final class DropsPanel extends JPanel
 		boolean linked = loggedIn && profile != null && profile.isLinkedRsn(currentRsn);
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
-		JPanel card = UiComponents.detailsCard(newCandidate.getItemName(), "Review this candidate before submitting.",
+		JPanel card = UiComponents.detailsCard(newCandidate.getItemName(), "",
 			"Source", newCandidate.getSource(),
 			"RSN", newCandidate.getRsn(),
 			"Detected", UiComponents.shortDate(newCandidate.getDetectedAt()),

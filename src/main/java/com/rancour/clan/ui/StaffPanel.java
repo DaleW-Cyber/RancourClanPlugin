@@ -1,20 +1,16 @@
 package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.concurrent.CompletionStage;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import com.rancour.clan.models.ActionResult;
+import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
-import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.services.StaffService;
 
 final class StaffPanel extends JPanel
@@ -22,11 +18,11 @@ final class StaffPanel extends JPanel
 	private final StaffService service;
 	private final Runnable announcementCreated;
 	private final JTextArea status = UiComponents.statusLabel("Staff tools ready");
-	private final JPanel pending = UiComponents.contentPanel();
+	private final JPanel content = UiComponents.contentPanel();
+	JButton announcementsButton;
 	JTextField announcementTitle;
 	JTextArea announcementMessage;
 	JButton createAnnouncementButton;
-	private boolean loadingPending;
 
 	StaffPanel(StaffService service)
 	{
@@ -38,155 +34,107 @@ final class StaffPanel extends JPanel
 		super(new BorderLayout());
 		this.service = service;
 		this.announcementCreated = announcementCreated;
-		JPanel content = UiComponents.contentPanel();
-		content.add(UiComponents.heading("Staff Administration"));
-		content.add(createAnnouncementForm());
-		content.add(eventCacheControls());
-		content.add(teamContractNotice());
-		content.add(pending);
-		JButton refresh = new JButton("Refresh Pending Drops");
-		refresh.addActionListener(event -> refreshPending());
-		JPanel controls = new JPanel(new BorderLayout());
-		controls.add(refresh, BorderLayout.CENTER);
-		controls.add(status, BorderLayout.SOUTH);
-		add(UiComponents.page(controls, content), BorderLayout.CENTER);
+		add(UiComponents.page(null, content), BorderLayout.CENTER);
+		showMenu();
 	}
 
 	void refreshPending()
 	{
-		if (loadingPending)
-		{
-			return;
-		}
-		loadingPending = true;
-		status.setText("Loading pending drops...");
-		service.loadPendingDrops().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> renderPending(items, error)));
+		// RuneLite pending-drop review is intentionally hidden. Staff review happens in Discord.
+	}
+
+	void showMenu()
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Staff"));
+		JPanel menu = UiComponents.card("Tools", "", "");
+		announcementsButton = new JButton("Announcements");
+		announcementsButton.addActionListener(event -> showAnnouncementPage());
+		menu.add(announcementsButton);
+		content.add(menu);
+		content.add(status);
+		refreshContent();
+	}
+
+	void showAnnouncementPage()
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Announcements"));
+		JButton back = new JButton("Back");
+		back.addActionListener(event -> showMenu());
+		content.add(back);
+		content.add(createAnnouncementForm());
+		content.add(status);
+		refreshContent();
 	}
 
 	private JPanel createAnnouncementForm()
 	{
-		JPanel card = UiComponents.card("Create announcement", "Publishes through the Rancour API only.", "Expiry is capped at 7 days");
+		JPanel card = UiComponents.card("Create", "", "");
 		JTextField title = new JTextField();
-		JTextArea message = new JTextArea(4, 12);
+		JTextArea message = new JTextArea(3, 12);
 		announcementTitle = title;
 		announcementMessage = message;
 		message.setLineWrap(true);
 		message.setWrapStyleWord(true);
 		JComboBox<String> priority = new JComboBox<>(new String[] {"normal", "high", "urgent"});
 		JComboBox<ExpiryOption> expiry = new JComboBox<>(ExpiryOption.OPTIONS);
-		JButton create = new JButton("Create Announcement");
+		JButton create = new JButton("Create");
 		createAnnouncementButton = create;
 		create.addActionListener(event ->
 		{
 			if (title.getText().trim().isEmpty() || message.getText().trim().isEmpty())
 			{
-				status.setText("Title and message are required");
+				status.setText("Title and body are required");
 				return;
 			}
 			create.setEnabled(false);
-			status.setText("Creating announcement...");
+			status.setText("Creating...");
 			ExpiryOption selectedExpiry = (ExpiryOption) expiry.getSelectedItem();
 			service.createAnnouncement(new CreateAnnouncementRequest(title.getText().trim(), message.getText().trim(),
-				(String) priority.getSelectedItem(), selectedExpiry == null ? null : selectedExpiry.expiresAt())).whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
-				{
-					create.setEnabled(true);
-					if (error != null)
-					{
-						status.setText("Error: " + UiComponents.errorMessage(error));
-						return;
-					}
-					title.setText("");
-					message.setText("");
-					priority.setSelectedItem("normal");
-					expiry.setSelectedIndex(0);
-					status.setText("Announcement created: " + result.getTitle());
-					announcementCreated.run();
-				}));
+				(String) priority.getSelectedItem(), selectedExpiry == null ? null : selectedExpiry.expiresAt()))
+				.whenComplete((result, error) -> SwingUtilities.invokeLater(() -> onAnnouncementCreated(
+					title, message, priority, expiry, create, result, error)));
 		});
 		card.add(UiComponents.wrapped("Title"));
 		card.add(title);
-		card.add(UiComponents.wrapped("Message"));
+		card.add(UiComponents.wrapped("Body"));
 		card.add(message);
 		card.add(UiComponents.wrapped("Priority"));
 		card.add(priority);
-		card.add(UiComponents.wrapped("Expires at (optional)"));
+		card.add(UiComponents.wrapped("Expiry"));
 		card.add(expiry);
 		card.add(create);
 		return card;
 	}
 
-	private JPanel eventCacheControls()
+	private void onAnnouncementCreated(
+		JTextField title,
+		JTextArea message,
+		JComboBox<String> priority,
+		JComboBox<ExpiryOption> expiry,
+		JButton create,
+		Announcement result,
+		Throwable error)
 	{
-		JPanel card = UiComponents.card("Event cache", "Request a refresh of the Discord-event cache.", "Requires a future Railway API endpoint");
-		JButton refresh = new JButton("Refresh Event Cache");
-		refresh.addActionListener(event -> action(service.refreshEventCache()));
-		card.add(refresh);
-		return card;
-	}
-
-	private JPanel teamContractNotice()
-	{
-		JPanel card = UiComponents.card("Team moderation", "Team close is available from the Team Finder workflow.", "A separate staff lock workflow still needs an API contract");
-		JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
-		JButton close = new JButton("Close Team");
-		JButton lock = new JButton("Lock Team");
-		close.setEnabled(false);
-		lock.setEnabled(false);
-		actions.add(close);
-		actions.add(lock);
-		card.add(actions);
-		return card;
-	}
-
-	private void renderPending(List<StaffDropSubmission> items, Throwable error)
-	{
-		loadingPending = false;
-		pending.removeAll();
-		pending.add(UiComponents.heading("Pending Drops"));
+		create.setEnabled(true);
 		if (error != null)
 		{
 			status.setText("Error: " + UiComponents.errorMessage(error));
-			pending.add(UiComponents.wrapped("Pending submissions could not be loaded."));
+			return;
 		}
-		else if (items == null || items.isEmpty())
-		{
-			status.setText("No pending drops");
-			pending.add(UiComponents.wrapped("The review queue is empty."));
-		}
-		else
-		{
-			status.setText(items.size() + " pending drop(s)");
-			for (StaffDropSubmission item : items)
-			{
-				JPanel card = UiComponents.detailsCard(item.getItemName(), "",
-					"Source", item.getSource(),
-					"RSN", item.getRsn(),
-					"Submitted", UiComponents.shortDate(item.getSubmittedAt()),
-					"Status", item.getStatus());
-				JPanel buttons = new JPanel(new GridLayout(2, 1, 0, 4));
-				JButton approve = new JButton("Approve");
-				JButton reject = new JButton("Reject");
-				approve.addActionListener(event -> action(service.approveDrop(item.getId())));
-				reject.addActionListener(event -> action(service.rejectDrop(item.getId())));
-				buttons.add(approve);
-				buttons.add(reject);
-				card.add(buttons);
-				pending.add(card);
-			}
-			pending.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
-		}
-		pending.revalidate();
-		pending.repaint();
+		title.setText("");
+		message.setText("");
+		priority.setSelectedItem("normal");
+		expiry.setSelectedIndex(0);
+		status.setText("Created: " + result.getTitle());
+		announcementCreated.run();
 	}
 
-	private void action(CompletionStage<ActionResult> action)
+	private void refreshContent()
 	{
-		status.setText("Saving staff action...");
-		action.whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
-		{
-			status.setText(error == null ? result.getMessage() : "Error: " + UiComponents.errorMessage(error));
-			if (error == null) { refreshPending(); }
-		}));
+		content.revalidate();
+		content.repaint();
 	}
 
 	private static final class ExpiryOption
@@ -222,4 +170,5 @@ final class StaffPanel extends JPanel
 			return label;
 		}
 	}
+
 }

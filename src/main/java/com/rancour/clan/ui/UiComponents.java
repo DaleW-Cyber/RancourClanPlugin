@@ -22,17 +22,17 @@ import com.rancour.clan.api.ApiException;
 
 final class UiComponents
 {
-	private static final int TEXT_WIDTH = 138;
+	private static final int TEXT_WIDTH = 172;
 	private static final DateTimeFormatter SHORT_DATE =
-		DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm").withZone(ZoneId.systemDefault());
+		DateTimeFormatter.ofPattern("dd MMM HH:mm").withZone(ZoneId.systemDefault());
 
 	private UiComponents() { }
 
 	static JLabel heading(String text)
 	{
-		JLabel label = new JLabel("<html><h2>" + html(text) + "</h2></html>");
+		JLabel label = new JLabel("<html><b>" + html(text) + "</b></html>");
 		label.setForeground(Color.WHITE);
-		label.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+		label.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		return label;
 	}
 
@@ -92,7 +92,7 @@ final class UiComponents
 		name.setAlignmentX(Component.LEFT_ALIGNMENT);
 		row.add(name);
 		row.add(wrapped(fieldValue));
-		row.add(Box.createVerticalStrut(5));
+		row.add(Box.createVerticalStrut(3));
 		return row;
 	}
 
@@ -104,12 +104,12 @@ final class UiComponents
 		card.setAlignmentX(Component.LEFT_ALIGNMENT);
 		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 		card.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createEmptyBorder(0, 0, 8, 0),
-			BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+			BorderFactory.createEmptyBorder(0, 0, 6, 0),
+			BorderFactory.createEmptyBorder(6, 6, 6, 6)));
 		JTextArea titleLabel = new WrappingTextArea(title, true);
 		titleLabel.setForeground(Color.WHITE);
 		card.add(titleLabel);
-		card.add(Box.createVerticalStrut(5));
+		card.add(Box.createVerticalStrut(3));
 		return card;
 	}
 
@@ -118,7 +118,7 @@ final class UiComponents
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		content.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 		content.setAlignmentX(Component.LEFT_ALIGNMENT);
 		return content;
 	}

@@ -46,7 +46,7 @@ public class RancourClanPanelTest
 		assertTrue(buttons.contains("Drops"));
 		assertTrue(buttons.contains("Teams"));
 		assertTrue(buttons.contains("Staff"));
-		assertTrue(buttons.contains("Test API Connection"));
+		assertTrue(buttons.contains("Test API"));
 	}
 
 	@Test

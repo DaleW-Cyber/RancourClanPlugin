@@ -224,6 +224,12 @@ Requires authentication.
 
 The API records the authenticated profile as host. Staff-hosted teams require API-derived staff status.
 
+Discord bot Team Finder actions use internal API routes with `X-Rancour-Bot-Token` and `discordUserId`. They do not use RuneLite bearer sessions. An unlinked Discord user should receive:
+
+```json
+{ "message": "Link your RuneLite account first with /plugin_link." }
+```
+
 ## Staff drop review
 
 All staff routes require an authenticated profile with server-side staff authorization.

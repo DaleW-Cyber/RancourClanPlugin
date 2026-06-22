@@ -20,7 +20,7 @@ final class AnnouncementsPanel extends JPanel
 	{
 		super(new BorderLayout());
 		this.service = service;
-		JButton refresh = new JButton("Refresh Announcements");
+		JButton refresh = new JButton("Refresh");
 		refresh.addActionListener(event -> refresh());
 		JPanel controls = new JPanel(new BorderLayout());
 		controls.add(refresh, BorderLayout.CENTER);
@@ -48,7 +48,7 @@ final class AnnouncementsPanel extends JPanel
 		if (error != null)
 		{
 			status.setText("Error: " + UiComponents.errorMessage(error));
-			content.add(UiComponents.wrapped("Announcements are unavailable. The rest of the plugin remains usable."));
+			content.add(UiComponents.wrapped("Announcements are unavailable."));
 		}
 		else if (items == null || items.isEmpty())
 		{
