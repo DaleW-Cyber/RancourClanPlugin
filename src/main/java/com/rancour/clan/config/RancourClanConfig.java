@@ -30,6 +30,26 @@ public interface RancourClanConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "announcementChatNotifications",
+		name = "Show announcement notifications in chat",
+		description = "Show a short game-chat message when the API returns a new announcement"
+	)
+	default boolean announcementChatNotifications()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "announcementMinimumPriority",
+		name = "Minimum announcement priority",
+		description = "Lowest announcement priority shown in game chat"
+	)
+	default AnnouncementPriority announcementMinimumPriority()
+	{
+		return AnnouncementPriority.NORMAL;
+	}
+
+	@ConfigItem(
 		keyName = "minimumDropValue",
 		name = "Minimum drop value",
 		description = "Minimum total GE value for NPC loot confirmation prompts"

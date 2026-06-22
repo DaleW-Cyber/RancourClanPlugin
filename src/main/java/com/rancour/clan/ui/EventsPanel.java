@@ -15,7 +15,7 @@ import com.rancour.clan.services.EventService;
 final class EventsPanel extends JPanel
 {
 	private final EventService service;
-	private final JLabel status = new JLabel("Not loaded");
+	private final JLabel status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
 	EventsPanel(EventService service)
@@ -49,16 +49,18 @@ final class EventsPanel extends JPanel
 		else if (items == null || items.isEmpty())
 		{
 			status.setText("No upcoming events");
-			content.add(UiComponents.wrapped("No open events were returned."));
+			content.add(UiComponents.wrapped("No events available for your Discord roles."));
 		}
 		else
 		{
 			status.setText(items.size() + " event(s)");
 			for (ClanEvent item : items)
 			{
-				JPanel card = UiComponents.card(item.getName(), item.getDescription(),
-					item.getStartTime() + " | Host: " + item.getHost() + " | " + item.getStatus()
-						+ " | Signups: " + item.getSignupCount());
+				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(),
+					"Starts", item.getStartTime(),
+					"Host", item.getHost(),
+					"Status", item.getStatus(),
+					"Signups", String.valueOf(item.getSignupCount()));
 				JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
 				JButton join = new JButton("Join");
 				JButton leave = new JButton("Leave");
@@ -79,7 +81,14 @@ final class EventsPanel extends JPanel
 		status.setText("Saving event signup...");
 		action.whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
 		{
-			status.setText(error == null ? result.getMessage() : "Error: " + UiComponents.errorMessage(error));
+			if (error != null && UiComponents.isApiStatus(error, 403))
+			{
+				status.setText("You do not have access to this event.");
+			}
+			else
+			{
+				status.setText(error == null ? result.getMessage() : "Error: " + UiComponents.errorMessage(error));
+			}
 			if (error == null)
 			{
 				refresh();

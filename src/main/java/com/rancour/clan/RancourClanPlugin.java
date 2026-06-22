@@ -13,6 +13,7 @@ import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.ItemStack;
@@ -28,13 +29,16 @@ import com.rancour.clan.api.RestClanApiClient;
 import com.rancour.clan.config.RancourClanConfig;
 import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.services.AnnouncementService;
+import com.rancour.clan.services.AnnouncementNotifier;
 import com.rancour.clan.services.ApiServices;
 import com.rancour.clan.services.DropService;
 import com.rancour.clan.services.DropDetector;
 import com.rancour.clan.services.DuplicateDropGuard;
 import com.rancour.clan.services.EventService;
 import com.rancour.clan.services.InMemorySessionStore;
+import com.rancour.clan.services.NotifyingAnnouncementService;
 import com.rancour.clan.services.RuneLiteSessionStore;
+import com.rancour.clan.services.RuneLiteSeenAnnouncementStore;
 import com.rancour.clan.services.SessionStore;
 import com.rancour.clan.services.StaffService;
 import com.rancour.clan.services.TeamService;
@@ -186,9 +190,16 @@ public class RancourClanPlugin extends Plugin
 	}
 
 	@Provides
-	AnnouncementService provideAnnouncementService(ClanApiClient api, VerificationService verification)
+	AnnouncementService provideAnnouncementService(ClanApiClient api, VerificationService verification,
+		RancourClanConfig config, ConfigManager configManager, ClientThread clientThread, Client client)
 	{
-		return ApiServices.announcements(api, verification);
+		AnnouncementService service = ApiServices.announcements(api, verification);
+		AnnouncementNotifier notifier = new AnnouncementNotifier(
+			new RuneLiteSeenAnnouncementStore(configManager),
+			message -> clientThread.invokeLater(() -> client.addChatMessage(
+				ChatMessageType.GAMEMESSAGE, "", message, null))
+		);
+		return new NotifyingAnnouncementService(service, notifier, config);
 	}
 
 	@Provides

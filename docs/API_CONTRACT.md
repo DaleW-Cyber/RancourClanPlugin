@@ -8,7 +8,7 @@ This document defines the early-release contract between the RuneLite plugin and
 - Request and response bodies use `application/json`.
 - Times use ISO-8601 UTC strings, for example `2026-06-22T18:30:00Z`.
 - Authenticated requests use `Authorization: Bearer <sessionToken>`.
-- Public announcement/event/team reads may omit authorization. If a token is supplied, the API may include member-specific fields.
+- Public announcement/event/team reads may omit authorization. If a token is supplied, the API filters member-specific content server-side.
 - IDs are opaque strings.
 - Success responses must contain JSON; the client treats an empty body as an error.
 - Error responses should use `{ "message": "User-friendly explanation" }` with an appropriate HTTP status.
@@ -112,7 +112,10 @@ Returns:
     "host": "Host Name",
     "status": "open",
     "signupCount": 8,
-    "joined": false
+    "joined": false,
+    "visibility": "restricted",
+    "requiredRoleIds": ["123456789012345678"],
+    "sourceChannelId": "234567890123456789"
   }
 ]
 ```
@@ -126,7 +129,13 @@ Require authentication. Body is `{}`. Return:
 { "success": true, "message": "Event signup updated" }
 ```
 
-The API owns Discord event participation synchronization and idempotency.
+`visibility` is one of `public`, `member`, `staff`, or `restricted`. Anonymous callers receive only public events. Verified callers receive member events; staff events require API-derived staff status; restricted events require at least one `requiredRoleIds` match against the Discord roles stored during verification. `sourceChannelId` may be null for external Discord events.
+
+The API owns Discord event participation synchronization and idempotency. Join and Leave must enforce the same visibility rule as the list endpoint. A denied action returns HTTP `403` with:
+
+```json
+{ "message": "You do not have access to this event" }
+```
 
 ## Drops
 

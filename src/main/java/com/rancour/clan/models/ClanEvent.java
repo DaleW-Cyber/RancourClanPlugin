@@ -1,5 +1,7 @@
 package com.rancour.clan.models;
 
+import java.util.List;
+
 public final class ClanEvent
 {
 	private final String id;
@@ -10,9 +12,13 @@ public final class ClanEvent
 	private final String status;
 	private final int signupCount;
 	private final boolean joined;
+	private final String visibility;
+	private final List<String> requiredRoleIds;
+	private final String sourceChannelId;
 
 	public ClanEvent(String id, String name, String startTime, String description, String host,
-		String status, int signupCount, boolean joined)
+		String status, int signupCount, boolean joined, String visibility, List<String> requiredRoleIds,
+		String sourceChannelId)
 	{
 		this.id = id;
 		this.name = name;
@@ -22,6 +28,9 @@ public final class ClanEvent
 		this.status = status;
 		this.signupCount = signupCount;
 		this.joined = joined;
+		this.visibility = visibility;
+		this.requiredRoleIds = requiredRoleIds;
+		this.sourceChannelId = sourceChannelId;
 	}
 
 	public String getId() { return id; }
@@ -32,4 +41,7 @@ public final class ClanEvent
 	public String getStatus() { return status; }
 	public int getSignupCount() { return signupCount; }
 	public boolean isJoined() { return joined; }
+	public String getVisibility() { return visibility; }
+	public List<String> getRequiredRoleIds() { return requiredRoleIds; }
+	public String getSourceChannelId() { return sourceChannelId; }
 }

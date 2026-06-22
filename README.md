@@ -7,8 +7,8 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - Discord link-code generation and verification status refresh
 - RuneLite config-backed API session persistence
 - Verified profile display: Discord name, RSN, clan rank, staff status, expiry, and last checked time
-- Public and restricted announcement feed with loading, empty, refresh, and error states
-- Discord-backed event list with verified Join and Leave actions
+- Public and restricted announcement feed with loading, empty, refresh, error, and optional non-duplicating chat notifications
+- Discord-backed, API role-filtered event list with visibility-checked Join and Leave actions
 - Valuable/untradeable game-chat and high-value NPC-loot detection with 30-second duplicate prevention
 - Explicit drop confirmation before API submission
 - Team Finder with verified Join and Leave actions
@@ -74,6 +74,8 @@ The value is trimmed and normalized so trailing slashes do not create duplicate 
 
 When running with `./gradlew run`, API diagnostics are written to the Gradle/IntelliJ run console. Verification start logs the complete request URL. Failed HTTP responses log the status and a redacted, size-limited response body, while connection failures include their stack trace. Authorization values, session tokens, and common secret fields are never intentionally logged.
 
+`Show announcement notifications in chat` enables short `[Rancour]` game-chat notices for announcement IDs not previously seen on this RuneLite profile. `Minimum announcement priority` can be `normal`, `high`, or `urgent`. Seen IDs are stored locally; announcement bodies and session credentials are never written to chat.
+
 `Mock mode` is disabled by default. When enabled, every page uses clearly labelled local mock data and an in-memory mock session. Mock mode never writes its session token to RuneLite configuration.
 
 `Minimum drop value` defaults to 1,000,000 GP and controls which NPC loot events create a confirmation prompt. Game-chat valuable/untradeable notifications are also detected independently of this threshold.
@@ -84,7 +86,7 @@ The live verification session token and pending verification ID are stored under
 
 ### Verification
 
-1. Select `Generate Link Code`.
+1. Select `Generate Link Code`, then optionally use `Copy Code`.
 2. Use `/plugin_link CODE` in Discord before expiry.
 3. Select `Refresh Status`.
 4. The returned API session and member profile are stored/displayed.
@@ -97,7 +99,11 @@ Each submission includes item name, source, current RSN, UTC timestamp, and dete
 
 ### Staff access
 
-The Staff page is added only after `/plugin/me` or verification status identifies the member as staff. Client-side visibility is convenience only; the API must enforce staff authorization on every staff endpoint.
+The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side.
+
+### Event visibility
+
+The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. Join and Leave repeat the same server-side check.
 
 ## Architecture
 

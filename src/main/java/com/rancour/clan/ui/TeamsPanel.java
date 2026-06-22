@@ -15,7 +15,7 @@ import com.rancour.clan.services.TeamService;
 final class TeamsPanel extends JPanel
 {
 	private final TeamService service;
-	private final JLabel status = new JLabel("Not loaded");
+	private final JLabel status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
 	TeamsPanel(TeamService service)
@@ -56,11 +56,15 @@ final class TeamsPanel extends JPanel
 			status.setText(items.size() + " team(s)");
 			for (Team item : items)
 			{
-				String details = "Host: " + item.getHost() + " | Roles: " + String.join(", ", item.getRequiredRoles())
-					+ " | Members: " + item.getCurrentMembers() + "/" + item.getCapacity() + " | World: " + item.getWorld()
-					+ " | Voice: " + (item.isVoiceRequired() ? "Required" : "Optional");
-				String tags = (item.isStaffHosted() ? "Staff-hosted | " : "") + String.join(", ", item.getTags()) + " | " + item.getStatus();
-				JPanel card = UiComponents.card(item.getActivity(), details, tags);
+				String tags = (item.isStaffHosted() ? "Staff-hosted, " : "") + String.join(", ", item.getTags());
+				JPanel card = UiComponents.detailsCard(item.getActivity(), "",
+					"Host", item.getHost(),
+					"Required roles", String.join(", ", item.getRequiredRoles()),
+					"Members", item.getCurrentMembers() + "/" + item.getCapacity(),
+					"World", String.valueOf(item.getWorld()),
+					"Voice", item.isVoiceRequired() ? "Required" : "Optional",
+					"Status", item.getStatus(),
+					"Tags", tags);
 				JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
 				JButton join = new JButton("Join");
 				JButton leave = new JButton("Leave");

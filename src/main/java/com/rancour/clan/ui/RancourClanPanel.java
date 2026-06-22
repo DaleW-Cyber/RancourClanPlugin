@@ -22,6 +22,8 @@ public final class RancourClanPanel extends PluginPanel
 	private final DropsPanel dropsPanel;
 	private final JButton staffButton;
 	private final StaffPanel staffPanel;
+	private final CardLayout cardLayout;
+	private final JPanel cards;
 
 	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
 		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
@@ -29,8 +31,8 @@ public final class RancourClanPanel extends PluginPanel
 	{
 		super(false);
 		setLayout(new BorderLayout());
-		CardLayout cardLayout = new CardLayout();
-		JPanel cards = new JPanel(cardLayout);
+		cardLayout = new CardLayout();
+		cards = new JPanel(cardLayout);
 		VerificationPanel verificationPanel = new VerificationPanel(verificationService);
 		dropsPanel = new DropsPanel(dropService);
 		staffPanel = new StaffPanel(staffService);
@@ -77,6 +79,15 @@ public final class RancourClanPanel extends PluginPanel
 		{
 			staffPanel.refreshPending();
 		}
+		else
+		{
+			cardLayout.show(cards, "verification");
+		}
+	}
+
+	boolean isStaffButtonVisible()
+	{
+		return staffButton.isVisible();
 	}
 
 	private static JButton button(String label, CardLayout layout, JPanel cards, String page)

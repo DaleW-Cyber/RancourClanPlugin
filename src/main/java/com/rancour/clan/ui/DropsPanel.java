@@ -12,7 +12,7 @@ import com.rancour.clan.services.DropService;
 final class DropsPanel extends JPanel
 {
 	private final DropService service;
-	private final JLabel status = new JLabel("Waiting for a candidate drop");
+	private final JLabel status = UiComponents.statusLabel("Waiting for a candidate drop");
 	private final JPanel content = UiComponents.contentPanel();
 	private DropCandidate candidate;
 
@@ -34,9 +34,11 @@ final class DropsPanel extends JPanel
 		candidate = newCandidate;
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
-		JPanel card = UiComponents.card(newCandidate.getItemName(), "Source: " + newCandidate.getSource()
-			+ " | RSN: " + newCandidate.getRsn(), "Detected: " + newCandidate.getDetectedAt()
-			+ " via " + newCandidate.getDetectionMethod());
+		JPanel card = UiComponents.detailsCard(newCandidate.getItemName(), "Review this candidate before submitting.",
+			"Source", newCandidate.getSource(),
+			"RSN", newCandidate.getRsn(),
+			"Detected", newCandidate.getDetectedAt(),
+			"Method", newCandidate.getDetectionMethod());
 		JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
 		JButton confirm = new JButton("Confirm Submit");
 		JButton dismiss = new JButton("Dismiss");

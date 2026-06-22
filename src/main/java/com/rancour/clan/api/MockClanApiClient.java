@@ -29,7 +29,7 @@ public final class MockClanApiClient implements ClanApiClient
 	@Override public CompletionStage<VerificationStatus> fetchVerificationStatus(String id, String token) { return done(new VerificationStatus("verified", "mock-session-token", profile, profile.getExpiresAt(), profile.getLastCheckedAt())); }
 	@Override public CompletionStage<MemberProfile> fetchProfile(String token) { return done(profile); }
 	@Override public CompletionStage<List<Announcement>> fetchAnnouncements(String token) { return done(Arrays.asList(new Announcement("mock-news", "Mock announcement", "This is local mock mode data.", "normal", Instant.now().toString(), "No expiry", "Mock Staff", false))); }
-	@Override public CompletionStage<List<ClanEvent>> fetchEvents(String token) { return done(Arrays.asList(new ClanEvent("mock-event", "Mock PvM Night", Instant.now().toString(), "Local mock event", "Mock Host", "open", 3, false))); }
+	@Override public CompletionStage<List<ClanEvent>> fetchEvents(String token) { return done(Arrays.asList(new ClanEvent("mock-event", "Mock PvM Night", Instant.now().toString(), "Local mock event", "Mock Host", "open", 3, false, "member", Collections.emptyList(), null))); }
 	@Override public CompletionStage<ActionResult> joinEvent(String id, String token) { return ok("Joined mock event"); }
 	@Override public CompletionStage<ActionResult> leaveEvent(String id, String token) { return ok("Left mock event"); }
 	@Override public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String token) { return done(new DropSubmissionResult("mock-drop", "pending", "Mock drop queued")); }

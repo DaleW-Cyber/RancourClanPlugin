@@ -12,7 +12,7 @@ import com.rancour.clan.services.AnnouncementService;
 final class AnnouncementsPanel extends JPanel
 {
 	private final AnnouncementService service;
-	private final JLabel status = new JLabel("Not loaded");
+	private final JLabel status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
 	AnnouncementsPanel(AnnouncementService service)
@@ -53,9 +53,11 @@ final class AnnouncementsPanel extends JPanel
 			status.setText(items.size() + " announcement(s)");
 			for (Announcement item : items)
 			{
-				String footer = "Priority: " + item.getPriority() + " | By: " + item.getAuthor()
-					+ " | Created: " + item.getCreatedAt() + " | Expires: " + item.getExpiresAt();
-				content.add(UiComponents.card(item.getTitle(), item.getMessage(), footer));
+				content.add(UiComponents.detailsCard(item.getTitle(), item.getMessage(),
+					"Priority", item.getPriority(),
+					"Author", item.getAuthor(),
+					"Created", item.getCreatedAt(),
+					"Expires", item.getExpiresAt()));
 			}
 		}
 		content.revalidate();

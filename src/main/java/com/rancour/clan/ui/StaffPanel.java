@@ -19,7 +19,7 @@ import com.rancour.clan.services.StaffService;
 final class StaffPanel extends JPanel
 {
 	private final StaffService service;
-	private final JLabel status = new JLabel("Staff tools ready");
+	private final JLabel status = UiComponents.statusLabel("Staff tools ready");
 	private final JPanel pending = UiComponents.contentPanel();
 
 	StaffPanel(StaffService service)
@@ -50,7 +50,7 @@ final class StaffPanel extends JPanel
 	{
 		JPanel card = UiComponents.card("Create announcement", "Publishes through the Rancour API only.", "Expiry accepts the Railway API's ISO-8601 format");
 		JTextField title = new JTextField();
-		JTextArea message = new JTextArea(3, 20);
+		JTextArea message = new JTextArea(4, 12);
 		message.setLineWrap(true);
 		message.setWrapStyleWord(true);
 		JComboBox<String> priority = new JComboBox<>(new String[] {"normal", "high", "urgent"});
@@ -122,8 +122,11 @@ final class StaffPanel extends JPanel
 			status.setText(items.size() + " pending drop(s)");
 			for (StaffDropSubmission item : items)
 			{
-				JPanel card = UiComponents.card(item.getItemName(), "Source: " + item.getSource() + " | RSN: " + item.getRsn(),
-					"Submitted: " + item.getSubmittedAt() + " | " + item.getStatus());
+				JPanel card = UiComponents.detailsCard(item.getItemName(), "",
+					"Source", item.getSource(),
+					"RSN", item.getRsn(),
+					"Submitted", item.getSubmittedAt(),
+					"Status", item.getStatus());
 				JPanel buttons = new JPanel(new GridLayout(1, 2, 4, 0));
 				JButton approve = new JButton("Approve");
 				JButton reject = new JButton("Reject");
