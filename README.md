@@ -1,31 +1,37 @@
 # Rancour Clan Plugin
 
-An external RuneLite plugin foundation for Rancour clan tools. Phase 1 provides a local, offline UI with placeholder verification, announcements, events, and drop submission pages. No Discord, Railway, Google Sheets, or other external service is contacted yet.
+An early-release RuneLite plugin for Rancour clan verification, announcements, events, drop submissions, team finding, and staff workflows. All external communication goes through the configured Rancour REST API. The plugin contains no Discord bot token, Google credentials, Railway secret, or direct Google Sheets integration.
+
+## Current MVP
+
+- Discord link-code generation and verification status refresh
+- RuneLite config-backed API session persistence
+- Verified profile display: Discord name, RSN, clan rank, staff status, expiry, and last checked time
+- Public and restricted announcement feed with loading, empty, refresh, and error states
+- Discord-backed event list with verified Join and Leave actions
+- Valuable/untradeable game-chat and high-value NPC-loot detection with 30-second duplicate prevention
+- Explicit drop confirmation before API submission
+- Team Finder with verified Join and Leave actions
+- Staff-only navigation for announcements and pending-drop review
+- Explicit mock mode for local development
+
+The required backend contract is documented in [docs/API_CONTRACT.md](docs/API_CONTRACT.md). Release readiness is tracked in [docs/EARLY_RELEASE_CHECKLIST.md](docs/EARLY_RELEASE_CHECKLIST.md).
 
 ## Requirements
 
 - Java Development Kit 11
 - Git
-- An internet connection for the first Gradle dependency download
+- Internet access for Gradle dependencies and live API testing
 
-The repository includes the Gradle 8.10 wrapper. A system Gradle installation is not required.
+The Gradle 8.10 wrapper is included, so a system Gradle installation is not required.
 
-## Local development
-
-Clone the repository and enter it:
-
-```bash
-git clone https://github.com/DaleW-Cyber/RancourClanPlugin.git
-cd RancourClanPlugin
-```
-
-Build and test the plugin:
+## Build
 
 ```bash
 ./gradlew clean build
 ```
 
-On Windows PowerShell, use:
+Windows PowerShell:
 
 ```powershell
 .\gradlew.bat clean build
@@ -33,97 +39,105 @@ On Windows PowerShell, use:
 
 ## Run RuneLite locally
 
-Launch RuneLite in developer mode with the external plugin loaded:
-
 ```bash
 ./gradlew run
 ```
 
-On Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 .\gradlew.bat run
 ```
 
-RuneLite opens as a normal desktop application. Enable `Rancour Clan` in the configuration panel if needed, then select its `R` icon in the sidebar. The local launcher lives in `src/test` and is not included in the published plugin artifact.
+RuneLite starts in developer mode with `Rancour Clan` loaded as an external plugin. Enable it in RuneLite configuration if necessary, then open the `R` sidebar icon.
 
 ## IntelliJ IDEA
 
 1. Install a Java 11 JDK.
-2. Open the repository folder in IntelliJ IDEA.
-3. Import the project using the Gradle wrapper when prompted.
-4. Set the project SDK and Gradle JVM to Java 11.
-5. Allow Gradle synchronization to finish.
-6. Run the Gradle `run` task, or run `com.rancour.clan.RancourClanPluginTest` from `src/test/java`.
+2. Open the repository as a Gradle project.
+3. Select the included Gradle wrapper.
+4. Set both the project SDK and Gradle JVM to Java 11.
+5. Wait for Gradle synchronization.
+6. Run the Gradle `run` task or `com.rancour.clan.RancourClanPluginTest` from `src/test/java`.
 
-Do not add the RuneLite client JAR manually. Gradle supplies the correct compile and local development classpaths.
+Do not add a RuneLite client JAR manually.
 
-## Project structure
+## Configuration
+
+`API base URL` controls the only network destination used by the plugin. It defaults to:
 
 ```text
-RancourClanPlugin/
-|-- build.gradle
-|-- settings.gradle
-|-- runelite-plugin.properties
-|-- gradlew
-|-- gradlew.bat
-|-- gradle/wrapper/
-`-- src/
-    |-- main/java/com/rancour/clan/
-    |   |-- RancourClanPlugin.java
-    |   |-- api/
-    |   |   |-- ClanApiClient.java
-    |   |   `-- RestClanApiClient.java
-    |   |-- config/
-    |   |   `-- RancourClanConfig.java
-    |   |-- models/
-    |   |   |-- Announcement.java
-    |   |   |-- ClanEvent.java
-    |   |   |-- DropSubmission.java
-    |   |   `-- VerificationStatus.java
-    |   |-- services/
-    |   |   |-- AnnouncementService.java
-    |   |   |-- DropService.java
-    |   |   |-- EventService.java
-    |   |   |-- VerificationService.java
-    |   |   `-- Placeholder*Service.java
-    |   `-- ui/
-    |       |-- RancourClanPanel.java
-    |       |-- VerificationPanel.java
-    |       |-- AnnouncementsPanel.java
-    |       |-- EventsPanel.java
-    |       `-- DropsPanel.java
-    `-- test/java/com/rancour/clan/
-        `-- RancourClanPluginTest.java
+https://api.rancourpvm.com
 ```
+
+`Mock mode` is disabled by default. When enabled, every page uses clearly labelled local mock data and an in-memory mock session. Mock mode never writes its session token to RuneLite configuration.
+
+`Minimum drop value` defaults to 1,000,000 GP and controls which NPC loot events create a confirmation prompt. Game-chat valuable/untradeable notifications are also detected independently of this threshold.
+
+The live verification session token and pending verification ID are stored under the RuneLite `rancourclan` configuration group. They are API-issued client credentials only; no Discord, Railway, or Google secret is stored.
+
+## User flows
+
+### Verification
+
+1. Select `Generate Link Code`.
+2. Use `/plugin_link CODE` in Discord before expiry.
+3. Select `Refresh Status`.
+4. The returned API session and member profile are stored/displayed.
+
+### Drops
+
+The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. A candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
+
+Each submission includes item name, source, current RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds.
+
+### Staff access
+
+The Staff page is added only after `/plugin/me` or verification status identifies the member as staff. Client-side visibility is convenience only; the API must enforce staff authorization on every staff endpoint.
 
 ## Architecture
 
-`RancourClanPlugin` owns the RuneLite lifecycle and sidebar navigation. Swing components are isolated in `ui`, while domain data lives in `models`. UI pages depend on small interfaces from `services`, not on HTTP or third-party integrations.
+```text
+src/main/java/com/rancour/clan/
+|-- RancourClanPlugin.java       RuneLite lifecycle and chat subscriber
+|-- api/                         Async OkHttp transport and mock API
+|-- config/                      User-facing RuneLite configuration
+|-- models/                      Typed API request/response models
+|-- services/                    Session, authorization, and feature logic
+`-- ui/                          Swing pages and async UI states
+```
 
-`ClanApiClient` defines the future asynchronous REST boundary. `RestClanApiClient` currently makes no network requests and returns an explicit unsupported-operation failure if called. Phase 1 service implementations return local placeholder content. During Phase 2, API-backed service implementations can replace them without changing the page structure.
+`ClanApiClient` is the transport boundary. `RestClanApiClient` uses RuneLite's shared `OkHttpClient` asynchronously and parses typed Gson models. UI components only call services and marshal completion updates back to Swing's event thread. No HTTP request blocks the RuneLite client thread.
 
-The only current configuration value is the future API base URL. It defaults to `https://api.rancourpvm.com` but is unused until REST integration begins.
+`ApiServices` centralizes verification checks. Events, drops, and team membership require a verified profile and session. Staff operations additionally require `profile.staff=true`. The Railway API remains the final authority.
+
+## What works without the backend
+
+- Plugin compilation and local RuneLite launch
+- All six pages and their loading/error/empty layouts
+- Mock verification, announcements, events, drops, teams, and staff review
+- Chat drop candidate detection, duplicate prevention, confirmation, and dismissal
+- Client-side verified/staff action guards
+
+## Backend work still required
+
+- Railway implementation of every route in `docs/API_CONTRACT.md`
+- Discord `/plugin_link` command and short-lived code exchange
+- Discord announcement and event synchronization
+- Secure Railway session issuing, expiry, revocation, and authorization
+- Drop review persistence and Discord bot notification workflow
+- Team state persistence and Discord signup synchronization
+- Staff event-cache refresh endpoint
+- Staff team close/lock endpoints
 
 ## Plugin Hub conventions
 
-- Production sources compile for Java 11.
-- RuneLite is a `compileOnly` dependency and is supplied by the client at runtime.
-- `runelite-plugin.properties` identifies the single plugin entry point.
-- The local RuneLite launcher remains under `src/test`.
-- The Gradle `run` task launches RuneLite with developer mode and assertions enabled.
-- Published code must not bundle credentials, API secrets, Discord tokens, or member data.
-
-## Phase 2 roadmap
-
-1. Discord-based clan verification
-2. Announcement feed from Discord
-3. Event centre linked to Discord events
-4. Automatic drop submission prompts
-5. Team finder and signup system
-6. Staff administration tools
-
-Future design work will place Discord bot, Railway API, Google Sheets, drop logging, clan verification, and event participation logic behind the REST API. The RuneLite plugin should not receive direct service credentials or write to those systems itself.
+- Java 11 bytecode via `options.release=11`
+- RuneLite client remains `compileOnly`
+- Local launcher remains in `src/test`
+- Plugin entry point is declared in `runelite-plugin.properties`
+- Gradle `run` enables developer mode and assertions
+- No bundled external-service credentials or direct Discord/Sheets clients
 
 ## License
 
