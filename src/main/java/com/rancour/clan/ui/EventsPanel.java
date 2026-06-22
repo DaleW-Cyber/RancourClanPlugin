@@ -5,9 +5,9 @@ import java.awt.GridLayout;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JTextArea;
 import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.services.EventService;
@@ -15,7 +15,7 @@ import com.rancour.clan.services.EventService;
 final class EventsPanel extends JPanel
 {
 	private final EventService service;
-	private final JLabel status = UiComponents.statusLabel("Not loaded");
+	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
 	EventsPanel(EventService service)
@@ -57,11 +57,11 @@ final class EventsPanel extends JPanel
 			for (ClanEvent item : items)
 			{
 				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(),
-					"Starts", item.getStartTime(),
+					"Starts", UiComponents.shortDate(item.getStartTime()),
 					"Host", item.getHost(),
 					"Status", item.getStatus(),
 					"Signups", String.valueOf(item.getSignupCount()));
-				JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
+				JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
 				JButton join = new JButton("Join");
 				JButton leave = new JButton("Leave");
 				join.addActionListener(event -> action(service.join(item.getId())));

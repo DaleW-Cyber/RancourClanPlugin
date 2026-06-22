@@ -12,6 +12,7 @@ import javax.swing.SwingUtilities;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.GameTick;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.events.NpcLootReceived;
@@ -84,12 +85,14 @@ public class RancourClanPlugin extends Plugin
 
 	private NavigationButton navigationButton;
 	private volatile RancourClanPanel panel;
+	private volatile String activeRsn = "";
 	private final DropDetector dropDetector = new DropDetector();
 	private final DuplicateDropGuard duplicateDropGuard = new DuplicateDropGuard(Duration.ofSeconds(30));
 
 	@Override
 	protected void startUp()
 	{
+		activeRsn = currentAccountName();
 		SwingUtilities.invokeLater(() ->
 		{
 			panel = new RancourClanPanel(
@@ -99,7 +102,8 @@ public class RancourClanPlugin extends Plugin
 				dropService,
 				teamService,
 				staffService,
-				config.mockMode()
+				config.mockMode(),
+				() -> config.mockMode() ? "Mock RSN" : activeRsn
 			);
 			navigationButton = NavigationButton.builder()
 				.tooltip("Rancour Clan")
@@ -109,6 +113,12 @@ public class RancourClanPlugin extends Plugin
 				.build();
 			clientToolbar.addNavigation(navigationButton);
 		});
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		activeRsn = currentAccountName();
 	}
 
 	@Override
@@ -132,14 +142,18 @@ public class RancourClanPlugin extends Plugin
 		{
 			return;
 		}
-		String rsn = client.getLocalPlayer() == null ? "Unknown" : client.getLocalPlayer().getName();
+		String rsn = currentAccountName();
+		activeRsn = rsn;
+		if (rsn.isEmpty()) { rsn = "Unknown"; }
 		dropDetector.fromChatMessage(event.getMessage(), rsn).filter(duplicateDropGuard::accept).ifPresent(this::offerDropCandidate);
 	}
 
 	@Subscribe
 	public void onNpcLootReceived(NpcLootReceived event)
 	{
-		String rsn = client.getLocalPlayer() == null ? "Unknown" : client.getLocalPlayer().getName();
+		String rsn = currentAccountName();
+		activeRsn = rsn;
+		if (rsn.isEmpty()) { rsn = "Unknown"; }
 		String source = event.getNpc() == null ? "Unknown NPC" : event.getNpc().getName();
 		for (ItemStack item : event.getItems())
 		{
@@ -163,6 +177,13 @@ public class RancourClanPlugin extends Plugin
 		{
 			currentPanel.offerDropCandidate(candidate);
 		}
+	}
+
+	private String currentAccountName()
+	{
+		return client.getLocalPlayer() == null || client.getLocalPlayer().getName() == null
+			? ""
+			: client.getLocalPlayer().getName().trim();
 	}
 
 	@Provides

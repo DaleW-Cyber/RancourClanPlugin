@@ -6,7 +6,7 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 
 - Discord link-code generation and verification status refresh
 - RuneLite config-backed API session persistence
-- Verified profile display: Discord name, RSN, clan rank, staff status, expiry, and last checked time
+- Verified profile display: Discord name, active RSN, trusted linked RSNs, clan rank, staff status, expiry, and last checked time
 - Public and restricted announcement feed with loading, empty, refresh, error, and optional non-duplicating chat notifications
 - Discord-backed, API role-filtered event list with visibility-checked Join and Leave actions
 - Valuable/untradeable game-chat and high-value NPC-loot detection with 30-second duplicate prevention
@@ -91,11 +91,13 @@ The live verification session token and pending verification ID are stored under
 3. Select `Refresh Status`.
 4. The returned API session and member profile are stored/displayed.
 
+The plugin compares the currently logged-in RuneLite account with `linkedRsns` from the API. Unknown accounts show a warning and cannot confirm a drop. When logged out, the panel asks the player to log in before confirming the active RSN.
+
 ### Drops
 
 The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. A candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
 
-Each submission includes item name, source, current RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds.
+Each submission includes item name, source, current RuneLite RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds. The API independently requires that RSN to be in the verified profile's trusted linked-RSN set.
 
 ### Staff access
 
@@ -129,16 +131,16 @@ src/main/java/com/rancour/clan/
 - Chat drop candidate detection, duplicate prevention, confirmation, and dismissal
 - Client-side verified/staff action guards
 
-## Backend work still required
+## Remaining integration work
 
-- Railway implementation of every route in `docs/API_CONTRACT.md`
-- Discord `/plugin_link` command and short-lived code exchange
-- Discord announcement and event synchronization
-- Secure Railway session issuing, expiry, revocation, and authorization
-- Drop review persistence and Discord bot notification workflow
+- Staff-approved Discord commands/workflow to add, set-primary, and revoke linked alts
+- Discord event participation write-back
+- Approved plugin-drop integration with the legacy Google Sheet/log workflow
 - Team state persistence and Discord signup synchronization
 - Staff event-cache refresh endpoint
 - Staff team close/lock endpoints
+
+See [docs/UI_QA.md](docs/UI_QA.md) for the normal-sidebar-width manual check.
 
 ## Plugin Hub conventions
 

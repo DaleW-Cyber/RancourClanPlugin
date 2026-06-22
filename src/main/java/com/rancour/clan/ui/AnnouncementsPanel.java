@@ -3,16 +3,16 @@ package com.rancour.clan.ui;
 import java.awt.BorderLayout;
 import java.util.List;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JTextArea;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.services.AnnouncementService;
 
 final class AnnouncementsPanel extends JPanel
 {
 	private final AnnouncementService service;
-	private final JLabel status = UiComponents.statusLabel("Not loaded");
+	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
 	AnnouncementsPanel(AnnouncementService service)
@@ -56,8 +56,8 @@ final class AnnouncementsPanel extends JPanel
 				content.add(UiComponents.detailsCard(item.getTitle(), item.getMessage(),
 					"Priority", item.getPriority(),
 					"Author", item.getAuthor(),
-					"Created", item.getCreatedAt(),
-					"Expires", item.getExpiresAt()));
+					"Created", UiComponents.shortDate(item.getCreatedAt()),
+					"Expires", UiComponents.shortDate(item.getExpiresAt())));
 			}
 		}
 		content.revalidate();

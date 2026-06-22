@@ -59,6 +59,8 @@ Response:
   "profile": {
     "discordName": "Display Name",
     "rsn": "RuneScape Name",
+    "primaryRsn": "RuneScape Name",
+    "linkedRsns": ["RuneScape Name", "Approved Alt"],
     "clanRank": "Member",
     "staff": false,
     "expiresAt": "2026-06-29T18:30:00Z",
@@ -164,6 +166,14 @@ Response:
 ```
 
 The API must verify the session/RSN relationship, validate fields, and perform durable duplicate protection in addition to the client's short local window.
+
+`rsn` is a compatibility alias for `primaryRsn`. `linkedRsns` is the complete active, Discord-side verified account set. The API accepts a drop only when its `rsn` matches one of these names after OSRS normalization. An unknown account returns:
+
+```json
+{ "message": "This RuneLite account is not linked to your Discord profile." }
+```
+
+RuneLite must not create or modify linked accounts. The authenticated Discord bot owns the internal sync contract used by future staff-approved alt management.
 
 ## Teams
 

@@ -5,9 +5,9 @@ import java.awt.GridLayout;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JTextArea;
 import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.services.TeamService;
@@ -15,7 +15,7 @@ import com.rancour.clan.services.TeamService;
 final class TeamsPanel extends JPanel
 {
 	private final TeamService service;
-	private final JLabel status = UiComponents.statusLabel("Not loaded");
+	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
 	TeamsPanel(TeamService service)
@@ -65,7 +65,7 @@ final class TeamsPanel extends JPanel
 					"Voice", item.isVoiceRequired() ? "Required" : "Optional",
 					"Status", item.getStatus(),
 					"Tags", tags);
-				JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
+				JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
 				JButton join = new JButton("Join");
 				JButton leave = new JButton("Leave");
 				join.addActionListener(event -> action(service.join(item.getId())));

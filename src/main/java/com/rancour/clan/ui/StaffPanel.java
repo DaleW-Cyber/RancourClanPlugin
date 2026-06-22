@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -19,7 +18,7 @@ import com.rancour.clan.services.StaffService;
 final class StaffPanel extends JPanel
 {
 	private final StaffService service;
-	private final JLabel status = UiComponents.statusLabel("Staff tools ready");
+	private final JTextArea status = UiComponents.statusLabel("Staff tools ready");
 	private final JPanel pending = UiComponents.contentPanel();
 
 	StaffPanel(StaffService service)
@@ -68,13 +67,13 @@ final class StaffPanel extends JPanel
 				(String) priority.getSelectedItem(), expiry.getText().trim())).whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
 				status.setText(error == null ? "Announcement created: " + result.getTitle() : "Error: " + UiComponents.errorMessage(error))));
 		});
-		card.add(new JLabel("Title"));
+		card.add(UiComponents.wrapped("Title"));
 		card.add(title);
-		card.add(new JLabel("Message"));
+		card.add(UiComponents.wrapped("Message"));
 		card.add(message);
-		card.add(new JLabel("Priority"));
+		card.add(UiComponents.wrapped("Priority"));
 		card.add(priority);
-		card.add(new JLabel("Expires at (optional)"));
+		card.add(UiComponents.wrapped("Expires at (optional)"));
 		card.add(expiry);
 		card.add(create);
 		return card;
@@ -92,7 +91,7 @@ final class StaffPanel extends JPanel
 	private JPanel teamContractNotice()
 	{
 		JPanel card = UiComponents.card("Team moderation", "Close and lock actions are typed in the client API but disabled until backend routes are agreed.", "No endpoint in the current API contract");
-		JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
+		JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
 		JButton close = new JButton("Close Team");
 		JButton lock = new JButton("Lock Team");
 		close.setEnabled(false);
@@ -125,9 +124,9 @@ final class StaffPanel extends JPanel
 				JPanel card = UiComponents.detailsCard(item.getItemName(), "",
 					"Source", item.getSource(),
 					"RSN", item.getRsn(),
-					"Submitted", item.getSubmittedAt(),
+					"Submitted", UiComponents.shortDate(item.getSubmittedAt()),
 					"Status", item.getStatus());
-				JPanel buttons = new JPanel(new GridLayout(1, 2, 4, 0));
+				JPanel buttons = new JPanel(new GridLayout(2, 1, 0, 4));
 				JButton approve = new JButton("Approve");
 				JButton reject = new JButton("Reject");
 				approve.addActionListener(event -> action(service.approveDrop(item.getId())));

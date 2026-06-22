@@ -4,10 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.util.function.Supplier;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JTextArea;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.VerificationStatus;
 import com.rancour.clan.services.VerificationService;
@@ -15,20 +16,33 @@ import com.rancour.clan.services.VerificationService;
 final class VerificationPanel extends JPanel
 {
 	private final VerificationService service;
-	private final JLabel status = UiComponents.statusLabel("Not checked");
+	private final JTextArea status = UiComponents.statusLabel("Not checked");
 	private final JPanel content = UiComponents.contentPanel();
 	private final ClipboardWriter clipboard;
+	private final Supplier<String> activeRsn;
 
 	VerificationPanel(VerificationService service)
 	{
-		this(service, value -> Toolkit.getDefaultToolkit().getSystemClipboard()
+		this(service, () -> "", value -> Toolkit.getDefaultToolkit().getSystemClipboard()
 			.setContents(new StringSelection(value), null));
 	}
 
 	VerificationPanel(VerificationService service, ClipboardWriter clipboard)
 	{
+		this(service, () -> "", clipboard);
+	}
+
+	VerificationPanel(VerificationService service, Supplier<String> activeRsn)
+	{
+		this(service, activeRsn, value -> Toolkit.getDefaultToolkit().getSystemClipboard()
+			.setContents(new StringSelection(value), null));
+	}
+
+	VerificationPanel(VerificationService service, Supplier<String> activeRsn, ClipboardWriter clipboard)
+	{
 		super(new BorderLayout());
 		this.service = service;
+		this.activeRsn = activeRsn;
 		this.clipboard = clipboard;
 		JButton generate = new JButton("Generate Link Code");
 		JButton refresh = new JButton("Refresh Status");
@@ -97,7 +111,7 @@ final class VerificationPanel extends JPanel
 			JPanel card = UiComponents.detailsCard("Link code", "Use this short-lived code in Discord.",
 				"Code", result.getCode(),
 				"Discord command", "/plugin_link " + result.getCode(),
-				"Expires", result.getExpiresAt());
+				"Expires", UiComponents.shortDate(result.getExpiresAt()));
 			JButton copy = new JButton("Copy Code");
 			copy.addActionListener(event -> copyCode(result.getCode()));
 			card.add(copy);
@@ -109,15 +123,25 @@ final class VerificationPanel extends JPanel
 
 	private void showProfile(MemberProfile profile)
 	{
+		String currentRsn = UiComponents.value(activeRsn.get()).trim();
+		String active = currentRsn.isEmpty() ? "Log in to confirm active RSN." : currentRsn;
+		String warning = currentRsn.isEmpty() || profile.isLinkedRsn(currentRsn)
+			? ""
+			: "Warning: this RuneLite account is not linked to your Discord profile.";
 		content.removeAll();
 		content.add(UiComponents.heading("Verification"));
 		content.add(UiComponents.detailsCard("Verified member", "Your RuneLite session is linked to Discord.",
 			"Discord", profile.getDiscordName(),
-			"RSN", profile.getRsn(),
+			"Active RSN", active,
+			"Linked RSNs", String.join(", ", profile.getLinkedRsns()),
 			"Clan rank", profile.getClanRank(),
 			"Staff", profile.isStaff() ? "Yes" : "No",
-			"Expires", profile.getExpiresAt(),
-			"Last checked", profile.getLastCheckedAt()));
+			"Expires", UiComponents.shortDate(profile.getExpiresAt()),
+			"Last checked", UiComponents.shortDate(profile.getLastCheckedAt())));
+		if (!warning.isEmpty())
+		{
+			content.add(UiComponents.card("Account not linked", warning, "Drop submission is disabled."));
+		}
 		content.revalidate();
 		content.repaint();
 	}

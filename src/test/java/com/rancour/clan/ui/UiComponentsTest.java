@@ -20,4 +20,18 @@ public class UiComponentsTest
 		assertTrue("Preferred width was " + card.getPreferredSize().width,
 			card.getPreferredSize().width <= 210);
 	}
+
+	@Test
+	public void unbrokenValuesStayWithinNormalSidebarContentWidth()
+	{
+		JPanel card = UiComponents.detailsCard(
+			"Verification",
+			"",
+			"Discord command",
+			"/plugin_link_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		);
+
+		assertTrue("Preferred width was " + card.getPreferredSize().width,
+			card.getPreferredSize().width <= 210);
+	}
 }

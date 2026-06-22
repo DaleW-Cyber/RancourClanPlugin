@@ -2,24 +2,34 @@ package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.util.function.Supplier;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JTextArea;
 import com.rancour.clan.models.DropCandidate;
+import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.services.DropService;
 
 final class DropsPanel extends JPanel
 {
 	private final DropService service;
-	private final JLabel status = UiComponents.statusLabel("Waiting for a candidate drop");
+	private final JTextArea status = UiComponents.statusLabel("Waiting for a candidate drop");
 	private final JPanel content = UiComponents.contentPanel();
+	private final Supplier<String> activeRsn;
 	private DropCandidate candidate;
+	private MemberProfile profile;
 
 	DropsPanel(DropService service)
 	{
+		this(service, () -> "");
+	}
+
+	DropsPanel(DropService service, Supplier<String> activeRsn)
+	{
 		super(new BorderLayout());
 		this.service = service;
+		this.activeRsn = activeRsn;
 		content.add(UiComponents.heading("Drops"));
 		content.add(UiComponents.card("Confirmation required",
 			"Candidate drops detected from game chat appear here. Nothing is submitted automatically.",
@@ -32,25 +42,42 @@ final class DropsPanel extends JPanel
 	void offerCandidate(DropCandidate newCandidate)
 	{
 		candidate = newCandidate;
+		String currentRsn = UiComponents.value(activeRsn.get()).trim();
+		boolean loggedIn = !currentRsn.isEmpty();
+		boolean linked = loggedIn && profile != null && profile.isLinkedRsn(currentRsn);
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
 		JPanel card = UiComponents.detailsCard(newCandidate.getItemName(), "Review this candidate before submitting.",
 			"Source", newCandidate.getSource(),
 			"RSN", newCandidate.getRsn(),
-			"Detected", newCandidate.getDetectedAt(),
+			"Detected", UiComponents.shortDate(newCandidate.getDetectedAt()),
 			"Method", newCandidate.getDetectionMethod());
-		JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
+		if (!loggedIn)
+		{
+			card.add(UiComponents.wrapped("Log in to confirm active RSN."));
+		}
+		else if (!linked)
+		{
+			card.add(UiComponents.wrapped("This RuneLite account is not linked to your Discord profile."));
+		}
+		JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
 		JButton confirm = new JButton("Confirm Submit");
 		JButton dismiss = new JButton("Dismiss");
 		confirm.addActionListener(event -> submit());
 		dismiss.addActionListener(event -> clear("Candidate dismissed"));
 		actions.add(confirm);
 		actions.add(dismiss);
+		confirm.setEnabled(linked);
 		card.add(actions);
 		content.add(card);
-		status.setText("Review candidate before submitting");
+		status.setText(linked ? "Review candidate before submitting" : "Drop submission is disabled");
 		content.revalidate();
 		content.repaint();
+	}
+
+	void setProfile(MemberProfile profile)
+	{
+		this.profile = profile;
 	}
 
 	private void submit()

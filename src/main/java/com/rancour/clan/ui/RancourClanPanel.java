@@ -3,6 +3,7 @@ package com.rancour.clan.ui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.GridLayout;
+import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -29,12 +30,20 @@ public final class RancourClanPanel extends PluginPanel
 		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
 		boolean mockMode)
 	{
+		this(verificationService, announcementService, eventService, dropService, teamService,
+			staffService, mockMode, () -> "");
+	}
+
+	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
+		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
+		boolean mockMode, Supplier<String> activeRsn)
+	{
 		super(false);
 		setLayout(new BorderLayout());
 		cardLayout = new CardLayout();
 		cards = new JPanel(cardLayout);
-		VerificationPanel verificationPanel = new VerificationPanel(verificationService);
-		dropsPanel = new DropsPanel(dropService);
+		VerificationPanel verificationPanel = new VerificationPanel(verificationService, activeRsn);
+		dropsPanel = new DropsPanel(dropService, activeRsn);
 		staffPanel = new StaffPanel(staffService);
 		cards.add(verificationPanel, "verification");
 		cards.add(new AnnouncementsPanel(announcementService), "announcements");
@@ -72,6 +81,7 @@ public final class RancourClanPanel extends PluginPanel
 
 	private void updateStaffAccess(MemberProfile profile)
 	{
+		dropsPanel.setProfile(profile);
 		boolean staff = profile != null && profile.isStaff();
 		staffButton.setVisible(staff);
 		staffButton.getParent().revalidate();

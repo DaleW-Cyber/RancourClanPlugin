@@ -15,16 +15,18 @@
 - [x] Manual drop confirmation before submission
 - [x] Team Finder loading plus verified Join/Leave guards
 - [x] Conditional staff page based on verified profile
+- [x] Active RuneLite account matching against API-provided linked RSNs
+- [x] Normal-width wrapping cards and shortened timestamps across all pages
 - [x] Staff announcement and pending-drop review UI
 - [x] Disabled/typed boundaries for staff actions missing an API route
 - [x] Tests for pages, verification state, detection, and duplicate prevention
 
 ## Railway API required
 
-- [ ] Deploy all endpoints in `API_CONTRACT.md`
+- [x] Deploy Backend Alpha endpoints in `API_CONTRACT.md`
 - [ ] Configure TLS and production API base URL
 - [ ] Implement short-lived plugin sessions, expiry, rotation, and revocation
-- [ ] Enforce authenticated RSN ownership on protected actions
+- [x] Enforce authenticated linked-RSN ownership on drop submissions
 - [ ] Enforce staff authorization server-side
 - [ ] Add rate limiting, validation, audit logging, and durable idempotency
 - [ ] Decide contracts for event-cache refresh and team close/lock
@@ -32,7 +34,7 @@
 
 ## Discord bot required
 
-- [ ] Add `/plugin_link code`
+- [x] Add `/plugin_link code`
 - [ ] Complete and expire link attempts safely
 - [ ] Feed public/restricted announcements through the API
 - [ ] Synchronize Discord events and event participation

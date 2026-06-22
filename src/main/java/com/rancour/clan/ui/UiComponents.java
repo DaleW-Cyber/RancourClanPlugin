@@ -4,6 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -11,12 +16,15 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.JTextArea;
 import net.runelite.client.ui.ColorScheme;
 import com.rancour.clan.api.ApiException;
 
 final class UiComponents
 {
 	private static final int TEXT_WIDTH = 138;
+	private static final DateTimeFormatter SHORT_DATE =
+		DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm").withZone(ZoneId.systemDefault());
 
 	private UiComponents() { }
 
@@ -28,33 +36,16 @@ final class UiComponents
 		return label;
 	}
 
-	static JLabel wrapped(String text)
+	static JTextArea wrapped(String text)
 	{
-		JLabel label = new JLabel();
-		setWrappedText(label, text);
-		label.setForeground(Color.LIGHT_GRAY);
-		label.setAlignmentX(Component.LEFT_ALIGNMENT);
-		return label;
+		return new WrappingTextArea(text, false);
 	}
 
-	static JLabel statusLabel(String text)
+	static JTextArea statusLabel(String text)
 	{
-		JLabel label = new JLabel()
-		{
-			@Override
-			public void setText(String value)
-			{
-				super.setText("<html><body style='width:" + TEXT_WIDTH + "px'>" + html(UiComponents.value(value)) + "</body></html>");
-			}
-		};
+		JTextArea label = new WrappingTextArea(text, false);
 		label.setForeground(Color.LIGHT_GRAY);
-		label.setText(text);
 		return label;
-	}
-
-	static void setWrappedText(JLabel label, String text)
-	{
-		label.setText("<html><body style='width:" + TEXT_WIDTH + "px'>" + html(value(text)) + "</body></html>");
 	}
 
 	static JPanel card(String title, String body, String footer)
@@ -66,7 +57,7 @@ final class UiComponents
 		}
 		if (!value(footer).isEmpty())
 		{
-			JLabel footerLabel = wrapped(footer);
+			JTextArea footerLabel = wrapped(footer);
 			footerLabel.setForeground(Color.GRAY);
 			card.add(Box.createVerticalStrut(4));
 			card.add(footerLabel);
@@ -115,9 +106,8 @@ final class UiComponents
 		card.setBorder(BorderFactory.createCompoundBorder(
 			BorderFactory.createEmptyBorder(0, 0, 8, 0),
 			BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-		JLabel titleLabel = new JLabel("<html><body style='width:" + TEXT_WIDTH + "px'><b>" + html(value(title)) + "</b></body></html>");
+		JTextArea titleLabel = new WrappingTextArea(title, true);
 		titleLabel.setForeground(Color.WHITE);
-		titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		card.add(titleLabel);
 		card.add(Box.createVerticalStrut(5));
 		return card;
@@ -184,9 +174,52 @@ final class UiComponents
 		return value == null ? "" : value;
 	}
 
+	static String shortDate(String value)
+	{
+		if (value(value).isEmpty())
+		{
+			return "Not set";
+		}
+		try
+		{
+			return SHORT_DATE.format(Instant.parse(value));
+		}
+		catch (DateTimeParseException ignored)
+		{
+			return value;
+		}
+	}
+
 	private static String html(String value)
 	{
 		return value(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 			.replace("\r\n", "<br>").replace("\n", "<br>");
+	}
+
+	private static final class WrappingTextArea extends JTextArea
+	{
+		private WrappingTextArea(String text, boolean bold)
+		{
+			super(value(text));
+			setEditable(false);
+			setFocusable(false);
+			setOpaque(false);
+			setLineWrap(true);
+			setWrapStyleWord(true);
+			setBorder(null);
+			setFont(getFont().deriveFont(bold ? Font.BOLD : Font.PLAIN));
+			setForeground(Color.LIGHT_GRAY);
+			setAlignmentX(Component.LEFT_ALIGNMENT);
+			setSize(new Dimension(TEXT_WIDTH, Short.MAX_VALUE));
+			setMaximumSize(new Dimension(TEXT_WIDTH, Integer.MAX_VALUE));
+		}
+
+		@Override
+		public Dimension getPreferredSize()
+		{
+			setSize(new Dimension(TEXT_WIDTH, Short.MAX_VALUE));
+			Dimension preferred = super.getPreferredSize();
+			return new Dimension(TEXT_WIDTH, preferred.height);
+		}
 	}
 }
