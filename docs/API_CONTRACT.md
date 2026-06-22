@@ -14,6 +14,20 @@ This document defines the early-release contract between the RuneLite plugin and
 - Error responses should use `{ "message": "User-friendly explanation" }` with an appropriate HTTP status.
 - Session tokens must be short-lived, revocable, scoped to the plugin, and must never be Discord bot tokens.
 
+## Health
+
+### `GET /health`
+
+Unauthenticated connectivity check used by the Verification page's **Test API Connection** button.
+
+Response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
 ## Verification
 
 ### `POST /plugin/verification/start`

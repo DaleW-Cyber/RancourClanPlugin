@@ -70,6 +70,10 @@ Do not add a RuneLite client JAR manually.
 https://api.rancourpvm.com
 ```
 
+The value is trimmed and normalized so trailing slashes do not create duplicate slashes in request URLs. Use **Test API Connection** on the Verification page to call `GET /health` and display the result without creating a verification attempt.
+
+When running with `./gradlew run`, API diagnostics are written to the Gradle/IntelliJ run console. Verification start logs the complete request URL. Failed HTTP responses log the status and a redacted, size-limited response body, while connection failures include their stack trace. Authorization values, session tokens, and common secret fields are never intentionally logged.
+
 `Mock mode` is disabled by default. When enabled, every page uses clearly labelled local mock data and an in-memory mock session. Mock mode never writes its session token to RuneLite configuration.
 
 `Minimum drop value` defaults to 1,000,000 GP and controls which NPC loot events create a confirmation prompt. Game-chat valuable/untradeable notifications are also detected independently of this threshold.

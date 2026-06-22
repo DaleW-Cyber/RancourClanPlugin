@@ -22,16 +22,33 @@ final class VerificationPanel extends JPanel
 		this.service = service;
 		JButton generate = new JButton("Generate Link Code");
 		JButton refresh = new JButton("Refresh Status");
+		JButton testConnection = new JButton("Test API Connection");
 		generate.addActionListener(event -> generateCode());
 		refresh.addActionListener(event -> refresh());
-		JPanel controls = new JPanel(new GridLayout(3, 1, 4, 4));
+		testConnection.addActionListener(event -> testConnection());
+		JPanel controls = new JPanel(new GridLayout(4, 1, 4, 4));
 		controls.add(generate);
 		controls.add(refresh);
+		controls.add(testConnection);
 		controls.add(status);
 		content.add(UiComponents.heading("Verification"));
 		content.add(UiComponents.card("Clan account", "Generate a short-lived code, then use /plugin_link in Discord.", "No Discord token is stored in RuneLite"));
 		add(UiComponents.page(controls, content), BorderLayout.CENTER);
 		service.addProfileListener(profile -> SwingUtilities.invokeLater(() -> showProfile(profile)));
+	}
+
+	private void testConnection()
+	{
+		status.setText("Testing API connection...");
+		service.testConnection().whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("API test failed: " + UiComponents.errorMessage(error));
+				return;
+			}
+			status.setText("API connection successful: " + UiComponents.value(result.getStatus()));
+		}));
 	}
 
 	void refresh()

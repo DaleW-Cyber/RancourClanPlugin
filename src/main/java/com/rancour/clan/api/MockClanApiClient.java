@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import com.rancour.clan.models.ActionResult;
+import com.rancour.clan.models.ApiHealth;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
@@ -23,6 +24,7 @@ public final class MockClanApiClient implements ClanApiClient
 	private final MemberProfile profile = new MemberProfile("Mock Discord User", "Mock RSN", "Member", true,
 		"Mock session", Instant.now().toString());
 
+	@Override public CompletionStage<ApiHealth> health() { return done(new ApiHealth("ok (mock)")); }
 	@Override public CompletionStage<VerificationStartResponse> startVerification() { return done(new VerificationStartResponse("MOCK-123", "mock-verification", "10 minutes")); }
 	@Override public CompletionStage<VerificationStatus> fetchVerificationStatus(String id, String token) { return done(new VerificationStatus("verified", "mock-session-token", profile, profile.getExpiresAt(), profile.getLastCheckedAt())); }
 	@Override public CompletionStage<MemberProfile> fetchProfile(String token) { return done(profile); }

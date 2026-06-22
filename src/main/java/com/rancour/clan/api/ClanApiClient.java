@@ -3,6 +3,7 @@ package com.rancour.clan.api;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import com.rancour.clan.models.ActionResult;
+import com.rancour.clan.models.ApiHealth;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
@@ -16,6 +17,7 @@ import com.rancour.clan.models.VerificationStatus;
 
 public interface ClanApiClient
 {
+	CompletionStage<ApiHealth> health();
 	CompletionStage<VerificationStartResponse> startVerification();
 	CompletionStage<VerificationStatus> fetchVerificationStatus(String verificationId, String sessionToken);
 	CompletionStage<MemberProfile> fetchProfile(String sessionToken);

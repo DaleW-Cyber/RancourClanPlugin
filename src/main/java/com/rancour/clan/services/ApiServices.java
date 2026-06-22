@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.rancour.clan.api.ClanApiClient;
 import com.rancour.clan.api.ApiException;
 import com.rancour.clan.models.ActionResult;
+import com.rancour.clan.models.ApiHealth;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
@@ -152,6 +153,12 @@ public final class ApiServices
 		{
 			this.api = api;
 			this.sessions = sessions;
+		}
+
+		@Override
+		public CompletionStage<ApiHealth> testConnection()
+		{
+			return api.health();
 		}
 
 		@Override

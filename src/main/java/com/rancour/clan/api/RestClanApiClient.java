@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.regex.Pattern;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -16,7 +17,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import lombok.extern.slf4j.Slf4j;
 import com.rancour.clan.models.ActionResult;
+import com.rancour.clan.models.ApiHealth;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
@@ -28,9 +31,15 @@ import com.rancour.clan.models.Team;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
+@Slf4j
 public final class RestClanApiClient implements ClanApiClient
 {
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+	private static final int MAX_LOGGED_BODY_LENGTH = 2000;
+	private static final Pattern JSON_SECRET = Pattern.compile(
+		"(?i)(\\\"(?:sessionToken|token|secret|authorization)\\\"\\s*:\\s*\\\")[^\\\"]*(\\\")"
+	);
+	private static final Pattern BEARER_SECRET = Pattern.compile("(?i)(Bearer\\s+)[A-Za-z0-9._~+/-]+={0,2}");
 	private static final Type ANNOUNCEMENT_LIST = new TypeToken<List<Announcement>>() { }.getType();
 	private static final Type EVENT_LIST = new TypeToken<List<ClanEvent>>() { }.getType();
 	private static final Type TEAM_LIST = new TypeToken<List<Team>>() { }.getType();
@@ -51,9 +60,17 @@ public final class RestClanApiClient implements ClanApiClient
 	}
 
 	@Override
+	public CompletionStage<ApiHealth> health()
+	{
+		return get(url("health"), null, ApiHealth.class);
+	}
+
+	@Override
 	public CompletionStage<VerificationStartResponse> startVerification()
 	{
-		return post(url("plugin", "verification", "start"), new Object(), null, VerificationStartResponse.class);
+		HttpUrl target = url("plugin", "verification", "start");
+		log.info("Rancour API verification start: POST {}", target);
+		return post(target, new Object(), null, VerificationStartResponse.class);
 	}
 
 	@Override
@@ -183,6 +200,7 @@ public final class RestClanApiClient implements ClanApiClient
 		CompletableFuture<T> future = new CompletableFuture<>();
 		if (configurationError != null)
 		{
+			log.error("Rancour API configuration error for {} {}: {}", request.method(), request.url(), configurationError.getMessage());
 			future.completeExceptionally(configurationError);
 			return future;
 		}
@@ -191,7 +209,11 @@ public final class RestClanApiClient implements ClanApiClient
 			@Override
 			public void onFailure(Call call, IOException exception)
 			{
-				future.completeExceptionally(new ApiException("Unable to reach the Rancour API: " + exception.getMessage()));
+				log.error("Rancour API network failure for {} {}", request.method(), request.url(), exception);
+				future.completeExceptionally(new ApiException(
+					"Cannot connect to the Rancour API. Check the API base URL, HTTPS address, and Railway service. "
+						+ "Details: " + safeExceptionMessage(exception)
+				));
 			}
 
 			@Override
@@ -202,6 +224,8 @@ public final class RestClanApiClient implements ClanApiClient
 					String json = body == null ? "" : body.string();
 					if (!response.isSuccessful())
 					{
+						log.error("Rancour API non-success response: {} {} -> HTTP {} body={}",
+							request.method(), request.url(), response.code(), redactForLog(json));
 						ApiError error = json.isEmpty() ? null : gson.fromJson(json, ApiError.class);
 						String message = error != null && hasText(error.message) ? error.message : "Rancour API returned HTTP " + response.code();
 						future.completeExceptionally(new ApiException(message, response.code()));
@@ -209,6 +233,7 @@ public final class RestClanApiClient implements ClanApiClient
 					}
 					if (json.isEmpty())
 					{
+						log.error("Rancour API returned an empty response: {} {} -> HTTP {}", request.method(), request.url(), response.code());
 						future.completeExceptionally(new ApiException("Rancour API returned an empty response", response.code()));
 						return;
 					}
@@ -216,6 +241,7 @@ public final class RestClanApiClient implements ClanApiClient
 				}
 				catch (Exception exception)
 				{
+					log.error("Rancour API response handling failed for {} {}", request.method(), request.url(), exception);
 					future.completeExceptionally(new ApiException("Could not read the Rancour API response: " + exception.getMessage()));
 				}
 			}
@@ -244,7 +270,28 @@ public final class RestClanApiClient implements ClanApiClient
 	private static String normalizeBaseUrl(String value)
 	{
 		String trimmed = value == null ? "" : value.trim();
-		return trimmed.endsWith("/") ? trimmed : trimmed + "/";
+		while (trimmed.endsWith("/"))
+		{
+			trimmed = trimmed.substring(0, trimmed.length() - 1);
+		}
+		return trimmed + "/";
+	}
+
+	static String redactForLog(String value)
+	{
+		String redacted = JSON_SECRET.matcher(value == null ? "" : value).replaceAll("$1<redacted>$2");
+		redacted = BEARER_SECRET.matcher(redacted).replaceAll("$1<redacted>");
+		if (redacted.length() > MAX_LOGGED_BODY_LENGTH)
+		{
+			return redacted.substring(0, MAX_LOGGED_BODY_LENGTH) + "...<truncated>";
+		}
+		return redacted;
+	}
+
+	private static String safeExceptionMessage(Exception exception)
+	{
+		String message = exception.getMessage();
+		return hasText(message) ? message : exception.getClass().getSimpleName();
 	}
 
 	private static boolean hasText(String value)
