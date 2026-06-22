@@ -23,5 +23,6 @@ Use the normal RuneLite sidebar width. Do not drag the sidebar wider to make thi
 19. Close a team from Staff -> Teams, confirm the `Close this team?` prompt appears, and confirm the team disappears from normal Team Finder.
 20. Open Teams -> Create Team. Confirm Activity, Capacity, World, Voice required, Notes, Create, and Back fit the sidebar.
 21. Create a team while logged into a linked RSN and confirm Host and Joined show the RSN.
-22. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, or Lock Team. Drop approvals remain in Discord for now.
-23. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.
+22. Fill a test team to capacity and confirm the joined RuneLite user receives one chatbox notice: `[Rancour] Your team is ready: <activity> on world <world>.`
+23. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, or Lock Team. Drop approvals remain in Discord for now.
+24. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.

@@ -116,7 +116,7 @@ The API, not RuneLite, filters events using the Discord roles stored on the veri
 
 ### Teams
 
-Team Finder shows active teams returned by the API, including host, joined members, world, capacity, and voice requirement. Members can create teams from the Team Finder page; RuneLite sends the active logged-in RSN so hosts and joined members display by RSN wherever possible. Teams expire two hours after creation. Full teams remain visible for five minutes after reaching capacity, then disappear from normal Team Finder responses. Staff can manage active teams from `Staff -> Teams`, including editing activity/capacity/world/voice/tags/status and closing teams with confirmation.
+Team Finder shows active teams returned by the API, including host, joined members, world, capacity, voice requirement, and notes. Members can create teams from the Team Finder page; RuneLite sends the active logged-in RSN so hosts and joined members display by RSN wherever possible. Teams created in RuneLite appear in the Discord Team Finder panel after the bot refreshes it. Teams expire two hours after creation. Full teams remain visible for five minutes after reaching capacity, then disappear from normal Team Finder responses. If the current RuneLite user joined a team that becomes full, the plugin shows one local chatbox notice: `[Rancour] Your team is ready: <activity> on world <world>.` Staff can manage active teams from `Staff -> Teams`, including editing activity/capacity/world/voice/tags/status and closing teams with confirmation.
 
 ## Architecture
 

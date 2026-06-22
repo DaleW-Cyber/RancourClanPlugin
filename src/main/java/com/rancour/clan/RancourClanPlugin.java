@@ -39,11 +39,14 @@ import com.rancour.clan.services.DuplicateDropGuard;
 import com.rancour.clan.services.EventService;
 import com.rancour.clan.services.NotifyingAnnouncementService;
 import com.rancour.clan.services.PluginSettingsService;
+import com.rancour.clan.services.NotifyingTeamService;
 import com.rancour.clan.services.RuneLiteSessionStore;
 import com.rancour.clan.services.RuneLiteSeenAnnouncementStore;
+import com.rancour.clan.services.RuneLiteSeenTeamReadyStore;
 import com.rancour.clan.services.SessionStore;
 import com.rancour.clan.services.StaffService;
 import com.rancour.clan.services.TeamService;
+import com.rancour.clan.services.TeamReadyNotifier;
 import com.rancour.clan.services.VerificationService;
 import com.rancour.clan.ui.RancourClanPanel;
 
@@ -269,9 +272,15 @@ public class RancourClanPlugin extends Plugin
 	}
 
 	@Provides
-	TeamService provideTeamService(ClanApiClient api, VerificationService verification)
+	TeamService provideTeamService(ClanApiClient api, VerificationService verification,
+		ConfigManager configManager, ClientThread clientThread, Client client)
 	{
-		return ApiServices.teams(api, verification, () -> activeRsn);
+		TeamReadyNotifier notifier = new TeamReadyNotifier(
+			new RuneLiteSeenTeamReadyStore(configManager),
+			message -> clientThread.invokeLater(() -> client.addChatMessage(
+				ChatMessageType.GAMEMESSAGE, "", message, null))
+		);
+		return new NotifyingTeamService(ApiServices.teams(api, verification, () -> activeRsn), notifier);
 	}
 
 	@Provides

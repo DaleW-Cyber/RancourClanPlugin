@@ -260,7 +260,7 @@ Requires authentication.
 }
 ```
 
-The API records the authenticated profile as host and adds the creator as a joined member. RuneLite sends the active logged-in RSN as `activeRsn`; the API accepts it only when it is in the verified linked-RSN set. Discord-created teams use the primary RSN. Teams display members using RSN as the primary alias, falling back to Discord display name only if no RSN is available. Staff-hosted teams require API-derived staff status. Teams expire two hours after creation. Full teams set `fullAt`, remain visible for five minutes, then disappear from normal Team Finder responses. If a member leaves before the grace window ends and the team is no longer full, `fullAt` is cleared.
+The API records the authenticated profile as host and adds the creator as a joined member. RuneLite sends the active logged-in RSN as `activeRsn`; the API accepts it only when it is in the verified linked-RSN set. Discord-created teams use the primary RSN. Teams display members using RSN as the primary alias, falling back to Discord display name only if no RSN is available. Staff-hosted teams require API-derived staff status. Teams expire two hours after creation. Full teams set `fullAt`, queue one ready notification, remain visible for five minutes, then disappear from normal Team Finder responses. If a member leaves before the grace window ends and the team is no longer full, `fullAt` and pending ready-notification state are cleared. RuneLite shows a one-time local chatbox notice for joined teams that return as full.
 
 ### `GET /plugin/staff/teams`
 ### `PATCH /plugin/staff/teams/{id}`
