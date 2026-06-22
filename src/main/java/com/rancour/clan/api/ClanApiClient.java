@@ -9,6 +9,7 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
@@ -21,6 +22,7 @@ public interface ClanApiClient
 	CompletionStage<VerificationStartResponse> startVerification();
 	CompletionStage<VerificationStatus> fetchVerificationStatus(String verificationId, String sessionToken);
 	CompletionStage<MemberProfile> fetchProfile(String sessionToken);
+	CompletionStage<PluginSettings> fetchSettings();
 	CompletionStage<List<Announcement>> fetchAnnouncements(String sessionToken);
 	CompletionStage<List<ClanEvent>> fetchEvents(String sessionToken);
 	CompletionStage<ActionResult> joinEvent(String eventId, String sessionToken);
@@ -33,6 +35,8 @@ public interface ClanApiClient
 	CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken);
 	CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken);
 	CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken);
+	CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken);
+	CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken);
 
 	// TODO(Railway API): these actions need endpoints added to the agreed API contract.
 	CompletionStage<ActionResult> refreshEventCache(String sessionToken);

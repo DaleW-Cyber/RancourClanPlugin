@@ -1,14 +1,11 @@
 package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.util.List;
-import java.util.concurrent.CompletionStage;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.JTextArea;
-import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.services.EventService;
 
@@ -64,18 +61,7 @@ final class EventsPanel extends JPanel
 			for (ClanEvent item : items)
 			{
 				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(),
-					"Starts", UiComponents.shortDate(item.getStartTime()),
-					"Host", item.getHost(),
-					"Status", item.getStatus(),
-					"Signups", String.valueOf(item.getSignupCount()));
-				JPanel actions = new JPanel(new GridLayout(2, 1, 0, 4));
-				JButton join = new JButton("Join");
-				JButton leave = new JButton("Leave");
-				join.addActionListener(event -> action(service.join(item.getId())));
-				leave.addActionListener(event -> action(service.leave(item.getId())));
-				actions.add(join);
-				actions.add(leave);
-				card.add(actions);
+					"Starts", UiComponents.shortDate(item.getStartTime()));
 				content.add(card);
 			}
 			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
@@ -84,23 +70,4 @@ final class EventsPanel extends JPanel
 		content.repaint();
 	}
 
-	private void action(CompletionStage<ActionResult> action)
-	{
-		status.setText("Saving event signup...");
-		action.whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
-		{
-			if (error != null && UiComponents.isApiStatus(error, 403))
-			{
-				status.setText("You do not have access to this event.");
-			}
-			else
-			{
-				status.setText(error == null ? result.getMessage() : "Error: " + UiComponents.errorMessage(error));
-			}
-			if (error == null)
-			{
-				refresh();
-			}
-		}));
-	}
 }

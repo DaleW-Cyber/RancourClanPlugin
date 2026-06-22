@@ -3,23 +3,28 @@ package com.rancour.clan.ui;
 import java.awt.BorderLayout;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.services.StaffService;
 
 final class StaffPanel extends JPanel
 {
 	private final StaffService service;
-	private final Runnable announcementCreated;
-	private final JTextArea status = UiComponents.statusLabel("Staff tools ready");
+	private final Runnable dataChanged;
+	private final JTextArea status = UiComponents.statusLabel("Ready");
 	private final JPanel content = UiComponents.contentPanel();
+	private boolean dropsPanelEnabled = true;
 	JButton announcementsButton;
+	JButton dropsPanelButton;
 	JTextField announcementTitle;
 	JTextArea announcementMessage;
 	JButton createAnnouncementButton;
@@ -29,28 +34,31 @@ final class StaffPanel extends JPanel
 		this(service, () -> { });
 	}
 
-	StaffPanel(StaffService service, Runnable announcementCreated)
+	StaffPanel(StaffService service, Runnable dataChanged)
 	{
 		super(new BorderLayout());
 		this.service = service;
-		this.announcementCreated = announcementCreated;
+		this.dataChanged = dataChanged;
 		add(UiComponents.page(null, content), BorderLayout.CENTER);
 		showMenu();
 	}
 
 	void refreshPending()
 	{
-		// RuneLite pending-drop review is intentionally hidden. Staff review happens in Discord.
+		// Staff drop review happens in Discord. The RuneLite staff page only shows working controls.
 	}
 
 	void showMenu()
 	{
 		content.removeAll();
 		content.add(UiComponents.heading("Staff"));
-		JPanel menu = UiComponents.card("Tools", "", "");
+		JPanel menu = UiComponents.card("Menu", "", "");
 		announcementsButton = new JButton("Announcements");
+		dropsPanelButton = new JButton("Drops Panel");
 		announcementsButton.addActionListener(event -> showAnnouncementPage());
+		dropsPanelButton.addActionListener(event -> showDropsPanelPage());
 		menu.add(announcementsButton);
+		menu.add(dropsPanelButton);
 		content.add(menu);
 		content.add(status);
 		refreshContent();
@@ -65,6 +73,7 @@ final class StaffPanel extends JPanel
 		content.add(back);
 		content.add(createAnnouncementForm());
 		content.add(status);
+		loadAnnouncements();
 		refreshContent();
 	}
 
@@ -93,8 +102,8 @@ final class StaffPanel extends JPanel
 			ExpiryOption selectedExpiry = (ExpiryOption) expiry.getSelectedItem();
 			service.createAnnouncement(new CreateAnnouncementRequest(title.getText().trim(), message.getText().trim(),
 				(String) priority.getSelectedItem(), selectedExpiry == null ? null : selectedExpiry.expiresAt()))
-				.whenComplete((result, error) -> SwingUtilities.invokeLater(() -> onAnnouncementCreated(
-					title, message, priority, expiry, create, result, error)));
+				.whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
+					onAnnouncementCreated(title, message, priority, expiry, create, result, error)));
 		});
 		card.add(UiComponents.wrapped("Title"));
 		card.add(title);
@@ -106,6 +115,105 @@ final class StaffPanel extends JPanel
 		card.add(expiry);
 		card.add(create);
 		return card;
+	}
+
+	private void loadAnnouncements()
+	{
+		status.setText("Loading...");
+		service.loadAnnouncements().whenComplete((items, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				return;
+			}
+			renderAnnouncementList(items);
+		}));
+	}
+
+	private void renderAnnouncementList(List<Announcement> items)
+	{
+		content.add(UiComponents.heading("Current"));
+		if (items == null || items.isEmpty())
+		{
+			content.add(UiComponents.wrapped("No active announcements."));
+			status.setText("No announcements");
+		}
+		else
+		{
+			status.setText(items.size() + " active");
+			for (Announcement item : items)
+			{
+				JPanel card = UiComponents.detailsCard(item.getTitle(), preview(item.getMessage()));
+				JButton delete = new JButton("Delete");
+				delete.addActionListener(event -> deleteAnnouncement(item));
+				card.add(delete);
+				content.add(card);
+			}
+		}
+		refreshContent();
+	}
+
+	private void deleteAnnouncement(Announcement item)
+	{
+		if (!confirm("Delete this announcement?"))
+		{
+			return;
+		}
+		status.setText("Deleting...");
+		service.deleteAnnouncement(item.getId()).whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				return;
+			}
+			status.setText(result.getMessage());
+			dataChanged.run();
+			showAnnouncementPage();
+		}));
+	}
+
+	private void showDropsPanelPage()
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Drops Panel"));
+		JButton back = new JButton("Back");
+		back.addActionListener(event -> showMenu());
+		content.add(back);
+		renderDropsPanelCard();
+		content.add(status);
+		refreshContent();
+	}
+
+	private void renderDropsPanelCard()
+	{
+		JPanel card = UiComponents.card("State", dropsPanelEnabled ? "Enabled" : "Disabled", "");
+		JButton toggle = new JButton(dropsPanelEnabled ? "Disable Drops Panel" : "Enable Drops Panel");
+		toggle.addActionListener(event -> toggleDropsPanel(!dropsPanelEnabled));
+		card.add(toggle);
+		content.add(card);
+	}
+
+	private void toggleDropsPanel(boolean enabled)
+	{
+		String message = enabled ? "Enable drop submissions for members?" : "Disable drop submissions for members?";
+		if (!confirm(message))
+		{
+			return;
+		}
+		status.setText("Saving...");
+		service.setDropsPanelEnabled(enabled).whenComplete((settings, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				return;
+			}
+			applySettings(settings);
+			dataChanged.run();
+			showDropsPanelPage();
+		}));
 	}
 
 	private void onAnnouncementCreated(
@@ -128,13 +236,34 @@ final class StaffPanel extends JPanel
 		priority.setSelectedItem("normal");
 		expiry.setSelectedIndex(0);
 		status.setText("Created: " + result.getTitle());
-		announcementCreated.run();
+		dataChanged.run();
+		showAnnouncementPage();
+	}
+
+	void applySettings(PluginSettings settings)
+	{
+		if (settings != null)
+		{
+			dropsPanelEnabled = settings.isDropsPanelEnabled();
+		}
+	}
+
+	private boolean confirm(String message)
+	{
+		return JOptionPane.showConfirmDialog(this, message, "Confirm", JOptionPane.YES_NO_OPTION)
+			== JOptionPane.YES_OPTION;
 	}
 
 	private void refreshContent()
 	{
 		content.revalidate();
 		content.repaint();
+	}
+
+	private static String preview(String value)
+	{
+		String text = UiComponents.value(value);
+		return text.length() <= 120 ? text : text.substring(0, 117) + "...";
 	}
 
 	private static final class ExpiryOption
@@ -170,5 +299,4 @@ final class StaffPanel extends JPanel
 			return label;
 		}
 	}
-
 }

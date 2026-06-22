@@ -109,6 +109,55 @@ public class RestClanApiClientTest
 	}
 
 	@Test
+	public void settingsUsePublicEndpoint() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"dropsPanelEnabled\":false,\"approvedDrops\":[\"Twisted bow\"]}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		assertFalse(api.fetchSettings().toCompletableFuture().get().isDropsPanelEnabled());
+		assertEquals("GET", captured.get().method());
+		assertEquals("https://api.example.test/plugin/settings", captured.get().url().toString());
+	}
+
+	@Test
+	public void staffDeleteAnnouncementSendsBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"success\":true,\"message\":\"deleted\"}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.deleteAnnouncement("announcement-1", "staff-session").toCompletableFuture().get();
+
+		assertEquals("DELETE", captured.get().method());
+		assertEquals("https://api.example.test/plugin/staff/announcements/announcement-1", captured.get().url().toString());
+		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+	}
+
+	@Test
+	public void staffDropsPanelToggleSendsBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"dropsPanelEnabled\":true,\"approvedDrops\":[]}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.setDropsPanelEnabled(true, "staff-session").toCompletableFuture().get();
+
+		assertEquals("POST", captured.get().method());
+		assertEquals("https://api.example.test/plugin/staff/settings/drops-panel", captured.get().url().toString());
+		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+	}
+
+	@Test
 	public void nonSuccessIncludesStatusAndSafeApiMessage() throws Exception
 	{
 		RestClanApiClient api = new RestClanApiClient(

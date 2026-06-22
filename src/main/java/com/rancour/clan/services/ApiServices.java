@@ -16,6 +16,7 @@ import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
 import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.models.VerificationStartResponse;
@@ -42,6 +43,11 @@ public final class ApiServices
 			}
 			return items.stream().filter(item -> !item.isRestricted()).collect(Collectors.toList());
 		});
+	}
+
+	public static PluginSettingsService settings(ClanApiClient api)
+	{
+		return api::fetchSettings;
 	}
 
 	public static EventService events(ClanApiClient api, VerificationService verification)
@@ -73,10 +79,13 @@ public final class ApiServices
 	{
 		return new StaffService()
 		{
+			@Override public CompletionStage<List<Announcement>> loadAnnouncements() { return withStaff(verification, token -> api.fetchAnnouncements(token)); }
 			@Override public CompletionStage<List<StaffDropSubmission>> loadPendingDrops() { return withStaff(verification, token -> api.fetchPendingDrops(token)); }
 			@Override public CompletionStage<ActionResult> approveDrop(String id) { return withStaff(verification, token -> api.approveDrop(id, token)); }
 			@Override public CompletionStage<ActionResult> rejectDrop(String id) { return withStaff(verification, token -> api.rejectDrop(id, token)); }
 			@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request) { return withStaff(verification, token -> api.createAnnouncement(request, token)); }
+			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff(verification, token -> api.deleteAnnouncement(id, token)); }
+			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff(verification, token -> api.setDropsPanelEnabled(enabled, token)); }
 			@Override public CompletionStage<ActionResult> refreshEventCache() { return withStaff(verification, api::refreshEventCache); }
 		};
 	}

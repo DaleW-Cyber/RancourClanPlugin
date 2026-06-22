@@ -9,9 +9,12 @@ import com.rancour.clan.models.StaffDropSubmission;
 
 public interface StaffService
 {
+	CompletionStage<List<Announcement>> loadAnnouncements();
 	CompletionStage<List<StaffDropSubmission>> loadPendingDrops();
 	CompletionStage<ActionResult> approveDrop(String submissionId);
 	CompletionStage<ActionResult> rejectDrop(String submissionId);
 	CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request);
+	CompletionStage<ActionResult> deleteAnnouncement(String announcementId);
+	CompletionStage<com.rancour.clan.models.PluginSettings> setDropsPanelEnabled(boolean enabled);
 	CompletionStage<ActionResult> refreshEventCache();
 }

@@ -25,7 +25,9 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.DropsPanelSettingRequest;
 import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.models.VerificationStartResponse;
@@ -88,6 +90,12 @@ public final class RestClanApiClient implements ClanApiClient
 	public CompletionStage<MemberProfile> fetchProfile(String sessionToken)
 	{
 		return get(url("plugin", "me"), sessionToken, MemberProfile.class);
+	}
+
+	@Override
+	public CompletionStage<PluginSettings> fetchSettings()
+	{
+		return get(url("plugin", "settings"), null, PluginSettings.class);
 	}
 
 	@Override
@@ -163,6 +171,19 @@ public final class RestClanApiClient implements ClanApiClient
 	}
 
 	@Override
+	public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken)
+	{
+		return protectedDelete(url("plugin", "staff", "announcements", announcementId), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken)
+	{
+		return protectedPost(url("plugin", "staff", "settings", "drops-panel"), new DropsPanelSettingRequest(enabled),
+			sessionToken, PluginSettings.class);
+	}
+
+	@Override
 	public CompletionStage<ActionResult> refreshEventCache(String sessionToken)
 	{
 		return unsupported("Event cache refresh requires a Railway API endpoint");
@@ -205,6 +226,19 @@ public final class RestClanApiClient implements ClanApiClient
 	{
 		logProtected("POST", url, token);
 		return post(url, body, token, responseType);
+	}
+
+	private <T> CompletionStage<T> delete(HttpUrl url, String token, Type responseType)
+	{
+		Request.Builder request = new Request.Builder().url(url).delete();
+		addAuthorization(request, token);
+		return execute(request.build(), responseType);
+	}
+
+	private <T> CompletionStage<T> protectedDelete(HttpUrl url, String token, Type responseType)
+	{
+		logProtected("DELETE", url, token);
+		return delete(url, token, responseType);
 	}
 
 	private static void logProtected(String method, HttpUrl url, String token)

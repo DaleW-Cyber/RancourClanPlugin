@@ -77,6 +77,19 @@ Valid states are `pending`, `verified`, `expired`, and `revoked`. `sessionToken`
 
 Requires authentication. Returns the profile object shown above. The server should return `401` for expired/revoked sessions and `403` where clan access is not permitted.
 
+## Plugin settings
+
+### `GET /plugin/settings`
+
+Returns public client settings and the approved Rancour drop catalogue. The catalogue is used by RuneLite to suppress unknown high-value loot before it becomes a pending drop candidate; the API must still validate the submitted item again.
+
+```json
+{
+  "dropsPanelEnabled": true,
+  "approvedDrops": ["Twisted bow", "Dexterous prayer scroll"]
+}
+```
+
 ## Announcements
 
 ### `GET /plugin/announcements`
@@ -141,6 +154,8 @@ The API owns Discord event participation synchronization and idempotency. Join a
 { "message": "You do not have access to this event" }
 ```
 
+RuneLite Events are currently read-only. Joining/leaving events is handled in Discord.
+
 ## Drops
 
 ### `POST /plugin/drops`
@@ -176,6 +191,20 @@ The API must verify the session/RSN relationship, validate fields, and perform d
 ```
 
 RuneLite must not create or modify linked accounts. The authenticated Discord bot owns the internal sync contract used by future staff-approved alt management.
+
+Drop submissions can be globally disabled with `dropsPanelEnabled=false`. When disabled, the API rejects `POST /plugin/drops` with:
+
+```json
+{ "message": "Drop submissions are currently disabled." }
+```
+
+The API also rejects item names that are not present in the approved Rancour drop catalogue with:
+
+```json
+{ "message": "Drop is not in the approved Rancour catalogue." }
+```
+
+Discord does not need to recognise a drop before RuneLite sees it; RuneLite detects the drop and the API validates it against the catalogue.
 
 ## Teams
 
@@ -272,6 +301,26 @@ Body is `{}`. Return an `ActionResult`. Decisions should be idempotent and audit
 Return the created `Announcement` model. The API owns Discord publication and persistence.
 
 `expiresAt` must be in the future and no more than seven days after the API server's current UTC time. RuneLite uses a dropdown with 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, and 7 days options instead of manual date entry.
+
+### `DELETE /plugin/staff/announcements/{announcementId}`
+
+Requires staff authentication. Deletes or hides the announcement from future `GET /plugin/announcements` responses. Return:
+
+```json
+{ "success": true, "message": "Announcement deleted" }
+```
+
+## Staff settings
+
+### `POST /plugin/staff/settings/drops-panel`
+
+Requires staff authentication. Body:
+
+```json
+{ "enabled": true }
+```
+
+Returns the same model as `GET /plugin/settings`. The API must enforce staff authorization server-side; RuneLite confirmation dialogs are only a usability guard.
 
 ## Missing backend contracts
 

@@ -14,11 +14,16 @@ import javax.swing.JButton;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
 import com.rancour.clan.api.MockClanApiClient;
+import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.ApiHealth;
+import com.rancour.clan.models.ClanEvent;
+import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 import com.rancour.clan.services.ApiServices;
+import com.rancour.clan.services.EventService;
 import com.rancour.clan.services.InMemorySessionStore;
 import com.rancour.clan.services.VerificationService;
 
@@ -36,6 +41,7 @@ public class RancourClanPanelTest
 			ApiServices.drops(api, verification),
 			ApiServices.teams(api, verification),
 			ApiServices.staff(api, verification),
+			api::fetchSettings,
 			true);
 
 		Set<String> buttons = new HashSet<>();
@@ -57,7 +63,57 @@ public class RancourClanPanelTest
 		assertTrue(panelFor(profile(true)).isStaffButtonVisible());
 	}
 
+	@Test
+	public void dropsButtonFollowsBackendSetting() throws Exception
+	{
+		RancourClanPanel panel = panelFor(profile(true), new PluginSettings(false, java.util.Collections.singletonList("Twisted bow")));
+
+		assertFalse(panel.isDropsButtonVisible());
+		assertFalse(panel.acceptsDropCandidate(candidate("Twisted bow")));
+	}
+
+	@Test
+	public void dropCandidatesMustBeApprovedBySettingsCatalogue() throws Exception
+	{
+		RancourClanPanel panel = panelFor(profile(true), new PluginSettings(true, java.util.Collections.singletonList("Twisted bow")));
+
+		assertTrue(panel.isDropsButtonVisible());
+		assertTrue(panel.acceptsDropCandidate(candidate("Twisted bow")));
+		assertFalse(panel.acceptsDropCandidate(candidate("Coins")));
+	}
+
+	@Test
+	public void eventsPanelIsReadOnly() throws Exception
+	{
+		EventsPanel panel = new EventsPanel(new EventService()
+		{
+			@Override public CompletionStage<java.util.List<ClanEvent>> loadEvents()
+			{
+				return CompletableFuture.completedFuture(java.util.Collections.singletonList(
+					new ClanEvent("event", "Raid night", "2026-06-22T20:00:00Z", "Bring supplies",
+						"Host", "open", 3, false, "member", java.util.Collections.emptyList(), null)));
+			}
+
+			@Override public CompletionStage<ActionResult> join(String eventId) { throw new AssertionError("RuneLite events are read-only"); }
+			@Override public CompletionStage<ActionResult> leave(String eventId) { throw new AssertionError("RuneLite events are read-only"); }
+		});
+		SwingUtilities.invokeAndWait(() -> { });
+
+		Set<String> buttons = new HashSet<>();
+		collectButtonLabels(panel, buttons);
+		assertTrue(buttons.contains("Refresh"));
+		assertFalse(buttons.contains("Join"));
+		assertFalse(buttons.contains("Leave"));
+		assertFalse(allText(panel).contains("Host"));
+		assertFalse(allText(panel).contains("Status"));
+	}
+
 	private static RancourClanPanel panelFor(MemberProfile profile) throws Exception
+	{
+		return panelFor(profile, new PluginSettings(true, java.util.Arrays.asList("Twisted bow", "Dexterous prayer scroll")));
+	}
+
+	private static RancourClanPanel panelFor(MemberProfile profile, PluginSettings settings) throws Exception
 	{
 		MockClanApiClient api = new MockClanApiClient();
 		VerificationService verification = new FixedVerificationService(profile);
@@ -68,9 +124,15 @@ public class RancourClanPanelTest
 			ApiServices.drops(api, verification),
 			ApiServices.teams(api, verification),
 			ApiServices.staff(api, verification),
+			() -> CompletableFuture.completedFuture(settings),
 			true);
 		SwingUtilities.invokeAndWait(() -> { });
 		return panel;
+	}
+
+	private static DropCandidate candidate(String item)
+	{
+		return new DropCandidate(item, "Game chat", "RSN", "2026-06-22T18:30:00Z", "chat_message");
 	}
 
 	private static MemberProfile profile(boolean staff)
@@ -111,5 +173,26 @@ public class RancourClanPanelTest
 				collectButtonLabels((Container) component, labels);
 			}
 		}
+	}
+
+	private static String allText(Container container)
+	{
+		StringBuilder text = new StringBuilder();
+		for (Component component : container.getComponents())
+		{
+			if (component instanceof javax.swing.JTextArea)
+			{
+				text.append(((javax.swing.JTextArea) component).getText()).append('\n');
+			}
+			if (component instanceof javax.swing.AbstractButton)
+			{
+				text.append(((javax.swing.AbstractButton) component).getText()).append('\n');
+			}
+			if (component instanceof Container)
+			{
+				text.append(allText((Container) component));
+			}
+		}
+		return text.toString();
 	}
 }

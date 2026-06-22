@@ -19,6 +19,7 @@ final class DropsPanel extends JPanel
 	private final Supplier<String> activeRsn;
 	private DropCandidate candidate;
 	private MemberProfile profile;
+	private boolean dropsPanelEnabled = true;
 
 	DropsPanel(DropService service)
 	{
@@ -39,6 +40,11 @@ final class DropsPanel extends JPanel
 
 	void offerCandidate(DropCandidate newCandidate)
 	{
+		if (!dropsPanelEnabled)
+		{
+			showDisabled();
+			return;
+		}
 		candidate = newCandidate;
 		String currentRsn = UiComponents.value(activeRsn.get()).trim();
 		boolean loggedIn = !currentRsn.isEmpty();
@@ -76,6 +82,26 @@ final class DropsPanel extends JPanel
 	void setProfile(MemberProfile profile)
 	{
 		this.profile = profile;
+	}
+
+	void setDropsPanelEnabled(boolean enabled)
+	{
+		this.dropsPanelEnabled = enabled;
+		if (!enabled)
+		{
+			showDisabled();
+		}
+	}
+
+	void showDisabled()
+	{
+		candidate = null;
+		content.removeAll();
+		content.add(UiComponents.heading("Drops"));
+		content.add(UiComponents.wrapped("Drop submissions are currently disabled."));
+		status.setText("Disabled");
+		content.revalidate();
+		content.repaint();
 	}
 
 	private void submit()

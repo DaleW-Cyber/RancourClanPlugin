@@ -8,11 +8,11 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - RuneLite config-backed API session persistence
 - Verified profile display: Discord name, active RSN, trusted linked RSNs, clan rank, staff status, expiry, and last checked time
 - Compact announcement feed that shows only title/body, with loading, empty, refresh, error, and optional non-duplicating chat notifications
-- Discord-backed, API role-filtered event list with visibility-checked Join and Leave actions
-- Valuable/untradeable game-chat and high-value NPC-loot detection with 30-second duplicate prevention
+- Discord-backed, API role-filtered read-only event list
+- Valuable/untradeable game-chat and high-value NPC-loot detection with approved-catalogue filtering and 30-second duplicate prevention
 - Explicit drop confirmation before API submission
 - Team Finder with verified Join and Leave actions
-- Staff-only menu with compact announcement creation
+- Staff-only menu with compact announcement creation/deletion and Drops Panel toggle
 - Explicit mock mode for local development
 
 The required backend contract is documented in [docs/API_CONTRACT.md](docs/API_CONTRACT.md). Release readiness is tracked in [docs/EARLY_RELEASE_CHECKLIST.md](docs/EARLY_RELEASE_CHECKLIST.md).
@@ -93,25 +93,27 @@ The live verification session token and pending verification ID are stored under
 3. Select `Refresh Status`.
 4. The returned API session and member profile are stored/displayed.
 
-Protected actions such as Event Join, Team Join, Drop Submit, and Staff tools require the stored API session token and send `Authorization: Bearer <sessionToken>`. If that token is missing, the panel shows `Verification session missing. Please refresh verification or link again.` If the API reports an expired/revoked session, RuneLite clears the local session and asks the user to refresh or link again.
+Protected actions such as Team Join, Drop Submit, and Staff tools require the stored API session token and send `Authorization: Bearer <sessionToken>`. If that token is missing, the panel shows `Verification session missing. Please refresh verification or link again.` If the API reports an expired/revoked session, RuneLite clears the local session and asks the user to refresh or link again.
 
 The plugin compares the currently logged-in RuneLite account with `linkedRsns` from the API. Unknown accounts show a warning and cannot confirm a drop. When logged out, the panel asks the player to log in before confirming the active RSN.
 
 ### Drops
 
-The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. A candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
+The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. Detected items are filtered against the approved Rancour drop catalogue returned by `GET /plugin/settings`; unknown high-value items are ignored and never create a pending candidate. A recognized candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
 
-Each submission includes item name, source, current RuneLite RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds. The API independently requires that RSN to be in the verified profile's trusted linked-RSN set.
+Each submission includes item name, source, current RuneLite RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds. The API independently requires that RSN to be in the verified profile's trusted linked-RSN set and rejects items outside the approved catalogue. Discord does not need to recognise the drop first; RuneLite detects it, then the API validates it.
+
+Staff can enable or disable member drop submissions from `Staff -> Drops Panel`. The setting is loaded through `GET /plugin/settings`, changed through `POST /plugin/staff/settings/drops-panel`, and enforced server-side. When disabled, the Drops tab is hidden and the Drops page shows `Drop submissions are currently disabled.`
 
 ### Staff access
 
-The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side. The current RuneLite Staff menu shows only working announcement creation; pending drop approval remains in Discord.
+The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side. The current RuneLite Staff menu shows working announcement creation/deletion and the Drops Panel toggle; pending drop approval remains in Discord.
 
 Staff announcement expiry is selected from fixed options: 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, or 7 days. RuneLite calculates `expiresAt` in UTC, and the API rejects any expiry longer than seven days.
 
 ### Event visibility
 
-The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. Join and Leave repeat the same server-side check.
+The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. RuneLite Events are currently read-only. Joining/leaving events is handled in Discord.
 
 ## Architecture
 
@@ -127,7 +129,7 @@ src/main/java/com/rancour/clan/
 
 `ClanApiClient` is the transport boundary. `RestClanApiClient` uses RuneLite's shared `OkHttpClient` asynchronously and parses typed Gson models. UI components only call services and marshal completion updates back to Swing's event thread. No HTTP request blocks the RuneLite client thread.
 
-`ApiServices` centralizes session checks. Events, drops, and team membership require a stored plugin session token; Staff operations additionally require the current profile to report `staff=true`. The Railway API remains the final authority.
+`ApiServices` centralizes session checks. Drops and team membership require a stored plugin session token; Staff operations additionally require the current profile to report `staff=true`. The Railway API remains the final authority.
 
 ## What works without the backend
 

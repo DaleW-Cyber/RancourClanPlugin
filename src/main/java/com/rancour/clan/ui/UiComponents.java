@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JSeparator;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -103,13 +104,19 @@ final class UiComponents
 		card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		card.setAlignmentX(Component.LEFT_ALIGNMENT);
 		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-		card.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createEmptyBorder(0, 0, 6, 0),
-			BorderFactory.createEmptyBorder(6, 6, 6, 6)));
 		JTextArea titleLabel = new WrappingTextArea(title, true);
 		titleLabel.setForeground(Color.WHITE);
 		card.add(titleLabel);
+		JSeparator separator = new JSeparator();
+		separator.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		separator.setAlignmentX(Component.LEFT_ALIGNMENT);
+		card.add(separator);
 		card.add(Box.createVerticalStrut(3));
+		card.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createEmptyBorder(0, 0, 6, 0),
+			BorderFactory.createCompoundBorder(
+				BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR),
+				BorderFactory.createEmptyBorder(6, 6, 6, 6))));
 		return card;
 	}
 

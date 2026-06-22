@@ -39,6 +39,7 @@ import com.rancour.clan.services.DuplicateDropGuard;
 import com.rancour.clan.services.EventService;
 import com.rancour.clan.services.InMemorySessionStore;
 import com.rancour.clan.services.NotifyingAnnouncementService;
+import com.rancour.clan.services.PluginSettingsService;
 import com.rancour.clan.services.RuneLiteSessionStore;
 import com.rancour.clan.services.RuneLiteSeenAnnouncementStore;
 import com.rancour.clan.services.SessionStore;
@@ -84,6 +85,9 @@ public class RancourClanPlugin extends Plugin
 	@Inject
 	private StaffService staffService;
 
+	@Inject
+	private PluginSettingsService settingsService;
+
 	private NavigationButton navigationButton;
 	private volatile RancourClanPanel panel;
 	private volatile String activeRsn = "";
@@ -104,6 +108,7 @@ public class RancourClanPlugin extends Plugin
 				dropService,
 				teamService,
 				staffService,
+				settingsService,
 				config.mockMode(),
 				() -> config.mockMode() ? "Mock RSN" : activeRsn
 			);
@@ -200,7 +205,7 @@ public class RancourClanPlugin extends Plugin
 	private void offerDropCandidate(DropCandidate candidate)
 	{
 		RancourClanPanel currentPanel = panel;
-		if (currentPanel != null)
+		if (currentPanel != null && currentPanel.acceptsDropCandidate(candidate))
 		{
 			currentPanel.offerDropCandidate(candidate);
 		}
@@ -272,6 +277,12 @@ public class RancourClanPlugin extends Plugin
 	StaffService provideStaffService(ClanApiClient api, VerificationService verification)
 	{
 		return ApiServices.staff(api, verification);
+	}
+
+	@Provides
+	PluginSettingsService providePluginSettingsService(ClanApiClient api)
+	{
+		return ApiServices.settings(api);
 	}
 
 	private static BufferedImage createNavigationIcon()

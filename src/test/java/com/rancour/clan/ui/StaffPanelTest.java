@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.services.StaffService;
 import java.time.Duration;
@@ -83,6 +84,7 @@ public class StaffPanelTest
 		String text = allText(panel);
 		assertTrue(text.contains("Staff"));
 		assertTrue(text.contains("Announcements"));
+		assertTrue(text.contains("Drops Panel"));
 		assertFalse(text.contains("Pending Drops"));
 		assertFalse(text.contains("Refresh Event Cache"));
 		assertFalse(text.contains("Close Team"));
@@ -98,6 +100,10 @@ public class StaffPanelTest
 			if (component instanceof JTextArea)
 			{
 				text.append(((JTextArea) component).getText()).append('\n');
+			}
+			if (component instanceof javax.swing.JLabel)
+			{
+				text.append(((javax.swing.JLabel) component).getText()).append('\n');
 			}
 			if (component instanceof AbstractButton)
 			{
@@ -132,6 +138,12 @@ public class StaffPanelTest
 		private final AtomicReference<CreateAnnouncementRequest> created = new AtomicReference<>();
 
 		@Override
+		public CompletionStage<List<Announcement>> loadAnnouncements()
+		{
+			return CompletableFuture.completedFuture(Collections.emptyList());
+		}
+
+		@Override
 		public CompletionStage<List<StaffDropSubmission>> loadPendingDrops()
 		{
 			return CompletableFuture.completedFuture(Collections.emptyList());
@@ -155,6 +167,18 @@ public class StaffPanelTest
 			created.set(request);
 			return CompletableFuture.completedFuture(new Announcement("id", request.getTitle(), request.getMessage(),
 				request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Staff", false));
+		}
+
+		@Override
+		public CompletionStage<ActionResult> deleteAnnouncement(String announcementId)
+		{
+			return CompletableFuture.completedFuture(new ActionResult(true, "Announcement deleted"));
+		}
+
+		@Override
+		public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled)
+		{
+			return CompletableFuture.completedFuture(new PluginSettings(enabled, Collections.emptyList()));
 		}
 
 		@Override

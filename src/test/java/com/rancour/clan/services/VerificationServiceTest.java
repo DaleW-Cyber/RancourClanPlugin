@@ -18,6 +18,7 @@ import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
 import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.models.VerificationStartResponse;
@@ -124,6 +125,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<VerificationStartResponse> startVerification() { return failed(); }
 		@Override public CompletionStage<VerificationStatus> fetchVerificationStatus(String verificationId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<MemberProfile> fetchProfile(String sessionToken) { return failed(); }
+		@Override public CompletionStage<PluginSettings> fetchSettings() { return failed(); }
 		@Override public CompletionStage<java.util.List<Announcement>> fetchAnnouncements(String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<ClanEvent>> fetchEvents(String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> joinEvent(String eventId, String sessionToken) { return failed(); }
@@ -136,6 +138,8 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> refreshEventCache(String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> closeTeam(String teamId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> lockTeam(String teamId, String sessionToken) { return failed(); }
