@@ -43,19 +43,26 @@ src/main/java/com/rancour/clan/
 
 ## Local development
 
-Clone the repository, enter the project folder, then run a Gradle build.
+This project is structured as an external RuneLite plugin with a local test launcher.
 
-Linux or macOS:
+Build:
 
 ```bash
-./gradlew build
+gradle build
 ```
 
-Windows PowerShell:
+Run RuneLite with the plugin loaded:
 
-```powershell
-.\gradlew.bat build
+```bash
+gradle run
 ```
+
+In IntelliJ IDEA:
+
+1. Open the repository as a Gradle project.
+2. Use Java 11.
+3. Run `com.rancour.clan.RancourClanPluginTest` from `src/test/java`.
+4. Open RuneLite and confirm the `Rancour Clan` side panel appears.
 
 ## Configuration
 
@@ -75,4 +82,4 @@ This is a placeholder until the Railway plugin API service is created.
 
 ## Next development step
 
-Create a local RuneLite development launcher or import this project into an IDE alongside RuneLite/plugin-hub development tooling, then confirm the side panel appears in RuneLite.
+Confirm the plugin launches locally, then add the first real API-backed feature: verified member linking.
