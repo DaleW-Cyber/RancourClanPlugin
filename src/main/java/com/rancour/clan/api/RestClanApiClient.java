@@ -1,55 +1,266 @@
 package com.rancour.clan.api;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.ClanEvent;
+import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
+import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.StaffDropSubmission;
+import com.rancour.clan.models.Team;
+import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
 
 public final class RestClanApiClient implements ClanApiClient
 {
-	private final String baseUrl;
+	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+	private static final Type ANNOUNCEMENT_LIST = new TypeToken<List<Announcement>>() { }.getType();
+	private static final Type EVENT_LIST = new TypeToken<List<ClanEvent>>() { }.getType();
+	private static final Type TEAM_LIST = new TypeToken<List<Team>>() { }.getType();
+	private static final Type STAFF_DROP_LIST = new TypeToken<List<StaffDropSubmission>>() { }.getType();
 
-	public RestClanApiClient(String baseUrl)
-	{
-		this.baseUrl = baseUrl;
-	}
+	private final OkHttpClient httpClient;
+	private final Gson gson;
+	private final HttpUrl baseUrl;
+	private final ApiException configurationError;
 
-	public String getBaseUrl()
+	public RestClanApiClient(OkHttpClient httpClient, Gson gson, String baseUrl)
 	{
-		return baseUrl;
-	}
-
-	@Override
-	public CompletionStage<VerificationStatus> fetchVerificationStatus()
-	{
-		return unavailable();
-	}
-
-	@Override
-	public CompletionStage<List<Announcement>> fetchAnnouncements()
-	{
-		return unavailable();
+		this.httpClient = httpClient;
+		this.gson = gson;
+		HttpUrl parsed = HttpUrl.parse(normalizeBaseUrl(baseUrl));
+		this.baseUrl = parsed == null ? HttpUrl.parse("http://invalid.local/") : parsed;
+		this.configurationError = parsed == null ? new ApiException("API base URL is invalid; update the Rancour Clan configuration") : null;
 	}
 
 	@Override
-	public CompletionStage<List<ClanEvent>> fetchEvents()
+	public CompletionStage<VerificationStartResponse> startVerification()
 	{
-		return unavailable();
+		return post(url("plugin", "verification", "start"), new Object(), null, VerificationStartResponse.class);
 	}
 
 	@Override
-	public CompletionStage<Void> submitDrop(DropSubmission submission)
+	public CompletionStage<VerificationStatus> fetchVerificationStatus(String verificationId, String sessionToken)
 	{
-		return unavailable();
+		HttpUrl.Builder builder = url("plugin", "verification", "status").newBuilder();
+		if (hasText(verificationId))
+		{
+			builder.addQueryParameter("verificationId", verificationId);
+		}
+		return get(builder.build(), sessionToken, VerificationStatus.class);
 	}
 
-	private static <T> CompletionStage<T> unavailable()
+	@Override
+	public CompletionStage<MemberProfile> fetchProfile(String sessionToken)
+	{
+		return get(url("plugin", "me"), sessionToken, MemberProfile.class);
+	}
+
+	@Override
+	public CompletionStage<List<Announcement>> fetchAnnouncements(String sessionToken)
+	{
+		return get(url("plugin", "announcements"), sessionToken, ANNOUNCEMENT_LIST);
+	}
+
+	@Override
+	public CompletionStage<List<ClanEvent>> fetchEvents(String sessionToken)
+	{
+		return get(url("plugin", "events"), sessionToken, EVENT_LIST);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> joinEvent(String eventId, String sessionToken)
+	{
+		return post(url("plugin", "events", eventId, "join"), new Object(), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> leaveEvent(String eventId, String sessionToken)
+	{
+		return post(url("plugin", "events", eventId, "leave"), new Object(), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken)
+	{
+		return post(url("plugin", "drops"), submission, sessionToken, DropSubmissionResult.class);
+	}
+
+	@Override
+	public CompletionStage<List<Team>> fetchTeams(String sessionToken)
+	{
+		return get(url("plugin", "teams"), sessionToken, TEAM_LIST);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> joinTeam(String teamId, String sessionToken)
+	{
+		return post(url("plugin", "teams", teamId, "join"), new Object(), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> leaveTeam(String teamId, String sessionToken)
+	{
+		return post(url("plugin", "teams", teamId, "leave"), new Object(), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<List<StaffDropSubmission>> fetchPendingDrops(String sessionToken)
+	{
+		return get(url("plugin", "staff", "drop-submissions"), sessionToken, STAFF_DROP_LIST);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken)
+	{
+		return post(url("plugin", "staff", "drop-submissions", submissionId, "approve"), new Object(), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken)
+	{
+		return post(url("plugin", "staff", "drop-submissions", submissionId, "reject"), new Object(), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken)
+	{
+		return post(url("plugin", "staff", "announcements"), request, sessionToken, Announcement.class);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> refreshEventCache(String sessionToken)
+	{
+		return unsupported("Event cache refresh requires a Railway API endpoint");
+	}
+
+	@Override
+	public CompletionStage<ActionResult> closeTeam(String teamId, String sessionToken)
+	{
+		return unsupported("Team closing requires a Railway API endpoint");
+	}
+
+	@Override
+	public CompletionStage<ActionResult> lockTeam(String teamId, String sessionToken)
+	{
+		return unsupported("Team locking requires a Railway API endpoint");
+	}
+
+	private <T> CompletionStage<T> get(HttpUrl url, String token, Type responseType)
+	{
+		Request.Builder request = new Request.Builder().url(url).get();
+		addAuthorization(request, token);
+		return execute(request.build(), responseType);
+	}
+
+	private <T> CompletionStage<T> post(HttpUrl url, Object body, String token, Type responseType)
+	{
+		RequestBody requestBody = RequestBody.create(JSON, gson.toJson(body));
+		Request.Builder request = new Request.Builder().url(url).post(requestBody);
+		addAuthorization(request, token);
+		return execute(request.build(), responseType);
+	}
+
+	private <T> CompletionStage<T> execute(Request request, Type responseType)
 	{
 		CompletableFuture<T> future = new CompletableFuture<>();
-		future.completeExceptionally(new UnsupportedOperationException("REST API integration is planned for Phase 2"));
+		if (configurationError != null)
+		{
+			future.completeExceptionally(configurationError);
+			return future;
+		}
+		httpClient.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException exception)
+			{
+				future.completeExceptionally(new ApiException("Unable to reach the Rancour API: " + exception.getMessage()));
+			}
+
+			@Override
+			public void onResponse(Call call, Response response)
+			{
+				try (ResponseBody body = response.body())
+				{
+					String json = body == null ? "" : body.string();
+					if (!response.isSuccessful())
+					{
+						ApiError error = json.isEmpty() ? null : gson.fromJson(json, ApiError.class);
+						String message = error != null && hasText(error.message) ? error.message : "Rancour API returned HTTP " + response.code();
+						future.completeExceptionally(new ApiException(message, response.code()));
+						return;
+					}
+					if (json.isEmpty())
+					{
+						future.completeExceptionally(new ApiException("Rancour API returned an empty response", response.code()));
+						return;
+					}
+					future.complete(gson.fromJson(json, responseType));
+				}
+				catch (Exception exception)
+				{
+					future.completeExceptionally(new ApiException("Could not read the Rancour API response: " + exception.getMessage()));
+				}
+			}
+		});
 		return future;
+	}
+
+	private HttpUrl url(String... segments)
+	{
+		HttpUrl.Builder builder = baseUrl.newBuilder();
+		for (String segment : segments)
+		{
+			builder.addPathSegment(segment);
+		}
+		return builder.build();
+	}
+
+	private static void addAuthorization(Request.Builder request, String token)
+	{
+		if (hasText(token))
+		{
+			request.header("Authorization", "Bearer " + token);
+		}
+	}
+
+	private static String normalizeBaseUrl(String value)
+	{
+		String trimmed = value == null ? "" : value.trim();
+		return trimmed.endsWith("/") ? trimmed : trimmed + "/";
+	}
+
+	private static boolean hasText(String value)
+	{
+		return value != null && !value.trim().isEmpty();
+	}
+
+	private static <T> CompletionStage<T> unsupported(String message)
+	{
+		CompletableFuture<T> future = new CompletableFuture<>();
+		future.completeExceptionally(new UnsupportedOperationException(message));
+		return future;
+	}
+
+	private static final class ApiError
+	{
+		private String message;
 	}
 }

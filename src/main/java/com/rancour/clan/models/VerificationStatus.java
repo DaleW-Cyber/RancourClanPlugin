@@ -2,15 +2,25 @@ package com.rancour.clan.models;
 
 public final class VerificationStatus
 {
-	private final boolean linked;
-	private final String message;
+	private final String state;
+	private final String sessionToken;
+	private final MemberProfile profile;
+	private final String expiresAt;
+	private final String lastCheckedAt;
 
-	public VerificationStatus(boolean linked, String message)
+	public VerificationStatus(String state, String sessionToken, MemberProfile profile, String expiresAt, String lastCheckedAt)
 	{
-		this.linked = linked;
-		this.message = message;
+		this.state = state;
+		this.sessionToken = sessionToken;
+		this.profile = profile;
+		this.expiresAt = expiresAt;
+		this.lastCheckedAt = lastCheckedAt;
 	}
 
-	public boolean isLinked() { return linked; }
-	public String getMessage() { return message; }
+	public String getState() { return state; }
+	public String getSessionToken() { return sessionToken; }
+	public MemberProfile getProfile() { return profile; }
+	public String getExpiresAt() { return expiresAt; }
+	public String getLastCheckedAt() { return lastCheckedAt; }
+	public boolean isVerified() { return "verified".equalsIgnoreCase(state) && profile != null; }
 }

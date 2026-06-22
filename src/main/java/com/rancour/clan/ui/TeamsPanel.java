@@ -9,20 +9,20 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import com.rancour.clan.models.ActionResult;
-import com.rancour.clan.models.ClanEvent;
-import com.rancour.clan.services.EventService;
+import com.rancour.clan.models.Team;
+import com.rancour.clan.services.TeamService;
 
-final class EventsPanel extends JPanel
+final class TeamsPanel extends JPanel
 {
-	private final EventService service;
+	private final TeamService service;
 	private final JLabel status = new JLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 
-	EventsPanel(EventService service)
+	TeamsPanel(TeamService service)
 	{
 		super(new BorderLayout());
 		this.service = service;
-		JButton refresh = new JButton("Refresh Events");
+		JButton refresh = new JButton("Refresh Teams");
 		refresh.addActionListener(event -> refresh());
 		JPanel controls = new JPanel(new BorderLayout());
 		controls.add(refresh, BorderLayout.CENTER);
@@ -33,32 +33,34 @@ final class EventsPanel extends JPanel
 
 	private void refresh()
 	{
-		status.setText("Loading events...");
-		service.loadEvents().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> render(items, error)));
+		status.setText("Loading teams...");
+		service.loadTeams().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> render(items, error)));
 	}
 
-	private void render(List<ClanEvent> items, Throwable error)
+	private void render(List<Team> items, Throwable error)
 	{
 		content.removeAll();
-		content.add(UiComponents.heading("Event Centre"));
+		content.add(UiComponents.heading("Team Finder"));
 		if (error != null)
 		{
 			status.setText("Error: " + UiComponents.errorMessage(error));
-			content.add(UiComponents.wrapped("Events are unavailable. Try refresh when the API is online."));
+			content.add(UiComponents.wrapped("Teams are unavailable. Try refresh when the API is online."));
 		}
 		else if (items == null || items.isEmpty())
 		{
-			status.setText("No upcoming events");
-			content.add(UiComponents.wrapped("No open events were returned."));
+			status.setText("No open teams");
+			content.add(UiComponents.wrapped("No open teams were returned."));
 		}
 		else
 		{
-			status.setText(items.size() + " event(s)");
-			for (ClanEvent item : items)
+			status.setText(items.size() + " team(s)");
+			for (Team item : items)
 			{
-				JPanel card = UiComponents.card(item.getName(), item.getDescription(),
-					item.getStartTime() + " | Host: " + item.getHost() + " | " + item.getStatus()
-						+ " | Signups: " + item.getSignupCount());
+				String details = "Host: " + item.getHost() + " | Roles: " + String.join(", ", item.getRequiredRoles())
+					+ " | Members: " + item.getCurrentMembers() + "/" + item.getCapacity() + " | World: " + item.getWorld()
+					+ " | Voice: " + (item.isVoiceRequired() ? "Required" : "Optional");
+				String tags = (item.isStaffHosted() ? "Staff-hosted | " : "") + String.join(", ", item.getTags()) + " | " + item.getStatus();
+				JPanel card = UiComponents.card(item.getActivity(), details, tags);
 				JPanel actions = new JPanel(new GridLayout(1, 2, 4, 0));
 				JButton join = new JButton("Join");
 				JButton leave = new JButton("Leave");
@@ -76,14 +78,11 @@ final class EventsPanel extends JPanel
 
 	private void action(CompletionStage<ActionResult> action)
 	{
-		status.setText("Saving event signup...");
+		status.setText("Saving team signup...");
 		action.whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
 		{
 			status.setText(error == null ? result.getMessage() : "Error: " + UiComponents.errorMessage(error));
-			if (error == null)
-			{
-				refresh();
-			}
+			if (error == null) { refresh(); }
 		}));
 	}
 }

@@ -18,4 +18,24 @@ public interface RancourClanConfig extends Config
 	{
 		return "https://api.rancourpvm.com";
 	}
+
+	@ConfigItem(
+		keyName = "mockMode",
+		name = "Mock mode",
+		description = "Use clearly labelled local development data instead of the Rancour API"
+	)
+	default boolean mockMode()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "minimumDropValue",
+		name = "Minimum drop value",
+		description = "Minimum total GE value for NPC loot confirmation prompts"
+	)
+	default int minimumDropValue()
+	{
+		return 1_000_000;
+	}
 }

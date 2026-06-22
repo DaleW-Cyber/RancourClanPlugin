@@ -1,39 +1,64 @@
 package com.rancour.clan;
 
 import com.google.inject.Provides;
+import com.google.gson.Gson;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.time.Duration;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.Client;
+import net.runelite.api.events.ChatMessage;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.NpcLootReceived;
+import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.ItemStack;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import okhttp3.OkHttpClient;
 import com.rancour.clan.api.ClanApiClient;
+import com.rancour.clan.api.MockClanApiClient;
 import com.rancour.clan.api.RestClanApiClient;
 import com.rancour.clan.config.RancourClanConfig;
+import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.services.AnnouncementService;
+import com.rancour.clan.services.ApiServices;
 import com.rancour.clan.services.DropService;
+import com.rancour.clan.services.DropDetector;
+import com.rancour.clan.services.DuplicateDropGuard;
 import com.rancour.clan.services.EventService;
-import com.rancour.clan.services.PlaceholderAnnouncementService;
-import com.rancour.clan.services.PlaceholderDropService;
-import com.rancour.clan.services.PlaceholderEventService;
-import com.rancour.clan.services.PlaceholderVerificationService;
+import com.rancour.clan.services.InMemorySessionStore;
+import com.rancour.clan.services.RuneLiteSessionStore;
+import com.rancour.clan.services.SessionStore;
+import com.rancour.clan.services.StaffService;
+import com.rancour.clan.services.TeamService;
 import com.rancour.clan.services.VerificationService;
 import com.rancour.clan.ui.RancourClanPanel;
 
 @PluginDescriptor(
 	name = "Rancour Clan",
-	description = "Rancour clan verification, announcements, events, and drop tools",
-	tags = {"clan", "pvm", "events", "drops", "verification"}
+	description = "Rancour clan verification, announcements, events, teams, and drop tools",
+	tags = {"clan", "pvm", "events", "drops", "verification", "teams"}
 )
 public class RancourClanPlugin extends Plugin
 {
 	@Inject
+	private Client client;
+
+	@Inject
 	private ClientToolbar clientToolbar;
+
+	@Inject
+	private ItemManager itemManager;
+
+	@Inject
+	private RancourClanConfig config;
 
 	@Inject
 	private VerificationService verificationService;
@@ -47,18 +72,30 @@ public class RancourClanPlugin extends Plugin
 	@Inject
 	private DropService dropService;
 
+	@Inject
+	private TeamService teamService;
+
+	@Inject
+	private StaffService staffService;
+
 	private NavigationButton navigationButton;
+	private volatile RancourClanPanel panel;
+	private final DropDetector dropDetector = new DropDetector();
+	private final DuplicateDropGuard duplicateDropGuard = new DuplicateDropGuard(Duration.ofSeconds(30));
 
 	@Override
 	protected void startUp()
 	{
 		SwingUtilities.invokeLater(() ->
 		{
-			RancourClanPanel panel = new RancourClanPanel(
+			panel = new RancourClanPanel(
 				verificationService,
 				announcementService,
 				eventService,
-				dropService
+				dropService,
+				teamService,
+				staffService,
+				config.mockMode()
 			);
 			navigationButton = NavigationButton.builder()
 				.tooltip("Rancour Clan")
@@ -80,7 +117,48 @@ public class RancourClanPlugin extends Plugin
 				clientToolbar.removeNavigation(navigationButton);
 				navigationButton = null;
 			}
+			panel = null;
 		});
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		if (event.getType() != ChatMessageType.GAMEMESSAGE && event.getType() != ChatMessageType.SPAM)
+		{
+			return;
+		}
+		String rsn = client.getLocalPlayer() == null ? "Unknown" : client.getLocalPlayer().getName();
+		dropDetector.fromChatMessage(event.getMessage(), rsn).filter(duplicateDropGuard::accept).ifPresent(this::offerDropCandidate);
+	}
+
+	@Subscribe
+	public void onNpcLootReceived(NpcLootReceived event)
+	{
+		String rsn = client.getLocalPlayer() == null ? "Unknown" : client.getLocalPlayer().getName();
+		String source = event.getNpc() == null ? "Unknown NPC" : event.getNpc().getName();
+		for (ItemStack item : event.getItems())
+		{
+			long totalValue = (long) itemManager.getItemPrice(item.getId()) * item.getQuantity();
+			if (totalValue >= config.minimumDropValue())
+			{
+				String itemName = itemManager.getItemComposition(item.getId()).getName();
+				DropCandidate candidate = dropDetector.fromNpcLoot(itemName, source, rsn);
+				if (duplicateDropGuard.accept(candidate))
+				{
+					offerDropCandidate(candidate);
+				}
+			}
+		}
+	}
+
+	private void offerDropCandidate(DropCandidate candidate)
+	{
+		RancourClanPanel currentPanel = panel;
+		if (currentPanel != null)
+		{
+			currentPanel.offerDropCandidate(candidate);
+		}
 	}
 
 	@Provides
@@ -90,33 +168,51 @@ public class RancourClanPlugin extends Plugin
 	}
 
 	@Provides
-	ClanApiClient provideApiClient(RancourClanConfig config)
+	SessionStore provideSessionStore(ConfigManager configManager, RancourClanConfig config)
 	{
-		return new RestClanApiClient(config.apiBaseUrl());
+		return config.mockMode() ? new InMemorySessionStore() : new RuneLiteSessionStore(configManager);
 	}
 
 	@Provides
-	VerificationService provideVerificationService()
+	ClanApiClient provideApiClient(OkHttpClient httpClient, Gson gson, RancourClanConfig config)
 	{
-		return new PlaceholderVerificationService();
+		return config.mockMode() ? new MockClanApiClient() : new RestClanApiClient(httpClient, gson, config.apiBaseUrl());
 	}
 
 	@Provides
-	AnnouncementService provideAnnouncementService()
+	VerificationService provideVerificationService(ClanApiClient api, SessionStore sessions)
 	{
-		return new PlaceholderAnnouncementService();
+		return ApiServices.verification(api, sessions);
 	}
 
 	@Provides
-	EventService provideEventService()
+	AnnouncementService provideAnnouncementService(ClanApiClient api, VerificationService verification)
 	{
-		return new PlaceholderEventService();
+		return ApiServices.announcements(api, verification);
 	}
 
 	@Provides
-	DropService provideDropService()
+	EventService provideEventService(ClanApiClient api, VerificationService verification)
 	{
-		return new PlaceholderDropService();
+		return ApiServices.events(api, verification);
+	}
+
+	@Provides
+	DropService provideDropService(ClanApiClient api, VerificationService verification)
+	{
+		return ApiServices.drops(api, verification);
+	}
+
+	@Provides
+	TeamService provideTeamService(ClanApiClient api, VerificationService verification)
+	{
+		return ApiServices.teams(api, verification);
+	}
+
+	@Provides
+	StaffService provideStaffService(ClanApiClient api, VerificationService verification)
+	{
+		return ApiServices.staff(api, verification);
 	}
 
 	private static BufferedImage createNavigationIcon()
