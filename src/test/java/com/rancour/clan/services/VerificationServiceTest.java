@@ -21,6 +21,7 @@ import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamCreateRequest;
 import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
@@ -210,8 +211,9 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> leaveEvent(String eventId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchTeams(String sessionToken) { return failed(); }
-		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String sessionToken) { return failed(); }
-		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Team> createTeam(TeamCreateRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<StaffDropSubmission>> fetchPendingDrops(String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken) { return failed(); }
@@ -251,8 +253,9 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> leaveEvent(String eventId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchTeams(String sessionToken) { return failed(); }
-		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String sessionToken) { return failed(); }
-		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Team> createTeam(TeamCreateRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
+		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<StaffDropSubmission>> fetchPendingDrops(String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken) { return failed(); }

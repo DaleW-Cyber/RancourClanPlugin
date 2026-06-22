@@ -82,10 +82,29 @@ public class RestClanApiClientTest
 			"https://api.example.test"
 		);
 
-		api.joinTeam("team-1", "team-session").toCompletableFuture().get();
+		api.joinTeam("team-1", "Mutable", "team-session").toCompletableFuture().get();
 
 		assertEquals("POST", captured.get().method());
 		assertEquals("https://api.example.test/plugin/teams/team-1/join", captured.get().url().toString());
+		assertEquals("Bearer team-session", captured.get().header("Authorization"));
+	}
+
+	@Test
+	public void createTeamSendsBearerAuthorizationAndActiveRsn() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200,
+				"{\"id\":\"team-1\",\"activity\":\"Nex\",\"host\":\"Mutable\",\"requiredRoles\":[],\"currentMembers\":1,\"capacity\":5,\"world\":420,\"voiceRequired\":true,\"status\":\"open\",\"staffHosted\":false,\"tags\":[],\"joined\":true,\"joinedMembers\":[\"Mutable\"]}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.createTeam(new com.rancour.clan.models.TeamCreateRequest("Nex", 5, 420, true, "Learner", "Mutable"), "team-session")
+			.toCompletableFuture().get();
+
+		assertEquals("POST", captured.get().method());
+		assertEquals("https://api.example.test/plugin/teams", captured.get().url().toString());
 		assertEquals("Bearer team-session", captured.get().header("Authorization"));
 	}
 

@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import com.rancour.clan.api.ClanApiClient;
@@ -20,6 +21,7 @@ import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamCreateRequest;
 import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
@@ -70,11 +72,17 @@ public final class ApiServices
 
 	public static TeamService teams(ClanApiClient api, VerificationService verification)
 	{
+		return teams(api, verification, () -> "");
+	}
+
+	public static TeamService teams(ClanApiClient api, VerificationService verification, Supplier<String> activeRsn)
+	{
 		return new TeamService()
 		{
 			@Override public CompletionStage<List<Team>> loadTeams() { return api.fetchTeams(verification.getSessionToken()); }
-			@Override public CompletionStage<ActionResult> join(String id) { return withToken(verification, token -> api.joinTeam(id, token)); }
-			@Override public CompletionStage<ActionResult> leave(String id) { return withToken(verification, token -> api.leaveTeam(id, token)); }
+			@Override public CompletionStage<Team> create(TeamCreateRequest request) { return withToken(verification, token -> api.createTeam(withActiveRsn(request, activeRsn.get()), token)); }
+			@Override public CompletionStage<ActionResult> join(String id) { return withToken(verification, token -> api.joinTeam(id, activeRsn.get(), token)); }
+			@Override public CompletionStage<ActionResult> leave(String id) { return withToken(verification, token -> api.leaveTeam(id, activeRsn.get(), token)); }
 		};
 	}
 
@@ -151,6 +159,13 @@ public final class ApiServices
 	private interface AsyncCall<T>
 	{
 		CompletionStage<T> invoke(String token);
+	}
+
+	private static TeamCreateRequest withActiveRsn(TeamCreateRequest request, String activeRsn)
+	{
+		String selected = hasText(activeRsn) ? activeRsn : request.getActiveRsn();
+		return new TeamCreateRequest(request.getActivity(), request.getCapacity(), request.getWorld(),
+			request.isVoiceRequired(), request.getNotes(), selected);
 	}
 
 	private static boolean isUnauthorized(Throwable error)

@@ -30,6 +30,8 @@ import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
+import com.rancour.clan.models.TeamActionRequest;
+import com.rancour.clan.models.TeamCreateRequest;
 import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.models.VerificationStartResponse;
 import com.rancour.clan.models.VerificationStatus;
@@ -136,15 +138,21 @@ public final class RestClanApiClient implements ClanApiClient
 	}
 
 	@Override
-	public CompletionStage<ActionResult> joinTeam(String teamId, String sessionToken)
+	public CompletionStage<Team> createTeam(TeamCreateRequest request, String sessionToken)
 	{
-		return protectedPost(url("plugin", "teams", teamId, "join"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "teams"), request, sessionToken, Team.class);
 	}
 
 	@Override
-	public CompletionStage<ActionResult> leaveTeam(String teamId, String sessionToken)
+	public CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken)
 	{
-		return protectedPost(url("plugin", "teams", teamId, "leave"), new Object(), sessionToken, ActionResult.class);
+		return protectedPost(url("plugin", "teams", teamId, "join"), new TeamActionRequest(activeRsn), sessionToken, ActionResult.class);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> leaveTeam(String teamId, String activeRsn, String sessionToken)
+	{
+		return protectedPost(url("plugin", "teams", teamId, "leave"), new TeamActionRequest(activeRsn), sessionToken, ActionResult.class);
 	}
 
 	@Override

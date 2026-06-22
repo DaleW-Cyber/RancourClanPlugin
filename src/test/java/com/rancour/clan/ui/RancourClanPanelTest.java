@@ -51,6 +51,7 @@ public class RancourClanPanelTest
 		assertTrue(buttons.contains("Events"));
 		assertTrue(buttons.contains("Drops"));
 		assertTrue(buttons.contains("Teams"));
+		assertTrue(buttons.contains("Create Team"));
 		assertTrue(buttons.contains("Staff"));
 		assertTrue(buttons.contains("Test API"));
 	}

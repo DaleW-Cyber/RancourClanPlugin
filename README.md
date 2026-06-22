@@ -11,7 +11,7 @@ An early-release RuneLite plugin for Rancour clan verification, announcements, e
 - Discord-backed, API role-filtered read-only event list
 - Valuable/untradeable game-chat and high-value NPC-loot detection with approved-catalogue filtering and 30-second duplicate prevention
 - Explicit drop confirmation before API submission
-- Team Finder with verified Join/Leave actions, host display, and joined member names
+- Team Finder with verified Create/Join/Leave actions, host display, and joined member RSN aliases
 - Staff-only menu with compact announcement creation/deletion, Drops Panel toggle, and team edit/close controls
 - Explicit mock mode for local development
 
@@ -117,7 +117,7 @@ The API, not RuneLite, filters events using the Discord roles stored on the veri
 
 ### Teams
 
-Team Finder shows active teams returned by the API, including host, joined members, world, capacity, and voice requirement. Teams expire two hours after creation. Full teams remain visible for five minutes after reaching capacity, then disappear from normal Team Finder responses. Staff can manage active teams from `Staff -> Teams`, including editing activity/capacity/world/voice/tags/status and closing teams with confirmation.
+Team Finder shows active teams returned by the API, including host, joined members, world, capacity, and voice requirement. Members can create teams from the Team Finder page; RuneLite sends the active logged-in RSN so hosts and joined members display by RSN wherever possible. Teams expire two hours after creation. Full teams remain visible for five minutes after reaching capacity, then disappear from normal Team Finder responses. Staff can manage active teams from `Staff -> Teams`, including editing activity/capacity/world/voice/tags/status and closing teams with confirmation.
 
 ## Architecture
 

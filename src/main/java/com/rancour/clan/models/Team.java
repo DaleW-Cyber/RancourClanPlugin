@@ -13,6 +13,7 @@ public final class Team
 	private final int capacity;
 	private final int world;
 	private final boolean voiceRequired;
+	private final String notes;
 	private final String status;
 	private final boolean staffHosted;
 	private final List<String> tags;
@@ -28,13 +29,22 @@ public final class Team
 		List<String> tags, boolean joined)
 	{
 		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
-			staffHosted, tags, joined, Collections.emptyList(), null, null, null, null);
+			staffHosted, tags, joined, Collections.emptyList(), null, null, null, null, "");
 	}
 
 	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
 		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
 		List<String> tags, boolean joined, List<String> joinedMembers, String createdAt, String expiresAt,
 		String fullAt, String closedAt)
+	{
+		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
+			staffHosted, tags, joined, joinedMembers, createdAt, expiresAt, fullAt, closedAt, "");
+	}
+
+	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
+		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
+		List<String> tags, boolean joined, List<String> joinedMembers, String createdAt, String expiresAt,
+		String fullAt, String closedAt, String notes)
 	{
 		this.id = id;
 		this.activity = activity;
@@ -44,6 +54,7 @@ public final class Team
 		this.capacity = capacity;
 		this.world = world;
 		this.voiceRequired = voiceRequired;
+		this.notes = notes;
 		this.status = status;
 		this.staffHosted = staffHosted;
 		this.tags = tags == null ? Collections.emptyList() : tags;
@@ -63,6 +74,7 @@ public final class Team
 	public int getCapacity() { return capacity; }
 	public int getWorld() { return world; }
 	public boolean isVoiceRequired() { return voiceRequired; }
+	public String getNotes() { return notes; }
 	public String getStatus() { return status; }
 	public boolean isStaffHosted() { return staffHosted; }
 	public List<String> getTags() { return tags; }

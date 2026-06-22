@@ -21,5 +21,7 @@ Use the normal RuneLite sidebar width. Do not drag the sidebar wider to make thi
 17. Open Staff -> Teams. Confirm team cards show Activity, Host, World, Members current/capacity, Joined names, expiry, Edit, and Close without clipped text.
 18. Edit a team from Staff -> Teams and confirm the Team Finder refreshes with the new values.
 19. Close a team from Staff -> Teams, confirm the `Close this team?` prompt appears, and confirm the team disappears from normal Team Finder.
-20. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, or Lock Team. Drop approvals remain in Discord for now.
+20. Open Teams -> Create Team. Confirm Activity, Capacity, World, Voice required, Notes, Create, and Back fit the sidebar.
+21. Create a team while logged into a linked RSN and confirm Host and Joined show the RSN.
+22. Confirm Staff does not show disabled placeholders for Pending Drops, Event Cache, or Lock Team. Drop approvals remain in Discord for now.
 21. Capture screenshots of all pages at the normal width for release review. No text should cross the right edge or create a horizontal scrollbar.

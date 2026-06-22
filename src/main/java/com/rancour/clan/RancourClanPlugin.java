@@ -274,7 +274,7 @@ public class RancourClanPlugin extends Plugin
 	@Provides
 	TeamService provideTeamService(ClanApiClient api, VerificationService verification)
 	{
-		return ApiServices.teams(api, verification);
+		return ApiServices.teams(api, verification, () -> config.mockMode() ? "Mock RSN" : activeRsn);
 	}
 
 	@Provides
