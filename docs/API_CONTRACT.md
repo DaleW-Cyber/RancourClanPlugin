@@ -81,12 +81,18 @@ Requires authentication. Returns the profile object shown above. The server shou
 
 ### `GET /plugin/settings`
 
-Returns public client settings and the approved Rancour drop catalogue. The catalogue is used by RuneLite to suppress unknown high-value loot before it becomes a pending drop candidate; the API must still validate the submitted item again.
+Returns public client settings and the approved Rancour drop catalogue. The catalogue is sourced from the Discord bot `drop_catalog.py`, which also powers manual Discord drop submission and ADS parsing. The catalogue is used by RuneLite to suppress unknown high-value loot before it becomes a pending drop candidate; the API must still validate the submitted item again.
 
 ```json
 {
   "dropsPanelEnabled": true,
-  "approvedDrops": ["Twisted bow", "Dexterous prayer scroll"]
+  "approvedDrops": ["Twisted bow", "Dexterous prayer scroll"],
+  "approvedDropSources": [
+    {
+      "boss": "Chambers of Xeric",
+      "drops": ["Twisted bow", "Dexterous prayer scroll"]
+    }
+  ]
 }
 ```
 
@@ -203,10 +209,11 @@ Drop submissions can be globally disabled with `dropsPanelEnabled=false`. When d
 The API also rejects item names that are not present in the approved Rancour drop catalogue with:
 
 ```json
-{ "message": "Drop is not in the approved Rancour catalogue." }
+{ "message": "This item is not part of the approved Rancour drop catalogue." }
 ```
 
 Discord does not need to recognise a drop before RuneLite sees it; RuneLite detects the drop and the API validates it against the catalogue.
+Plugin-submitted drops are stored with `origin=plugin`, allowing Discord ADS to skip matching RSN + item + source detections within its configured dedupe window.
 
 ## Teams
 

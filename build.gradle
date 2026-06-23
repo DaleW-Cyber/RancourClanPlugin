@@ -19,6 +19,7 @@ repositories {
 
 def runeLiteVersion = 'latest.release'
 def pluginMainClass = 'com.rancour.clan.RancourClanPluginTest'
+def pluginClass = 'com.rancour.clan.RancourClanPlugin'
 
 dependencies {
 	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
@@ -71,4 +72,22 @@ tasks.register('shadowJar', Jar) {
 	group = BasePlugin.BUILD_GROUP
 	archiveClassifier.set('shadow')
 	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
+}
+
+tasks.register('sideloadJar', Jar) {
+	description = 'Builds a slim jar for RuneLite developer-mode sideloading.'
+	group = BasePlugin.BUILD_GROUP
+
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from sourceSets.main.output
+	archiveClassifier.set('sideload')
+	archiveFileName.set("${rootProject.name}-${project.version}-sideload.jar")
+
+	manifest {
+		attributes(
+			'RuneLite-Plugin-Class': pluginClass,
+			'Implementation-Title': 'Rancour Clan Plugin',
+			'Implementation-Version': project.version
+		)
+	}
 }

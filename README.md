@@ -51,6 +51,38 @@ Windows PowerShell:
 
 RuneLite starts in developer mode with `Rancour Clan` loaded as an external plugin. Enable it in RuneLite configuration if necessary, then open the `R` sidebar icon.
 
+## Peer Testing Before Plugin Hub
+
+For member-friendly setup steps, send testers [docs/PEER_TESTING.md](docs/PEER_TESTING.md), `launch-rancour-plugin.bat`, and the `rancour-clan-plugin-1.3.0-all.jar` file.
+
+RuneLite does not load arbitrary jars dropped into `~/.runelite/externalplugins`. That directory is not the developer sideload folder used by current RuneLite builds.
+
+For local peer testing, use one of these developer-mode paths:
+
+```powershell
+.\gradlew.bat run
+```
+
+or build a runnable developer jar:
+
+```powershell
+.\gradlew.bat clean shadowJar
+java -ea -jar .\build\libs\rancour-clan-plugin-1.3.0-all.jar --developer-mode --debug
+```
+
+The runnable developer jar launches RuneLite with `RancourClanPlugin` registered through `ExternalPluginManager.loadBuiltin(...)`; it should be run, not copied into RuneLite's `externalplugins` folder.
+
+If you specifically want to test RuneLite's developer sideload folder, build the slim sideload jar and place it in `~/.runelite/sideloaded-plugins`, then launch RuneLite with `--developer-mode`:
+
+```powershell
+.\gradlew.bat clean sideloadJar
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.runelite\sideloaded-plugins"
+Copy-Item .\build\libs\rancour-clan-plugin-1.3.0-sideload.jar "$env:USERPROFILE\.runelite\sideloaded-plugins\"
+java -ea -jar .\build\libs\rancour-clan-plugin-1.3.0-all.jar --developer-mode --debug
+```
+
+Normal RuneLite/Jagex Launcher starts are not developer-mode starts, so they will not load loose sideload jars. Public users should install the Plugin Hub release once published.
+
 ## IntelliJ IDEA
 
 1. Install a Java 11 JDK.
@@ -98,7 +130,7 @@ The plugin compares the currently logged-in RuneLite account with `linkedRsns` f
 
 ### Drops
 
-The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. Detected items are filtered against the approved Rancour drop catalogue returned by `GET /plugin/settings`; unknown high-value items are ignored and never create a pending candidate. A recognized candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
+The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. Detected items are filtered against the approved Rancour drop catalogue returned by `GET /plugin/settings`; that catalogue is sourced from the Discord bot's `drop_catalog.py`, the same list used by manual Discord drop submission and ADS. Unknown high-value items are ignored and never create a pending candidate. A recognized candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
 
 Each submission includes item name, source, current RuneLite RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds. The API independently requires that RSN to be in the verified profile's trusted linked-RSN set and rejects items outside the approved catalogue. Discord does not need to recognise the drop first; RuneLite detects it, then the API validates it.
 

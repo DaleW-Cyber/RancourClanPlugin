@@ -2,6 +2,8 @@ package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.function.Predicate;
@@ -28,6 +30,8 @@ final class StaffPanel extends JPanel
 	private final JTextArea status = UiComponents.statusLabel("Ready");
 	private final JPanel content = UiComponents.contentPanel();
 	private boolean dropsPanelEnabled = true;
+	private int approvedDropCount;
+	private String lastSettingsRefresh = "Not loaded";
 	JButton announcementsButton;
 	JButton dropsPanelButton;
 	JButton teamsButton;
@@ -208,6 +212,8 @@ final class StaffPanel extends JPanel
 			dropsPanelEnabled ? RancourTheme.SUCCESS : RancourTheme.DANGER);
 		card.add(UiComponents.badge(dropsPanelEnabled ? "ENABLED" : "DISABLED",
 			dropsPanelEnabled ? RancourTheme.SUCCESS : RancourTheme.DANGER));
+		card.add(UiComponents.fieldRow("Approved drops", String.valueOf(approvedDropCount)));
+		card.add(UiComponents.fieldRow("Last refresh", lastSettingsRefresh));
 		JButton toggle = dropsPanelEnabled
 			? UiComponents.dangerButton("Disable Drops Panel")
 			: UiComponents.successButton("Enable Drops Panel");
@@ -398,6 +404,10 @@ final class StaffPanel extends JPanel
 		if (settings != null)
 		{
 			dropsPanelEnabled = settings.isDropsPanelEnabled();
+			approvedDropCount = settings.getApprovedDrops().size();
+			lastSettingsRefresh = DateTimeFormatter.ofPattern("HH:mm:ss")
+				.withZone(ZoneId.systemDefault())
+				.format(Instant.now());
 		}
 	}
 
