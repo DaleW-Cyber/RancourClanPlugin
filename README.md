@@ -1,224 +1,70 @@
-# Rancour PvM Plugin
+# Rancour PvM
 
-An early-release RuneLite Plugin Hub plugin for Rancour PvM clan verification, announcements, events, drop submissions, team finding, and staff workflows. All external communication goes through the Rancour REST API. The plugin contains no Discord bot token, Google credentials, Railway secret, or direct Google Sheets integration.
+Rancour PvM is a RuneLite plugin for members of the Rancour PvM clan.
 
-## Current MVP
+It links your RuneLite account with Discord so the clan can show useful member tools inside RuneLite, including news, events, teams, and approved drop submissions.
 
-- Discord link-code generation and verification status refresh
-- RuneLite config-backed API session persistence
-- Verified profile display: Discord name, active RSN, trusted linked RSNs, clan rank, staff status, expiry, and last checked time
-- Compact announcement feed that shows only title/body, with loading, empty, refresh, error, and optional non-duplicating chat notifications
-- Discord-backed, API role-filtered read-only event list
-- Valuable/untradeable game-chat and high-value NPC-loot detection with approved-catalogue filtering and 30-second duplicate prevention
-- Explicit drop confirmation before API submission
-- Team Finder with verified Create/Join/Leave actions, host display, and joined member RSN aliases
-- Staff-only menu with compact announcement creation/deletion, Drops Panel toggle, and team edit/close controls
-- Production API connection by default with developer-only system-property override
-
-The required backend contract is documented in [docs/API_CONTRACT.md](docs/API_CONTRACT.md). Release readiness is tracked in [docs/EARLY_RELEASE_CHECKLIST.md](docs/EARLY_RELEASE_CHECKLIST.md).
-
-## Requirements
-
-- Java Development Kit 11
-- Git
-- Internet access for Gradle dependencies and live API testing
-
-The Gradle 8.10 wrapper is included, so a system Gradle installation is not required.
-
-## Build
-
-```bash
-./gradlew clean build
-```
-
-Windows PowerShell:
-
-```powershell
-.\gradlew.bat clean build
-```
-
-## Plugin Hub User Setup
-
-Once published in the Plugin Hub:
+## Setup
 
 1. Open RuneLite.
 2. Open the Plugin Hub.
 3. Search for `Rancour PvM`.
 4. Install and enable the plugin.
-5. Open the `R` sidebar icon.
-6. Click `Generate Link Code`, then use the Discord verification panel to link your account.
+5. Open the `R` icon in the RuneLite sidebar.
+6. Click `Generate Link Code`.
+7. In Discord, use the Rancour plugin verification panel and enter the code shown in RuneLite.
+8. Return to RuneLite and click `Refresh Status`.
 
-No API URL, mock mode, Discord token, Google credential, or Railway setting is exposed in RuneLite configuration.
+Once linked, the plugin will remember your verification session until it expires or is revoked.
 
-## Run RuneLite locally
+## Features
 
-```bash
-./gradlew run
-```
+- Verify your RuneLite account with your Rancour Discord profile
+- View clan news and announcements
+- View clan events
+- Create, join, and leave PvM teams
+- Submit approved drops for review
+- Receive short RuneLite chat notifications for important updates
+- Staff tools for authorised Rancour staff members
 
-Windows PowerShell:
+## Events
 
-```powershell
-.\gradlew.bat run
-```
+Events shown in RuneLite are read-only.
 
-RuneLite starts in developer mode with `Rancour PvM` loaded as an external plugin. Enable it in RuneLite configuration if necessary, then open the `R` sidebar icon.
+Joining or leaving events is handled in Discord.
 
-## Developer Testing Before Plugin Hub
+Staff-only and restricted events are labelled clearly when they are visible to you.
 
-For member-friendly pre-release setup steps, send testers [docs/PEER_TESTING.md](docs/PEER_TESTING.md), `launch-rancour-plugin.bat`, and the `rancour-clan-plugin-1.3.0-all.jar` file.
+## Drops
 
-RuneLite does not load arbitrary jars dropped into `~/.runelite/externalplugins`. That directory is not the developer sideload folder used by current RuneLite builds.
+The Drops page only recognises items from the approved Rancour drop catalogue.
 
-For local peer testing, use one of these developer-mode paths:
+Detected drops are never submitted automatically. You must confirm the submission first.
 
-```powershell
-.\gradlew.bat run
-```
+If drop submissions are disabled by staff, the Drops page will say so.
 
-or build a runnable developer jar:
+## Teams
 
-```powershell
-.\gradlew.bat clean shadowJar
-java -ea -jar .\build\libs\rancour-clan-plugin-1.3.0-all.jar --developer-mode --debug
-```
+Team Finder shows active teams from Rancour.
 
-The runnable developer jar launches RuneLite with `RancourClanPlugin` registered through `ExternalPluginManager.loadBuiltin(...)`; it should be run, not copied into RuneLite's `externalplugins` folder.
+Teams show the activity, host, world, members, capacity, voice requirement, and notes where available.
 
-If you specifically want to test RuneLite's developer sideload folder, build the slim sideload jar and place it in `~/.runelite/sideloaded-plugins`, then launch RuneLite with `--developer-mode`:
+Teams expire automatically, and empty teams are removed shortly after everyone leaves.
 
-```powershell
-.\gradlew.bat clean sideloadJar
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.runelite\sideloaded-plugins"
-Copy-Item .\build\libs\rancour-clan-plugin-1.3.0-sideload.jar "$env:USERPROFILE\.runelite\sideloaded-plugins\"
-java -ea -jar .\build\libs\rancour-clan-plugin-1.3.0-all.jar --developer-mode --debug
-```
+## Privacy And Safety
 
-Normal RuneLite/Jagex Launcher starts are not developer-mode starts, so they will not load loose sideload jars. Public users should install the Plugin Hub release once published.
+The plugin does not contain clan admin credentials or private service secrets.
 
-## IntelliJ IDEA
+The plugin only connects to Rancour's plugin service. It does not connect directly to Discord or clan spreadsheets.
 
-1. Install a Java 11 JDK.
-2. Open the repository as a Gradle project.
-3. Select the included Gradle wrapper.
-4. Set both the project SDK and Gradle JVM to Java 11.
-5. Wait for Gradle synchronization.
-6. Run the Gradle `run` task or `com.rancour.clan.RancourClanPluginTest` from `src/test/java`.
+Your verification status and session are stored locally in RuneLite configuration so the plugin can keep you signed in between launches.
 
-Do not add a RuneLite client JAR manually.
+## Support
 
-## Configuration
+For help, use the Rancour Discord support channels.
 
-Plugin Hub users do not need to configure backend settings. The plugin uses the production API by default:
-
-```text
-https://rancourdiscordbot-production.up.railway.app
-```
-
-Local developers can override the API with the JVM system property `rancour.apiBaseUrl`; this is intentionally not exposed in RuneLite settings. The value is trimmed and normalized so trailing slashes do not create duplicate slashes in request URLs. Use **Test API Connection** on the Verification page to call `GET /health` and display the result without creating a verification attempt.
-
-When running with `./gradlew run`, API diagnostics are written to the Gradle/IntelliJ run console. Verification start logs the complete request URL. Failed HTTP responses log the status and a redacted, size-limited response body, while connection failures include their stack trace. Authorization values, session tokens, and common secret fields are never intentionally logged.
-
-`Show announcement notifications in chat` enables short `[Rancour]` game-chat notices for announcement IDs not previously seen on this RuneLite profile. `Minimum announcement priority` can be `normal`, `high`, or `urgent`. Seen IDs are stored locally; announcement bodies and session credentials are never written to chat.
-
-`Enable automatic refresh` is on by default. `Refresh interval seconds` defaults to 60 and is clamped to a minimum of 30 seconds. Background refresh updates verification, announcements, events, and teams without blocking the RuneLite client thread. Manual Refresh buttons remain available as a fallback.
-
-`Minimum drop value` defaults to 1,000,000 GP and controls which NPC loot events create a confirmation prompt. Game-chat valuable/untradeable notifications are also detected independently of this threshold.
-
-The live verification session token and pending verification ID are stored under the RuneLite `rancourclan` configuration group. They are API-issued client credentials only; no Discord, Railway, or Google secret is stored.
-
-## User flows
-
-### Verification
-
-1. Install and enable the Plugin Hub plugin named `Rancour PvM`.
-2. Select `Generate Link Code`, then optionally use `Copy Code`.
-3. In Discord, click the staff-posted `Link RuneLite Plugin` panel button and enter the code. `/plugin_link CODE` remains available as a slash-command fallback.
-4. Select `Refresh Status`.
-5. The returned API session and member profile are stored/displayed.
-
-Protected actions such as Team Join, Drop Submit, and Staff tools require the stored API session token and send `Authorization: Bearer <sessionToken>`. If that token is missing, the panel shows `Verification session missing. Please refresh verification or link again.` If the API reports an expired/revoked session, RuneLite clears the local session and asks the user to refresh or link again.
-
-The plugin compares the currently logged-in RuneLite account with `linkedRsns` from the API. Unknown accounts show a warning and cannot confirm a drop. When logged out, the panel asks the player to log in before confirming the active RSN.
-
-### Drops
-
-The detector watches RuneLite game chat for valuable/untradeable notifications and RuneLite NPC loot events above the configured total GE-value threshold. Detected items are filtered against the approved Rancour drop catalogue returned by `GET /plugin/settings`; that catalogue is sourced from the Discord bot's `drop_catalog.py`, the same list used by manual Discord drop submission and ADS. Unknown high-value items are ignored and never create a pending candidate. A recognized candidate appears on the Drops page. The player must select `Confirm Submit`; detection alone never sends data.
-
-Each submission includes item name, source, current RuneLite RSN, UTC timestamp, and detection method. Identical item/source/RSN detections are suppressed for 30 seconds. The API independently requires that RSN to be in the verified profile's trusted linked-RSN set and rejects items outside the approved catalogue. Discord does not need to recognise the drop first; RuneLite detects it, then the API validates it.
-
-Staff can enable or disable member drop submissions from `Staff -> Drops Panel`. The setting is loaded through `GET /plugin/settings`, changed through `POST /plugin/staff/settings/drops-panel`, and enforced server-side. When disabled, the Drops tab is hidden and the Drops page shows `Drop submissions are currently disabled.`
-
-### Staff access
-
-The Staff page is visible only after `/plugin/me` or verification status returns `staff=true`. The API derives this value from the verified Discord role IDs and `STAFF_ROLE_IDS`; RuneLite has no local staff list. Discord role updates are synchronized by the bot, so the next status refresh removes the Staff page after a staff role is lost. Client-side visibility is convenience only; every staff endpoint also enforces authorization server-side. The current RuneLite Staff menu shows working announcement creation/deletion, the Drops Panel toggle, and Staff -> Teams edit/close controls; pending drop approval remains in Discord.
-
-Staff announcement expiry is selected from fixed options: 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, or 7 days. RuneLite calculates `expiresAt` in UTC, and the API rejects any expiry longer than seven days.
-
-### Event visibility
-
-The API, not RuneLite, filters events using the Discord roles stored on the verified profile. Unverified users receive only public events. Verified members receive member events and restricted events matching their Discord roles; staff events require API-derived staff status. RuneLite Events are currently read-only. Joining/leaving events is handled in Discord. Staff-only events show a compact `STAFF EVENT` badge, and restricted events visible to the user may show `RESTRICTED`; role IDs are not displayed.
-
-### Teams
-
-Team Finder shows active teams returned by the API, including host, joined members, world, capacity, voice requirement, and notes. Members can create teams from the Team Finder page; RuneLite sends the active logged-in RSN so hosts and joined members display by RSN wherever possible. Teams created in RuneLite appear in the Discord Team Finder panel after the bot refreshes it. Teams expire two hours after creation. Full teams remain visible for five minutes after reaching capacity, then disappear from normal Team Finder responses. If the current RuneLite user joined a team that becomes full, the plugin shows one local chatbox notice: `[Rancour] Your team is ready: <activity> on world <world>.` Staff can manage active teams from `Staff -> Teams`, including editing activity/capacity/world/voice/tags/status and closing teams with confirmation.
-
-## Architecture
-
-```text
-src/main/java/com/rancour/clan/
-|-- RancourClanPlugin.java       RuneLite lifecycle and chat subscriber
-|-- api/                         Async OkHttp transport and mock API
-|-- config/                      User-facing RuneLite configuration
-|-- models/                      Typed API request/response models
-|-- services/                    Session, authorization, and feature logic
-`-- ui/                          Swing pages and async UI states
-```
-
-`ClanApiClient` is the transport boundary. `RestClanApiClient` uses RuneLite's shared `OkHttpClient` asynchronously and parses typed Gson models. UI components only call services and marshal completion updates back to Swing's event thread. No HTTP request blocks the RuneLite client thread.
-
-`ApiServices` centralizes session checks. Drops and team membership require a stored plugin session token; Staff operations additionally require the current profile to report `staff=true`. The Railway API remains the final authority.
-
-## What works without the backend
-
-- Plugin compilation and local RuneLite launch
-- All six pages and their loading/error/empty layouts
-- Mock verification, announcements, events, drops, teams, and staff announcement creation
-- Chat drop candidate detection, duplicate prevention, confirmation, and dismissal
-- Client-side verified/staff action guards
-
-## Remaining integration work
-
-- Staff-approved Discord commands/workflow to add, set-primary, and revoke linked alts
-- Discord event participation write-back
-- Approved plugin-drop integration with the legacy Google Sheet/log workflow
-- Staff event-cache refresh endpoint
-- Staff team lock endpoint
-
-See [docs/UI_QA.md](docs/UI_QA.md) for the normal-sidebar-width manual check.
-
-## Plugin Hub conventions
-
-- Java 11 bytecode via `options.release=11`
-- RuneLite client remains `compileOnly`
-- RuneLite dependency uses `latest.release` for current Plugin Hub compatibility
-- `runelite-plugin.properties` uses `displayName=Rancour PvM`, `plugins=com.rancour.clan.RancourClanPlugin`, and `build=standard`
-- Local launcher remains in `src/test`
-- Plugin entry point is declared in `runelite-plugin.properties`
-- Gradle `run` enables developer mode and assertions
-- No bundled external-service credentials or direct Discord/Sheets clients
-
-## Plugin Hub Submission
-
-After pushing the final plugin commit, fork `https://github.com/runelite/plugin-hub` and add a marker file under `plugins/rancour-pvm`:
-
-```properties
-repository=https://github.com/DaleW-Cyber/RancourClanPlugin.git
-commit=<full 40-character plugin commit hash>
-```
-
-Submit that marker file as the only change in a Plugin Hub pull request. If the plugin repo changes after review feedback, push the plugin repo fix first, then update the marker `commit=` hash in the same Plugin Hub PR.
+If the plugin cannot connect, open the Verification page and use the connection test button.
 
 ## License
 
-See [LICENSE](LICENSE).
+This project is licensed under the BSD 2-Clause License. See [LICENSE](LICENSE).
