@@ -52,10 +52,9 @@ import com.rancour.clan.services.VerificationService;
 import com.rancour.clan.ui.RancourClanPanel;
 
 @PluginDescriptor(
-	name = "Rancour Clan",
-	description = "Rancour clan verification, announcements, events, teams, and drop tools",
-	tags = {"clan", "pvm", "events", "drops", "verification", "teams"},
-	enabledByDefault = true
+	name = "Rancour PvM",
+	description = "Rancour PvM clan verification, announcements, events, teams, and drop tools",
+	tags = {"rancour", "clan", "pvm", "events", "drops", "verification", "teams"}
 )
 @Slf4j
 public class RancourClanPlugin extends Plugin
@@ -103,7 +102,7 @@ public class RancourClanPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
-		log.info("Rancour Clan plugin startup requested");
+		log.info("Rancour PvM plugin startup requested");
 		activeRsn = currentAccountName();
 		SwingUtilities.invokeLater(() ->
 		{
@@ -118,13 +117,13 @@ public class RancourClanPlugin extends Plugin
 				() -> activeRsn
 			);
 			navigationButton = NavigationButton.builder()
-				.tooltip("Rancour Clan")
+				.tooltip("Rancour PvM")
 				.icon(createNavigationIcon())
 				.priority(5)
 				.panel(panel)
 				.build();
 			clientToolbar.addNavigation(navigationButton);
-			log.info("Rancour Clan navigation button added");
+			log.info("Rancour PvM navigation button added");
 			startAutoRefresh();
 		});
 	}

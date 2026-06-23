@@ -1,6 +1,6 @@
-# Rancour Clan Plugin
+# Rancour PvM Plugin
 
-An early-release RuneLite plugin for Rancour clan verification, announcements, events, drop submissions, team finding, and staff workflows. All external communication goes through the Rancour REST API. The plugin contains no Discord bot token, Google credentials, Railway secret, or direct Google Sheets integration.
+An early-release RuneLite Plugin Hub plugin for Rancour PvM clan verification, announcements, events, drop submissions, team finding, and staff workflows. All external communication goes through the Rancour REST API. The plugin contains no Discord bot token, Google credentials, Railway secret, or direct Google Sheets integration.
 
 ## Current MVP
 
@@ -37,6 +37,19 @@ Windows PowerShell:
 .\gradlew.bat clean build
 ```
 
+## Plugin Hub User Setup
+
+Once published in the Plugin Hub:
+
+1. Open RuneLite.
+2. Open the Plugin Hub.
+3. Search for `Rancour PvM`.
+4. Install and enable the plugin.
+5. Open the `R` sidebar icon.
+6. Click `Generate Link Code`, then use the Discord verification panel to link your account.
+
+No API URL, mock mode, Discord token, Google credential, or Railway setting is exposed in RuneLite configuration.
+
 ## Run RuneLite locally
 
 ```bash
@@ -49,11 +62,11 @@ Windows PowerShell:
 .\gradlew.bat run
 ```
 
-RuneLite starts in developer mode with `Rancour Clan` loaded as an external plugin. Enable it in RuneLite configuration if necessary, then open the `R` sidebar icon.
+RuneLite starts in developer mode with `Rancour PvM` loaded as an external plugin. Enable it in RuneLite configuration if necessary, then open the `R` sidebar icon.
 
-## Peer Testing Before Plugin Hub
+## Developer Testing Before Plugin Hub
 
-For member-friendly setup steps, send testers [docs/PEER_TESTING.md](docs/PEER_TESTING.md), `launch-rancour-plugin.bat`, and the `rancour-clan-plugin-1.3.0-all.jar` file.
+For member-friendly pre-release setup steps, send testers [docs/PEER_TESTING.md](docs/PEER_TESTING.md), `launch-rancour-plugin.bat`, and the `rancour-clan-plugin-1.3.0-all.jar` file.
 
 RuneLite does not load arbitrary jars dropped into `~/.runelite/externalplugins`. That directory is not the developer sideload folder used by current RuneLite builds.
 
@@ -188,10 +201,23 @@ See [docs/UI_QA.md](docs/UI_QA.md) for the normal-sidebar-width manual check.
 
 - Java 11 bytecode via `options.release=11`
 - RuneLite client remains `compileOnly`
+- RuneLite dependency uses `latest.release` for current Plugin Hub compatibility
+- `runelite-plugin.properties` uses `displayName=Rancour PvM`, `plugins=com.rancour.clan.RancourClanPlugin`, and `build=standard`
 - Local launcher remains in `src/test`
 - Plugin entry point is declared in `runelite-plugin.properties`
 - Gradle `run` enables developer mode and assertions
 - No bundled external-service credentials or direct Discord/Sheets clients
+
+## Plugin Hub Submission
+
+After pushing the final plugin commit, fork `https://github.com/runelite/plugin-hub` and add a marker file under `plugins/rancour-pvm`:
+
+```properties
+repository=https://github.com/DaleW-Cyber/RancourClanPlugin.git
+commit=<full 40-character plugin commit hash>
+```
+
+Submit that marker file as the only change in a Plugin Hub pull request. If the plugin repo changes after review feedback, push the plugin repo fix first, then update the marker `commit=` hash in the same Plugin Hub PR.
 
 ## License
 

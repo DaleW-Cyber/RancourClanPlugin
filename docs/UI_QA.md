@@ -2,7 +2,7 @@
 
 Use the normal RuneLite sidebar width. Do not drag the sidebar wider to make this check pass.
 
-1. Run `./gradlew run`, enable Rancour Clan, and open the `R` sidebar icon.
+1. Run `./gradlew run`, enable Rancour PvM, and open the `R` sidebar icon.
 2. Check Verification, News, Events, Drops, Teams, and Staff.
 3. Confirm long titles, descriptions, role lists, account names, status/error messages, and form labels wrap inside each card.
 4. Confirm timestamps use the compact `29 Jun 16:50` form.
