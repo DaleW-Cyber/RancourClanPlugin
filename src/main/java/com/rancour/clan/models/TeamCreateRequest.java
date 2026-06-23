@@ -16,7 +16,7 @@ public final class TeamCreateRequest
 		this.world = world;
 		this.voiceRequired = voiceRequired;
 		this.notes = notes;
-		this.activeRsn = activeRsn;
+		this.activeRsn = normalizeRsn(activeRsn);
 	}
 
 	public String getActivity() { return activity; }
@@ -25,4 +25,14 @@ public final class TeamCreateRequest
 	public boolean isVoiceRequired() { return voiceRequired; }
 	public String getNotes() { return notes; }
 	public String getActiveRsn() { return activeRsn; }
+
+	private static String normalizeRsn(String value)
+	{
+		if (value == null)
+		{
+			return null;
+		}
+		String normalized = value.replace('\u00A0', ' ').trim().replaceAll("\\s+", " ");
+		return normalized.isEmpty() || normalized.length() > 12 ? null : normalized;
+	}
 }

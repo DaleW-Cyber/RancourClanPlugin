@@ -14,6 +14,7 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.Buffer;
 import org.junit.Test;
 
 public class RestClanApiClientTest
@@ -145,6 +146,42 @@ public class RestClanApiClientTest
 		assertEquals("POST", captured.get().method());
 		assertEquals("https://api.example.test/plugin/teams", captured.get().url().toString());
 		assertEquals("Bearer team-session", captured.get().header("Authorization"));
+		String body = requestBody(captured.get());
+		assertTrue(body.contains("\"activeRsn\":\"Mutable\""));
+		assertTrue(body.contains("\"voiceRequired\":true"));
+	}
+
+	@Test
+	public void createTeamOmitsBlankActiveRsnToAvoidApiValidationFailure() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200,
+				"{\"id\":\"team-1\",\"activity\":\"Nex\",\"host\":\"Mutable\",\"requiredRoles\":[],\"currentMembers\":1,\"capacity\":5,\"world\":420,\"voiceRequired\":true,\"status\":\"open\",\"staffHosted\":false,\"tags\":[],\"joined\":true,\"joinedMembers\":[\"Mutable\"]}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.createTeam(new com.rancour.clan.models.TeamCreateRequest("Nex", 5, 420, true, "Learner", "  "), "team-session")
+			.toCompletableFuture().get();
+
+		String body = requestBody(captured.get());
+		assertFalse(body.contains("activeRsn"));
+	}
+
+	@Test
+	public void teamJoinOmitsBlankActiveRsnToAvoidApiValidationFailure() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"success\":true,\"message\":\"joined\"}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.joinTeam("team-1", "", "team-session").toCompletableFuture().get();
+
+		assertFalse(requestBody(captured.get()).contains("activeRsn"));
 	}
 
 	@Test
@@ -312,5 +349,12 @@ public class RestClanApiClientTest
 			return (ApiException) error.getCause();
 		}
 		throw new AssertionError("Expected API failure");
+	}
+
+	private static String requestBody(Request request) throws IOException
+	{
+		Buffer buffer = new Buffer();
+		request.body().writeTo(buffer);
+		return buffer.readUtf8();
 	}
 }

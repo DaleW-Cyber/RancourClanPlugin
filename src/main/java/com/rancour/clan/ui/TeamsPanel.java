@@ -103,10 +103,26 @@ final class TeamsPanel extends JPanel
 			status.setText("Capacity and world must be numbers");
 			return;
 		}
+		if (capacityValue < 2 || capacityValue > 10)
+		{
+			status.setText("Capacity must be between 2 and 10");
+			return;
+		}
+		if (worldValue < 300 || worldValue > 600)
+		{
+			status.setText("World must be between 300 and 600");
+			return;
+		}
+		String notesValue = notes.getText().trim();
+		if (notesValue.length() > 500)
+		{
+			status.setText("Notes must be 500 characters or fewer");
+			return;
+		}
 		button.setEnabled(false);
 		status.setText("Creating team...");
 		TeamCreateRequest request = new TeamCreateRequest(activityValue, capacityValue, worldValue,
-			voice.isSelected(), notes.getText().trim(), "");
+			voice.isSelected(), notesValue, null);
 		service.create(request).whenComplete((team, error) -> SwingUtilities.invokeLater(() ->
 		{
 			button.setEnabled(true);
