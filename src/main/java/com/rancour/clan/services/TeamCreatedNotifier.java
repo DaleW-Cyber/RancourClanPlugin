@@ -30,7 +30,7 @@ public final class TeamCreatedNotifier
 			store.markSeen(team.getId());
 			if (initialised && enabled.getAsBoolean() && team.shouldNotifyCurrentUser())
 			{
-				chatSink.accept("[Rancour] New team: " + team.getActivity() + " on world " + team.getWorld() + ".");
+				chatSink.accept("[Rancour] New team formed: " + team.getActivity() + " - Host: " + team.getHost());
 			}
 		}
 		initialised = true;
