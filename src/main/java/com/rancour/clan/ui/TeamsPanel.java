@@ -108,9 +108,9 @@ final class TeamsPanel extends JPanel
 			status.setText("Capacity must be between 2 and 10");
 			return;
 		}
-		if (worldValue < 300 || worldValue > 600)
+		if (worldValue < 300 || worldValue > 700)
 		{
-			status.setText("World must be between 300 and 600");
+			status.setText("World must be between 300 and 700");
 			return;
 		}
 		String notesValue = notes.getText().trim();

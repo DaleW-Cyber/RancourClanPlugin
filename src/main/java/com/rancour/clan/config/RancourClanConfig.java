@@ -30,6 +30,26 @@ public interface RancourClanConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "notifyTeamCreated",
+		name = "Notify when a new team is formed",
+		description = "Show a short game-chat message when a new team is created"
+	)
+	default boolean notifyTeamCreated()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "notifyTeamFull",
+		name = "Notify when my team is full",
+		description = "Show a short game-chat message when a joined team reaches capacity"
+	)
+	default boolean notifyTeamFull()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "automaticRefresh",
 		name = "Enable automatic refresh",
 		description = "Periodically refresh verification, announcements, events, teams, and staff queues"
@@ -47,15 +67,5 @@ public interface RancourClanConfig extends Config
 	default int refreshIntervalSeconds()
 	{
 		return 60;
-	}
-
-	@ConfigItem(
-		keyName = "minimumDropValue",
-		name = "Minimum drop value",
-		description = "Minimum total GE value for NPC loot confirmation prompts"
-	)
-	default int minimumDropValue()
-	{
-		return 1_000_000;
 	}
 }

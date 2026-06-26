@@ -48,6 +48,7 @@ import com.rancour.clan.services.SessionStore;
 import com.rancour.clan.services.StaffService;
 import com.rancour.clan.services.TeamService;
 import com.rancour.clan.services.TeamReadyNotifier;
+import com.rancour.clan.services.TeamCreatedNotifier;
 import com.rancour.clan.services.VerificationService;
 import com.rancour.clan.ui.RancourClanPanel;
 
@@ -194,15 +195,11 @@ public class RancourClanPlugin extends Plugin
 		String source = event.getNpc() == null ? "Unknown NPC" : event.getNpc().getName();
 		for (ItemStack item : event.getItems())
 		{
-			long totalValue = (long) itemManager.getItemPrice(item.getId()) * item.getQuantity();
-			if (totalValue >= config.minimumDropValue())
+			String itemName = itemManager.getItemComposition(item.getId()).getName();
+			DropCandidate candidate = dropDetector.fromNpcLoot(itemName, source, rsn);
+			if (duplicateDropGuard.accept(candidate))
 			{
-				String itemName = itemManager.getItemComposition(item.getId()).getName();
-				DropCandidate candidate = dropDetector.fromNpcLoot(itemName, source, rsn);
-				if (duplicateDropGuard.accept(candidate))
-				{
-					offerDropCandidate(candidate);
-				}
+				offerDropCandidate(candidate);
 			}
 		}
 	}
@@ -277,14 +274,21 @@ public class RancourClanPlugin extends Plugin
 
 	@Provides
 	TeamService provideTeamService(ClanApiClient api, VerificationService verification,
-		ConfigManager configManager, ClientThread clientThread, Client client)
+		RancourClanConfig config, ConfigManager configManager, ClientThread clientThread, Client client)
 	{
 		TeamReadyNotifier notifier = new TeamReadyNotifier(
 			new RuneLiteSeenTeamReadyStore(configManager),
 			message -> clientThread.invokeLater(() -> client.addChatMessage(
-				ChatMessageType.GAMEMESSAGE, "", message, null))
+				ChatMessageType.GAMEMESSAGE, "", message, null)),
+			config::notifyTeamFull
 		);
-		return new NotifyingTeamService(ApiServices.teams(api, verification, () -> activeRsn), notifier);
+		TeamCreatedNotifier createdNotifier = new TeamCreatedNotifier(
+			new RuneLiteSeenTeamReadyStore(configManager, "seenTeamCreated."),
+			message -> clientThread.invokeLater(() -> client.addChatMessage(
+				ChatMessageType.GAMEMESSAGE, "", message, null)),
+			config::notifyTeamCreated
+		);
+		return new NotifyingTeamService(ApiServices.teams(api, verification, () -> activeRsn), notifier, createdNotifier);
 	}
 
 	@Provides

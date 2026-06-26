@@ -9,6 +9,7 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.StaffDropSubmission;
@@ -38,6 +39,7 @@ public interface ClanApiClient
 	CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken);
 	CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken);
 	CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken);
+	CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request, String sessionToken);
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken);
 	CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken);
 	CompletionStage<List<Team>> fetchStaffTeams(String sessionToken);

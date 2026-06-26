@@ -15,7 +15,7 @@ It links your RuneLite account with Discord so the clan can show useful member t
 7. In Discord, use the Rancour plugin verification panel and enter the code shown in RuneLite.
 8. Return to RuneLite and click `Refresh Status`.
 
-Once linked, the plugin will remember your verification session until it expires or is revoked.
+Once linked, the plugin will remember your verification session until it expires or is revoked. Approved alt accounts are managed in Discord and do not require a new RuneLite verification code.
 
 ## Features
 
@@ -24,7 +24,7 @@ Once linked, the plugin will remember your verification session until it expires
 - View clan events
 - Create, join, and leave PvM teams
 - Submit approved drops for review
-- Receive short RuneLite chat notifications for important updates
+- Receive optional RuneLite chat notifications for important updates and teams
 - Staff tools for authorised Rancour staff members
 
 ## Events
@@ -48,6 +48,8 @@ If drop submissions are disabled by staff, the Drops page will say so.
 Team Finder shows active teams from Rancour.
 
 Teams show the activity, host, world, members, capacity, voice requirement, and notes where available.
+
+Worlds up to 700 are supported.
 
 Teams expire automatically, and empty teams are removed shortly after everyone leaves.
 

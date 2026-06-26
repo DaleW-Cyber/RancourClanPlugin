@@ -17,6 +17,7 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
@@ -218,6 +219,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchStaffTeams(String sessionToken) { return failed(); }
@@ -260,6 +262,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> approveDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> rejectDrop(String submissionId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchStaffTeams(String sessionToken) { return failed(); }

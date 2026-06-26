@@ -17,6 +17,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.models.TeamEditRequest;
@@ -165,12 +166,75 @@ final class StaffPanel extends JPanel
 			for (Announcement item : items)
 			{
 				JPanel card = UiComponents.detailsCard(item.getTitle(), preview(item.getMessage()), announcementAccent(item.getPriority()));
+				JButton edit = UiComponents.neutralButton("Edit");
 				JButton delete = UiComponents.dangerButton("Delete");
+				edit.addActionListener(event -> showEditAnnouncementPage(item));
 				delete.addActionListener(event -> deleteAnnouncement(item));
+				card.add(edit);
 				card.add(delete);
 				content.add(card);
 			}
 		}
+		refreshContent();
+	}
+
+	private void showEditAnnouncementPage(Announcement item)
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Edit Announcement"));
+		JButton back = UiComponents.neutralButton("Back");
+		back.addActionListener(event -> showAnnouncementPage());
+		content.add(back);
+		JPanel card = UiComponents.card("Edit", "", "", announcementAccent(item.getPriority()));
+		JTextField title = UiComponents.compact(new JTextField(item.getTitle()));
+		JTextArea message = new JTextArea(item.getMessage(), 3, 12);
+		message.setLineWrap(true);
+		message.setWrapStyleWord(true);
+		UiComponents.compact(message);
+		JComboBox<String> priority = UiComponents.compact(new JComboBox<>(new String[] {"normal", "high", "urgent"}));
+		priority.setSelectedItem(item.getPriority());
+		JComboBox<ExpiryOption> expiry = UiComponents.compact(new JComboBox<>(ExpiryOption.EDIT_OPTIONS));
+		JCheckBox restricted = UiComponents.compact(new JCheckBox("Restricted"));
+		restricted.setSelected(item.isRestricted());
+		JButton save = UiComponents.successButton("Save");
+		save.addActionListener(event ->
+		{
+			if (title.getText().trim().isEmpty() || message.getText().trim().isEmpty())
+			{
+				status.setText("Title and body are required");
+				return;
+			}
+			save.setEnabled(false);
+			status.setText("Saving...");
+			ExpiryOption selectedExpiry = (ExpiryOption) expiry.getSelectedItem();
+			service.editAnnouncement(item.getId(), new EditAnnouncementRequest(title.getText().trim(),
+				message.getText().trim(), (String) priority.getSelectedItem(),
+				selectedExpiry == null ? null : selectedExpiry.expiresAt(), restricted.isSelected()))
+				.whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
+				{
+					save.setEnabled(true);
+					if (error != null)
+					{
+						status.setText("Error: " + UiComponents.errorMessage(error));
+						return;
+					}
+					status.setText("Announcement updated");
+					dataChanged.run();
+					showAnnouncementPage();
+				}));
+		});
+		card.add(UiComponents.wrapped("Title"));
+		card.add(title);
+		card.add(UiComponents.wrapped("Body"));
+		card.add(message);
+		card.add(UiComponents.wrapped("Priority"));
+		card.add(priority);
+		card.add(UiComponents.wrapped("Expiry"));
+		card.add(expiry);
+		card.add(restricted);
+		card.add(save);
+		content.add(card);
+		content.add(status);
 		refreshContent();
 	}
 
@@ -512,6 +576,16 @@ final class StaffPanel extends JPanel
 			new ExpiryOption("3 days", 3, ChronoUnit.DAYS),
 			new ExpiryOption("7 days", 7, ChronoUnit.DAYS)
 		};
+		private static final ExpiryOption[] EDIT_OPTIONS = {
+			new ExpiryOption("Keep current", 0, null),
+			new ExpiryOption("1 hour", 1, ChronoUnit.HOURS),
+			new ExpiryOption("6 hours", 6, ChronoUnit.HOURS),
+			new ExpiryOption("12 hours", 12, ChronoUnit.HOURS),
+			new ExpiryOption("1 day", 1, ChronoUnit.DAYS),
+			new ExpiryOption("2 days", 2, ChronoUnit.DAYS),
+			new ExpiryOption("3 days", 3, ChronoUnit.DAYS),
+			new ExpiryOption("7 days", 7, ChronoUnit.DAYS)
+		};
 		private final String label;
 		private final int amount;
 		private final ChronoUnit unit;
@@ -525,6 +599,10 @@ final class StaffPanel extends JPanel
 
 		private String expiresAt()
 		{
+			if (unit == null)
+			{
+				return null;
+			}
 			return Instant.now().plus(amount, unit).truncatedTo(ChronoUnit.SECONDS).toString();
 		}
 

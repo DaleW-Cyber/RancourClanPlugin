@@ -13,6 +13,7 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
@@ -46,6 +47,7 @@ public final class MockClanApiClient implements ClanApiClient
 	@Override public CompletionStage<ActionResult> approveDrop(String id, String token) { return ok("Approved mock submission"); }
 	@Override public CompletionStage<ActionResult> rejectDrop(String id, String token) { return ok("Rejected mock submission"); }
 	@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String token) { return done(new Announcement("mock-created", request.getTitle(), request.getMessage(), request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Mock Staff", false)); }
+	@Override public CompletionStage<Announcement> editAnnouncement(String id, EditAnnouncementRequest request, String token) { return done(new Announcement(id, request.getTitle(), request.getMessage(), request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Mock Staff", Boolean.TRUE.equals(request.getRestricted()))); }
 	@Override public CompletionStage<ActionResult> deleteAnnouncement(String id, String token) { return ok("Announcement deleted"); }
 	@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String token) { dropsPanelEnabled = enabled; return done(settings()); }
 	@Override public CompletionStage<List<Team>> fetchStaffTeams(String token) { return fetchTeams(token); }

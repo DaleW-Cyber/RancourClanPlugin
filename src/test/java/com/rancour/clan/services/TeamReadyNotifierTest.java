@@ -17,7 +17,7 @@ public class TeamReadyNotifierTest
 	{
 		MemoryStore store = new MemoryStore();
 		List<String> messages = new ArrayList<>();
-		TeamReadyNotifier notifier = new TeamReadyNotifier(store, messages::add);
+		TeamReadyNotifier notifier = new TeamReadyNotifier(store, messages::add, () -> true);
 		Team team = new Team("team-1", "Nex", "Mutable", Collections.emptyList(), 2, 2, 420,
 			true, "open", false, Collections.emptyList(), true,
 			java.util.Arrays.asList("Mutable", "Beta"), "now", "later", "now", null, null, "Quick trip");
@@ -33,12 +33,29 @@ public class TeamReadyNotifierTest
 	public void ignoresTeamsThePlayerHasNotJoined()
 	{
 		List<String> messages = new ArrayList<>();
-		TeamReadyNotifier notifier = new TeamReadyNotifier(new MemoryStore(), messages::add);
+		TeamReadyNotifier notifier = new TeamReadyNotifier(new MemoryStore(), messages::add, () -> true);
 		Team team = new Team("team-1", "Nex", "Mutable", Collections.emptyList(), 2, 2, 420,
 			true, "open", false, Collections.emptyList(), false,
 			java.util.Arrays.asList("Mutable", "Beta"), "now", "later", "now", null, null, "");
 
 		notifier.notifyReadyTeams(Collections.singletonList(team));
+
+		assertEquals(0, messages.size());
+	}
+
+	@Test
+	public void disabledNotificationsStillMarkTeamSeen()
+	{
+		MemoryStore store = new MemoryStore();
+		List<String> messages = new ArrayList<>();
+		TeamReadyNotifier disabled = new TeamReadyNotifier(store, messages::add, () -> false);
+		TeamReadyNotifier enabled = new TeamReadyNotifier(store, messages::add, () -> true);
+		Team team = new Team("team-1", "Nex", "Mutable", Collections.emptyList(), 2, 2, 420,
+			true, "open", false, Collections.emptyList(), true,
+			java.util.Arrays.asList("Mutable", "Beta"), "now", "later", "now", null, null, "");
+
+		disabled.notifyReadyTeams(Collections.singletonList(team));
+		enabled.notifyReadyTeams(Collections.singletonList(team));
 
 		assertEquals(0, messages.size());
 	}

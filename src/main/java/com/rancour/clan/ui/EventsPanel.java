@@ -65,7 +65,8 @@ final class EventsPanel extends JPanel
 			for (ClanEvent item : items)
 			{
 				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(), eventAccent(item),
-					"Starts", UiComponents.shortDate(item.getStartTime()));
+					"Starts", UiComponents.shortDate(item.getStartTime()),
+					"Countdown", countdown(item.getStartTime()));
 				JTextArea badge = visibilityBadge(item);
 				if (badge != null)
 				{
@@ -117,5 +118,36 @@ final class EventsPanel extends JPanel
 			return UiComponents.badge("RESTRICTED", RancourTheme.WARNING);
 		}
 		return null;
+	}
+
+	private static String countdown(String startTime)
+	{
+		try
+		{
+			Duration duration = Duration.between(Instant.now(), Instant.parse(startTime));
+			boolean past = duration.isNegative();
+			Duration absolute = past ? duration.negated() : duration;
+			long days = absolute.toDays();
+			long hours = absolute.minusDays(days).toHours();
+			long minutes = absolute.minusDays(days).minusHours(hours).toMinutes();
+			String value;
+			if (days > 0)
+			{
+				value = days + "d " + hours + "h";
+			}
+			else if (hours > 0)
+			{
+				value = hours + "h " + minutes + "m";
+			}
+			else
+			{
+				value = Math.max(0, minutes) + "m";
+			}
+			return past ? "Started " + value + " ago" : "Starts in " + value;
+		}
+		catch (DateTimeParseException ignored)
+		{
+			return "Unknown";
+		}
 	}
 }

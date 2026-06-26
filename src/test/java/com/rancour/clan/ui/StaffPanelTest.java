@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Announcement;
 import com.rancour.clan.models.CreateAnnouncementRequest;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
@@ -267,6 +268,17 @@ public class StaffPanelTest
 			created.set(request);
 			Announcement item = new Announcement("id", request.getTitle(), request.getMessage(),
 				request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Staff", false);
+			announcements.add(item);
+			return CompletableFuture.completedFuture(item);
+		}
+
+		@Override
+		public CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request)
+		{
+			Announcement item = new Announcement(announcementId, request.getTitle(), request.getMessage(),
+				request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Staff",
+				Boolean.TRUE.equals(request.getRestricted()));
+			announcements.removeIf(existing -> announcementId.equals(existing.getId()));
 			announcements.add(item);
 			return CompletableFuture.completedFuture(item);
 		}

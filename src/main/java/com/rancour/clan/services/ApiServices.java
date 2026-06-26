@@ -17,6 +17,7 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
@@ -95,6 +96,7 @@ public final class ApiServices
 			@Override public CompletionStage<ActionResult> approveDrop(String id) { return withStaff("approveDrop", verification, token -> api.approveDrop(id, token)); }
 			@Override public CompletionStage<ActionResult> rejectDrop(String id) { return withStaff("rejectDrop", verification, token -> api.rejectDrop(id, token)); }
 			@Override public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request) { return withStaff("createAnnouncement", verification, token -> api.createAnnouncement(request, token)); }
+			@Override public CompletionStage<Announcement> editAnnouncement(String id, EditAnnouncementRequest request) { return withStaff("editAnnouncement", verification, token -> api.editAnnouncement(id, request, token)); }
 			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff("deleteAnnouncement", verification, token -> api.deleteAnnouncement(id, token)); }
 			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff("dropsPanelToggle", verification, token -> api.setDropsPanelEnabled(enabled, token)); }
 			@Override public CompletionStage<List<Team>> loadTeams() { return withStaff("loadStaffTeams", verification, api::fetchStaffTeams); }

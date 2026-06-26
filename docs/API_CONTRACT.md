@@ -267,13 +267,17 @@ Requires authentication.
 }
 ```
 
-The API records the authenticated profile as host and adds the creator as a joined member. RuneLite sends the active logged-in RSN as `activeRsn`; the API accepts it only when it is in the verified linked-RSN set. Discord-created teams use the primary RSN. Teams display members using RSN as the primary alias, falling back to Discord display name only if no RSN is available. Staff-hosted teams require API-derived staff status. Teams expire two hours after creation. Full teams set `fullAt`, queue one ready notification, remain visible for five minutes, then disappear from normal Team Finder responses. If a member leaves before the grace window ends and the team is no longer full, `fullAt` and pending ready-notification state are cleared. RuneLite shows a one-time local chatbox notice for joined teams that return as full.
+The API records the authenticated profile as host and adds the creator as a joined member. RuneLite sends the active logged-in RSN as `activeRsn`; the API accepts it only when it is in the verified linked-RSN set. Discord-created teams use the primary RSN. Team worlds must be between 300 and 700 inclusive. Teams display members using RSN as the primary alias, falling back to Discord display name only if no RSN is available. Staff-hosted teams require API-derived staff status. Teams expire two hours after creation. Full teams set `fullAt`, queue one ready notification, remain visible for five minutes, then disappear from normal Team Finder responses. If a member leaves before the grace window ends and the team is no longer full, `fullAt` is cleared, but `readyNotifiedAt` is not reset; a team can send only one ready notification during its lifecycle. RuneLite shows a one-time local chatbox notice for joined teams that return as full when local notifications are enabled.
+
+### `PATCH /plugin/teams/{id}`
+
+Requires authentication. The team host or staff can edit `activity`, `capacity`, `world`, `voiceRequired`, `requiredRoles`, `tags`, and `status`. Capacity cannot be set below the current joined member count. Normal members cannot edit another host's team.
 
 ### `GET /plugin/staff/teams`
 ### `PATCH /plugin/staff/teams/{id}`
 ### `DELETE /plugin/staff/teams/{id}`
 
-Require staff authentication. Staff team cards use `GET /plugin/staff/teams`. `PATCH` can update `activity`, `capacity`, `world`, `voiceRequired`, `requiredRoles`, `tags`, and `status`. Capacity cannot be set below the current joined member count. `DELETE` closes the team and preserves audit history.
+Require staff authentication. Staff team cards use `GET /plugin/staff/teams`. `PATCH` supports the same fields as host edit for any team. Capacity cannot be set below the current joined member count. `DELETE` closes the team and preserves audit history.
 
 Discord bot Team Finder actions use internal API routes with `X-Rancour-Bot-Token` and `discordUserId`. They do not use RuneLite bearer sessions. An unlinked Discord user should receive:
 
@@ -323,6 +327,12 @@ Body is `{}`. Return an `ActionResult`. Decisions should be idempotent and audit
 Return the created `Announcement` model. The API owns Discord publication and persistence.
 
 `expiresAt` must be in the future and no more than seven days after the API server's current UTC time. RuneLite uses a dropdown with 1 hour, 6 hours, 12 hours, 1 day, 2 days, 3 days, and 7 days options instead of manual date entry.
+
+### `PATCH /plugin/staff/announcements/{announcementId}`
+
+Requires staff authentication. Updates any subset of `title`, `message`, `priority`, `expiresAt`, and `restricted`.
+The same non-empty title/body and seven-day expiry rules apply. Edits are audit logged as `announcement.edit`
+and appear in RuneLite after the next News refresh.
 
 ### `DELETE /plugin/staff/announcements/{announcementId}`
 

@@ -25,6 +25,7 @@ import com.rancour.clan.models.ClanEvent;
 import com.rancour.clan.models.CreateAnnouncementRequest;
 import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
+import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.DropsPanelSettingRequest;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
@@ -185,6 +186,12 @@ public final class RestClanApiClient implements ClanApiClient
 	public CompletionStage<Announcement> createAnnouncement(CreateAnnouncementRequest request, String sessionToken)
 	{
 		return protectedPost(url("plugin", "staff", "announcements"), request, sessionToken, Announcement.class);
+	}
+
+	@Override
+	public CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request, String sessionToken)
+	{
+		return protectedPatch(url("plugin", "staff", "announcements", announcementId), request, sessionToken, Announcement.class);
 	}
 
 	@Override

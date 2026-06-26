@@ -10,11 +10,13 @@ public final class NotifyingTeamService implements TeamService
 {
 	private final TeamService delegate;
 	private final TeamReadyNotifier notifier;
+	private final TeamCreatedNotifier createdNotifier;
 
-	public NotifyingTeamService(TeamService delegate, TeamReadyNotifier notifier)
+	public NotifyingTeamService(TeamService delegate, TeamReadyNotifier notifier, TeamCreatedNotifier createdNotifier)
 	{
 		this.delegate = delegate;
 		this.notifier = notifier;
+		this.createdNotifier = createdNotifier;
 	}
 
 	@Override
@@ -22,6 +24,7 @@ public final class NotifyingTeamService implements TeamService
 	{
 		return delegate.loadTeams().thenApply(teams ->
 		{
+			createdNotifier.notifyNewTeams(teams);
 			notifier.notifyReadyTeams(teams);
 			return teams;
 		});
