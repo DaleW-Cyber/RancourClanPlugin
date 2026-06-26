@@ -42,7 +42,7 @@ public class RancourClanPanelTest
 			ApiServices.drops(api, verification),
 			ApiServices.teams(api, verification),
 			ApiServices.staff(api, verification),
-			api::fetchSettings,
+			() -> api.fetchSettings("session"),
 			true);
 
 		Set<String> buttons = new HashSet<>();
@@ -114,7 +114,7 @@ public class RancourClanPanelTest
 			ApiServices.drops(api, verification),
 			ApiServices.teams(api, verification),
 			ApiServices.staff(api, verification),
-			api::fetchSettings,
+			() -> api.fetchSettings("session"),
 			() -> "RSN");
 		SwingUtilities.invokeAndWait(() -> { });
 

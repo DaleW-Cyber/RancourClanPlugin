@@ -298,9 +298,9 @@ public class RancourClanPlugin extends Plugin
 	}
 
 	@Provides
-	PluginSettingsService providePluginSettingsService(ClanApiClient api)
+	PluginSettingsService providePluginSettingsService(ClanApiClient api, VerificationService verification)
 	{
-		return ApiServices.settings(api);
+		return ApiServices.settings(api, verification);
 	}
 
 	private static BufferedImage createNavigationIcon()

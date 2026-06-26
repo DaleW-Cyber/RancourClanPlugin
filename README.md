@@ -41,7 +41,7 @@ The Drops page only recognises items from the approved Rancour drop catalogue.
 
 Detected drops are never submitted automatically. You must confirm the submission first.
 
-If drop submissions are disabled by staff, the Drops page will say so.
+Staff can disable drop submissions globally or limit access to staff/testers during rollout. If your Discord profile is not currently allowed to use Drops, the Drops page is hidden or shows the staff-configured restriction message.
 
 ## Teams
 

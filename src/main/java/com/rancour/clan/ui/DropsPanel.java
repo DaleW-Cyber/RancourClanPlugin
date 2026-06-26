@@ -9,6 +9,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.JTextArea;
 import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.services.DropService;
 
 final class DropsPanel extends JPanel
@@ -19,7 +20,9 @@ final class DropsPanel extends JPanel
 	private final Supplier<String> activeRsn;
 	private DropCandidate candidate;
 	private MemberProfile profile;
-	private boolean dropsPanelEnabled = true;
+	private boolean dropsVisible = true;
+	private boolean dropsCanSubmit = true;
+	private String restrictionMessage = "Drop submissions are currently disabled.";
 
 	DropsPanel(DropService service)
 	{
@@ -40,7 +43,7 @@ final class DropsPanel extends JPanel
 
 	void offerCandidate(DropCandidate newCandidate)
 	{
-		if (!dropsPanelEnabled)
+		if (!dropsVisible)
 		{
 			showDisabled();
 			return;
@@ -71,11 +74,11 @@ final class DropsPanel extends JPanel
 		dismiss.addActionListener(event -> clear("Candidate dismissed"));
 		actions.add(confirm);
 		actions.add(dismiss);
-		confirm.setEnabled(linked);
+		confirm.setEnabled(linked && dropsCanSubmit);
 		card.add(actions);
 		content.add(card);
-		status.setText(linked ? "Review candidate before submitting" : "Drop submission is disabled");
-		status.setForeground(linked ? RancourTheme.WARNING : RancourTheme.DANGER);
+		status.setText(linked && dropsCanSubmit ? "Review candidate before submitting" : restrictionMessage);
+		status.setForeground(linked && dropsCanSubmit ? RancourTheme.WARNING : RancourTheme.DANGER);
 		content.revalidate();
 		content.repaint();
 	}
@@ -87,8 +90,26 @@ final class DropsPanel extends JPanel
 
 	void setDropsPanelEnabled(boolean enabled)
 	{
-		this.dropsPanelEnabled = enabled;
+		this.dropsVisible = enabled;
+		this.dropsCanSubmit = enabled;
 		if (!enabled)
+		{
+			showDisabled();
+		}
+	}
+
+	void applySettings(PluginSettings settings)
+	{
+		if (settings == null)
+		{
+			return;
+		}
+		this.dropsVisible = settings.isDropsVisible();
+		this.dropsCanSubmit = settings.canSubmitDrops();
+		this.restrictionMessage = UiComponents.value(settings.getDropsRestrictionMessage()).isEmpty()
+			? "Drop submissions are currently disabled."
+			: settings.getDropsRestrictionMessage();
+		if (!dropsVisible)
 		{
 			showDisabled();
 		}
@@ -99,7 +120,7 @@ final class DropsPanel extends JPanel
 		candidate = null;
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
-		content.add(UiComponents.card("Drops disabled", "Drop submissions are currently disabled.", "", RancourTheme.DANGER));
+		content.add(UiComponents.card("Drops disabled", restrictionMessage, "", RancourTheme.DANGER));
 		status.setText("Disabled");
 		status.setForeground(RancourTheme.DANGER);
 		content.revalidate();

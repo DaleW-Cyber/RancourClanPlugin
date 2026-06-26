@@ -298,6 +298,13 @@ public class StaffPanelTest
 		}
 
 		@Override
+		public CompletionStage<PluginSettings> setDropsAccessMode(String mode)
+		{
+			return CompletableFuture.completedFuture(new PluginSettings(true, mode, true, true, null,
+				Collections.emptyList(), Collections.emptyList()));
+		}
+
+		@Override
 		public CompletionStage<List<Team>> loadTeams()
 		{
 			return CompletableFuture.completedFuture(new ArrayList<>(teams));

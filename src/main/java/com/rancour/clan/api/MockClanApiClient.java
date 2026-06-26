@@ -28,12 +28,13 @@ public final class MockClanApiClient implements ClanApiClient
 	private final MemberProfile profile = new MemberProfile("Mock Discord User", "Mock RSN", "Member", true,
 		"Mock session", Instant.now().toString());
 	private boolean dropsPanelEnabled = true;
+	private String dropsAccessMode = "members";
 
 	@Override public CompletionStage<ApiHealth> health() { return done(new ApiHealth("ok (mock)")); }
 	@Override public CompletionStage<VerificationStartResponse> startVerification() { return done(new VerificationStartResponse("MOCK-123", "mock-verification", "10 minutes")); }
 	@Override public CompletionStage<VerificationStatus> fetchVerificationStatus(String id, String token) { return done(new VerificationStatus("verified", "mock-session-token", profile, profile.getExpiresAt(), profile.getLastCheckedAt())); }
 	@Override public CompletionStage<MemberProfile> fetchProfile(String token) { return done(profile); }
-	@Override public CompletionStage<PluginSettings> fetchSettings() { return done(settings()); }
+	@Override public CompletionStage<PluginSettings> fetchSettings(String token) { return done(settings()); }
 	@Override public CompletionStage<List<Announcement>> fetchAnnouncements(String token) { return done(Arrays.asList(new Announcement("mock-news", "Mock announcement", "This is local mock mode data.", "normal", Instant.now().toString(), "No expiry", "Mock Staff", false))); }
 	@Override public CompletionStage<List<ClanEvent>> fetchEvents(String token) { return done(Arrays.asList(new ClanEvent("mock-event", "Mock PvM Night", Instant.now().toString(), "Local mock event", "Mock Host", "open", 3, false, "member", Collections.emptyList(), null))); }
 	@Override public CompletionStage<ActionResult> joinEvent(String id, String token) { return ok("Joined mock event"); }
@@ -51,6 +52,7 @@ public final class MockClanApiClient implements ClanApiClient
 	@Override public CompletionStage<Announcement> editAnnouncement(String id, EditAnnouncementRequest request, String token) { return done(new Announcement(id, request.getTitle(), request.getMessage(), request.getPriority(), Instant.now().toString(), request.getExpiresAt(), "Mock Staff", Boolean.TRUE.equals(request.getRestricted()))); }
 	@Override public CompletionStage<ActionResult> deleteAnnouncement(String id, String token) { return ok("Announcement deleted"); }
 	@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String token) { dropsPanelEnabled = enabled; return done(settings()); }
+	@Override public CompletionStage<PluginSettings> setDropsAccessMode(String mode, String token) { dropsAccessMode = mode; return done(settings()); }
 	@Override public CompletionStage<List<Team>> fetchStaffTeams(String token) { return fetchTeams(token); }
 	@Override public CompletionStage<Team> editStaffTeam(String id, TeamEditRequest request, String token) { return done(new Team(id, request.getActivity(), "Mock Host", Collections.emptyList(), 2, request.getCapacity(), request.getWorld(), Boolean.TRUE.equals(request.getVoiceRequired()), "open", false, request.getTags(), false, Arrays.asList("Mock Host", "Mock RSN"), Instant.now().toString(), Instant.now().plusSeconds(7200).toString(), null, null)); }
 	@Override public CompletionStage<ActionResult> closeStaffTeam(String id, String token) { return ok("Team closed"); }
@@ -59,6 +61,6 @@ public final class MockClanApiClient implements ClanApiClient
 	@Override public CompletionStage<ActionResult> lockTeam(String id, String token) { return ok("Mock team locked"); }
 
 	private static CompletionStage<ActionResult> ok(String message) { return done(new ActionResult(true, message)); }
-	private PluginSettings settings() { return new PluginSettings(dropsPanelEnabled, Arrays.asList("Twisted bow", "Dexterous prayer scroll", "Mock item")); }
+	private PluginSettings settings() { return new PluginSettings(dropsPanelEnabled, dropsAccessMode, dropsPanelEnabled, dropsPanelEnabled, null, Arrays.asList("Twisted bow", "Dexterous prayer scroll", "Mock item"), Collections.emptyList()); }
 	private static <T> CompletionStage<T> done(T value) { return CompletableFuture.completedFuture(value); }
 }

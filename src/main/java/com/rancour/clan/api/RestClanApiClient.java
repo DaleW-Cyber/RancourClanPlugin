@@ -27,6 +27,7 @@ import com.rancour.clan.models.DropSubmission;
 import com.rancour.clan.models.DropSubmissionResult;
 import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.DropsPanelSettingRequest;
+import com.rancour.clan.models.DropsAccessSettingRequest;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
@@ -105,9 +106,9 @@ public final class RestClanApiClient implements ClanApiClient
 	}
 
 	@Override
-	public CompletionStage<PluginSettings> fetchSettings()
+	public CompletionStage<PluginSettings> fetchSettings(String sessionToken)
 	{
-		return get(url("plugin", "settings"), null, PluginSettings.class);
+		return get(url("plugin", "settings"), sessionToken, PluginSettings.class);
 	}
 
 	@Override
@@ -213,6 +214,15 @@ public final class RestClanApiClient implements ClanApiClient
 		log.info("Rancour API staff action request: action=dropsPanelToggle endpoint={} hasSessionToken={}",
 			endpoint, hasText(sessionToken));
 		return protectedPost(endpoint, new DropsPanelSettingRequest(enabled), sessionToken, PluginSettings.class);
+	}
+
+	@Override
+	public CompletionStage<PluginSettings> setDropsAccessMode(String mode, String sessionToken)
+	{
+		HttpUrl endpoint = url("plugin", "staff", "settings", "drops-access");
+		log.info("Rancour API staff action request: action=dropsAccessMode endpoint={} hasSessionToken={} mode={}",
+			endpoint, hasText(sessionToken), mode);
+		return protectedPatch(endpoint, new DropsAccessSettingRequest(mode), sessionToken, PluginSettings.class);
 	}
 
 	@Override

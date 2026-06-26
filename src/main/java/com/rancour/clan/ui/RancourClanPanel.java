@@ -41,6 +41,8 @@ public final class RancourClanPanel extends PluginPanel
 	private volatile boolean userSelectedPage;
 	private volatile boolean lastVerifiedWithSession;
 	private volatile boolean dropsPanelEnabled = true;
+	private volatile boolean dropsVisible = true;
+	private volatile boolean dropsCanSubmit = true;
 	private volatile Set<String> approvedDropKeys = Collections.emptySet();
 
 	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
@@ -125,7 +127,7 @@ public final class RancourClanPanel extends PluginPanel
 
 	public boolean acceptsDropCandidate(DropCandidate candidate)
 	{
-		return dropsPanelEnabled && approvedDropKeys.contains(normalizeDrop(candidate.getItemName()));
+		return dropsVisible && dropsCanSubmit && approvedDropKeys.contains(normalizeDrop(candidate.getItemName()));
 	}
 
 	public void offerDropCandidate(DropCandidate candidate)
@@ -181,19 +183,25 @@ public final class RancourClanPanel extends PluginPanel
 				return;
 			}
 			dropsPanelEnabled = settings.isDropsPanelEnabled();
+			dropsVisible = settings.isDropsVisible();
+			dropsCanSubmit = settings.canSubmitDrops();
 			Set<String> keys = new HashSet<>();
 			for (String drop : settings.getApprovedDrops())
 			{
 				keys.add(normalizeDrop(drop));
 			}
 			approvedDropKeys = keys;
-			dropsButton.setVisible(dropsPanelEnabled);
-			dropsPanel.setDropsPanelEnabled(dropsPanelEnabled);
+			dropsButton.setVisible(dropsVisible);
+			dropsPanel.applySettings(settings);
 			staffPanel.applySettings(settings);
 			dropsButton.getParent().revalidate();
-			if (!dropsPanelEnabled)
+			if (!dropsVisible)
 			{
 				dropsPanel.showDisabled();
+				if ("drops".equals(currentPage))
+				{
+					showPage(lastVerifiedWithSession ? "announcements" : "verification", false);
+				}
 			}
 		}));
 	}

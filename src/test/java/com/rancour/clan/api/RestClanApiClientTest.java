@@ -213,7 +213,7 @@ public class RestClanApiClientTest
 			"https://api.example.test"
 		);
 
-		assertFalse(api.fetchSettings().toCompletableFuture().get().isDropsPanelEnabled());
+		assertFalse(api.fetchSettings("session").toCompletableFuture().get().isDropsPanelEnabled());
 		assertEquals("GET", captured.get().method());
 		assertEquals("https://api.example.test/plugin/settings", captured.get().url().toString());
 	}

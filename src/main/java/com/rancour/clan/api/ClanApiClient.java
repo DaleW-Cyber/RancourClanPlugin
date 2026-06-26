@@ -25,7 +25,7 @@ public interface ClanApiClient
 	CompletionStage<VerificationStartResponse> startVerification();
 	CompletionStage<VerificationStatus> fetchVerificationStatus(String verificationId, String sessionToken);
 	CompletionStage<MemberProfile> fetchProfile(String sessionToken);
-	CompletionStage<PluginSettings> fetchSettings();
+	CompletionStage<PluginSettings> fetchSettings(String sessionToken);
 	CompletionStage<List<Announcement>> fetchAnnouncements(String sessionToken);
 	CompletionStage<List<ClanEvent>> fetchEvents(String sessionToken);
 	CompletionStage<ActionResult> joinEvent(String eventId, String sessionToken);
@@ -43,6 +43,7 @@ public interface ClanApiClient
 	CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request, String sessionToken);
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken);
 	CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken);
+	CompletionStage<PluginSettings> setDropsAccessMode(String mode, String sessionToken);
 	CompletionStage<List<Team>> fetchStaffTeams(String sessionToken);
 	CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken);
 	CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken);

@@ -20,6 +20,7 @@ public interface StaffService
 	CompletionStage<Announcement> editAnnouncement(String announcementId, EditAnnouncementRequest request);
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId);
 	CompletionStage<com.rancour.clan.models.PluginSettings> setDropsPanelEnabled(boolean enabled);
+	CompletionStage<com.rancour.clan.models.PluginSettings> setDropsAccessMode(String mode);
 	CompletionStage<List<Team>> loadTeams();
 	CompletionStage<Team> editTeam(String teamId, TeamEditRequest request);
 	CompletionStage<ActionResult> closeTeam(String teamId);

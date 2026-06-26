@@ -51,9 +51,9 @@ public final class ApiServices
 		});
 	}
 
-	public static PluginSettingsService settings(ClanApiClient api)
+	public static PluginSettingsService settings(ClanApiClient api, VerificationService verification)
 	{
-		return api::fetchSettings;
+		return () -> api.fetchSettings(verification.getSessionToken());
 	}
 
 	public static EventService events(ClanApiClient api, VerificationService verification)
@@ -101,6 +101,7 @@ public final class ApiServices
 			@Override public CompletionStage<Announcement> editAnnouncement(String id, EditAnnouncementRequest request) { return withStaff("editAnnouncement", verification, token -> api.editAnnouncement(id, request, token)); }
 			@Override public CompletionStage<ActionResult> deleteAnnouncement(String id) { return withStaff("deleteAnnouncement", verification, token -> api.deleteAnnouncement(id, token)); }
 			@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled) { return withStaff("dropsPanelToggle", verification, token -> api.setDropsPanelEnabled(enabled, token)); }
+			@Override public CompletionStage<PluginSettings> setDropsAccessMode(String mode) { return withStaff("dropsAccessMode", verification, token -> api.setDropsAccessMode(mode, token)); }
 			@Override public CompletionStage<List<Team>> loadTeams() { return withStaff("loadStaffTeams", verification, api::fetchStaffTeams); }
 			@Override public CompletionStage<Team> editTeam(String id, TeamEditRequest request) { return withStaff("editTeam", verification, token -> api.editStaffTeam(id, request, token)); }
 			@Override public CompletionStage<ActionResult> closeTeam(String id) { return withStaff("closeTeam", verification, token -> api.closeStaffTeam(id, token)); }
