@@ -33,6 +33,7 @@ public interface ClanApiClient
 	CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken);
 	CompletionStage<List<Team>> fetchTeams(String sessionToken);
 	CompletionStage<Team> createTeam(TeamCreateRequest request, String sessionToken);
+	CompletionStage<Team> editTeam(String teamId, TeamEditRequest request, String sessionToken);
 	CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken);
 	CompletionStage<ActionResult> leaveTeam(String teamId, String activeRsn, String sessionToken);
 	CompletionStage<List<StaffDropSubmission>> fetchPendingDrops(String sessionToken);

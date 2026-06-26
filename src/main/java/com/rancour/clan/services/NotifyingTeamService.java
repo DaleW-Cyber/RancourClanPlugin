@@ -5,6 +5,7 @@ import java.util.concurrent.CompletionStage;
 import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.models.TeamCreateRequest;
+import com.rancour.clan.models.TeamEditRequest;
 
 public final class NotifyingTeamService implements TeamService
 {
@@ -37,6 +38,12 @@ public final class NotifyingTeamService implements TeamService
 	}
 
 	@Override
+	public CompletionStage<Team> edit(String id, TeamEditRequest request)
+	{
+		return delegate.edit(id, request);
+	}
+
+	@Override
 	public CompletionStage<ActionResult> join(String id)
 	{
 		return delegate.join(id);
@@ -46,5 +53,11 @@ public final class NotifyingTeamService implements TeamService
 	public CompletionStage<ActionResult> leave(String id)
 	{
 		return delegate.leave(id);
+	}
+
+	@Override
+	public CompletionStage<ActionResult> close(String id)
+	{
+		return delegate.close(id);
 	}
 }

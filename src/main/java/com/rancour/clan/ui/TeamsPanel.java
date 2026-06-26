@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.GridLayout;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -15,19 +16,27 @@ import javax.swing.JTextField;
 import com.rancour.clan.models.ActionResult;
 import com.rancour.clan.models.Team;
 import com.rancour.clan.models.TeamCreateRequest;
+import com.rancour.clan.models.TeamEditRequest;
 import com.rancour.clan.services.TeamService;
 
 final class TeamsPanel extends JPanel
 {
 	private final TeamService service;
+	private final Supplier<String> activeRsn;
 	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 	private boolean loading;
 
 	TeamsPanel(TeamService service)
 	{
+		this(service, () -> "");
+	}
+
+	TeamsPanel(TeamService service, Supplier<String> activeRsn)
+	{
 		super(new BorderLayout());
 		this.service = service;
+		this.activeRsn = activeRsn;
 		JButton refresh = UiComponents.neutralButton("Refresh");
 		JButton create = UiComponents.successButton("Create Team");
 		refresh.addActionListener(event -> refresh());
@@ -175,12 +184,105 @@ final class TeamsPanel extends JPanel
 				actions.add(join);
 				actions.add(leave);
 				card.add(actions);
+				if (canManage(item))
+				{
+					JButton edit = UiComponents.neutralButton("Edit");
+					JButton close = UiComponents.dangerButton("Close");
+					edit.addActionListener(event -> showEditForm(item));
+					close.addActionListener(event -> action(service.close(item.getId())));
+					card.add(edit);
+					card.add(close);
+				}
 				content.add(card);
 			}
 			content.add(UiComponents.small("Last updated " + UiComponents.nowShort()));
 		}
 		content.revalidate();
 		content.repaint();
+	}
+
+	private boolean canManage(Team team)
+	{
+		String active = UiComponents.value(activeRsn.get()).trim();
+		return !active.isEmpty() && active.equalsIgnoreCase(UiComponents.value(team.getHost()).trim());
+	}
+
+	private void showEditForm(Team team)
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Edit Team"));
+		JPanel card = UiComponents.card("Team", "", "", RancourTheme.INFO);
+		JTextField activity = UiComponents.compact(new JTextField(team.getActivity()));
+		JTextField capacity = UiComponents.compact(new JTextField(String.valueOf(team.getCapacity())));
+		JTextField world = UiComponents.compact(new JTextField(String.valueOf(team.getWorld())));
+		JCheckBox voice = UiComponents.compact(new JCheckBox("Voice required"));
+		voice.setSelected(team.isVoiceRequired());
+		JTextArea notes = new JTextArea(team.getNotes(), 3, 12);
+		notes.setLineWrap(true);
+		notes.setWrapStyleWord(true);
+		JButton save = UiComponents.successButton("Save");
+		JButton back = UiComponents.neutralButton("Back");
+		card.add(UiComponents.fieldRow("Activity", ""));
+		card.add(activity);
+		card.add(UiComponents.fieldRow("Capacity", ""));
+		card.add(capacity);
+		card.add(UiComponents.fieldRow("World", ""));
+		card.add(world);
+		card.add(voice);
+		card.add(UiComponents.fieldRow("Notes", ""));
+		card.add(UiComponents.compact(notes));
+		card.add(save);
+		card.add(back);
+		content.add(card);
+		save.addActionListener(event -> editTeam(team, activity, capacity, world, voice, notes, save));
+		back.addActionListener(event -> refresh());
+		status.setText("Edit team details");
+		content.revalidate();
+		content.repaint();
+	}
+
+	private void editTeam(Team team, JTextField activity, JTextField capacity, JTextField world, JCheckBox voice,
+		JTextArea notes, JButton button)
+	{
+		String activityValue = activity.getText().trim();
+		Integer capacityValue = parseInt(capacity.getText());
+		Integer worldValue = parseInt(world.getText());
+		if (activityValue.isEmpty())
+		{
+			status.setText("Activity is required");
+			return;
+		}
+		if (capacityValue == null || worldValue == null)
+		{
+			status.setText("Capacity and world must be numbers");
+			return;
+		}
+		if (capacityValue < team.getCurrentMembers())
+		{
+			status.setText("Capacity cannot be below current members");
+			return;
+		}
+		if (worldValue < 300 || worldValue > 700)
+		{
+			status.setText("World must be between 300 and 700");
+			return;
+		}
+		String notesValue = notes.getText().trim();
+		if (notesValue.length() > 500)
+		{
+			status.setText("Notes must be 500 characters or fewer");
+			return;
+		}
+		button.setEnabled(false);
+		status.setText("Saving team...");
+		TeamEditRequest request = new TeamEditRequest(activityValue, capacityValue, worldValue,
+			voice.isSelected(), notesValue, team.getTags(), team.getStatus());
+		service.edit(team.getId(), request).whenComplete((result, error) -> SwingUtilities.invokeLater(() ->
+		{
+			button.setEnabled(true);
+			status.setText(error == null ? "Team updated" : "Error: " + UiComponents.errorMessage(error));
+			if (error == null) { refresh(); }
+		}));
 	}
 
 	private static Color teamAccent(Team team)

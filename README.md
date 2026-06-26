@@ -51,6 +51,8 @@ Teams show the activity, host, world, members, capacity, voice requirement, and 
 
 Worlds up to 700 are supported.
 
+Team hosts can edit or close their own teams from the RuneLite panel when logged into the linked host RSN.
+
 Teams expire automatically, and empty teams are removed shortly after everyone leaves.
 
 ## Privacy And Safety

@@ -213,6 +213,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchTeams(String sessionToken) { return failed(); }
 		@Override public CompletionStage<Team> createTeam(TeamCreateRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Team> editTeam(String teamId, TeamEditRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<StaffDropSubmission>> fetchPendingDrops(String sessionToken) { return failed(); }
@@ -256,6 +257,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<DropSubmissionResult> submitDrop(DropSubmission submission, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchTeams(String sessionToken) { return failed(); }
 		@Override public CompletionStage<Team> createTeam(TeamCreateRequest request, String sessionToken) { return failed(); }
+		@Override public CompletionStage<Team> editTeam(String teamId, TeamEditRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> leaveTeam(String teamId, String activeRsn, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<StaffDropSubmission>> fetchPendingDrops(String sessionToken) { return failed(); }

@@ -87,7 +87,7 @@ public final class RancourClanPanel extends PluginPanel
 		verificationPanel = new VerificationPanel(verificationService, activeRsn);
 		announcementsPanel = new AnnouncementsPanel(announcementService);
 		eventsPanel = new EventsPanel(eventService);
-		teamsPanel = new TeamsPanel(teamService);
+		teamsPanel = new TeamsPanel(teamService, activeRsn);
 		dropsPanel = new DropsPanel(dropService, activeRsn);
 		staffPanel = new StaffPanel(staffService, () ->
 		{

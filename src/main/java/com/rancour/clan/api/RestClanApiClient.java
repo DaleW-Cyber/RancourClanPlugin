@@ -153,6 +153,12 @@ public final class RestClanApiClient implements ClanApiClient
 	}
 
 	@Override
+	public CompletionStage<Team> editTeam(String teamId, TeamEditRequest request, String sessionToken)
+	{
+		return protectedPatch(url("plugin", "teams", teamId), request, sessionToken, Team.class);
+	}
+
+	@Override
 	public CompletionStage<ActionResult> joinTeam(String teamId, String activeRsn, String sessionToken)
 	{
 		return protectedPost(url("plugin", "teams", teamId, "join"), new TeamActionRequest(activeRsn), sessionToken, ActionResult.class);

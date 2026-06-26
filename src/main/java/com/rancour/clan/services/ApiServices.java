@@ -82,8 +82,10 @@ public final class ApiServices
 		{
 			@Override public CompletionStage<List<Team>> loadTeams() { return api.fetchTeams(verification.getSessionToken()); }
 			@Override public CompletionStage<Team> create(TeamCreateRequest request) { return withToken(verification, token -> api.createTeam(withActiveRsn(request, activeRsn.get()), token)); }
+			@Override public CompletionStage<Team> edit(String id, TeamEditRequest request) { return withToken(verification, token -> api.editTeam(id, request, token)); }
 			@Override public CompletionStage<ActionResult> join(String id) { return withToken(verification, token -> api.joinTeam(id, activeRsn.get(), token)); }
 			@Override public CompletionStage<ActionResult> leave(String id) { return withToken(verification, token -> api.leaveTeam(id, activeRsn.get(), token)); }
+			@Override public CompletionStage<ActionResult> close(String id) { return withToken(verification, token -> api.closeTeam(id, token)); }
 		};
 	}
 
