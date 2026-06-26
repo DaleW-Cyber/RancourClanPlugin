@@ -36,7 +36,7 @@ public interface RancourClanConfig extends Config
 	)
 	default boolean notifyTeamCreated()
 	{
-		return false;
+		return true;
 	}
 
 	@ConfigItem(
