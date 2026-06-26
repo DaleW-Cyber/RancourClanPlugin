@@ -80,7 +80,7 @@ final class EventsPanel extends JPanel
 
 	private static JPanel eventCard(ClanEvent item)
 	{
-		String notes = UiComponents.value(item.getNotes()).isEmpty() ? "None" : item.getNotes();
+		String notes = visibleNotes(item);
 		if (hasStarted(item))
 		{
 			return UiComponents.detailsCard(item.getName(), "", eventAccent(item),
@@ -93,6 +93,42 @@ final class EventsPanel extends JPanel
 			"Countdown", countdown(item.getStartTime()),
 			"Ends", endCountdown(item.getEndTime()),
 			"Notes", notes);
+	}
+
+	private static String visibleNotes(ClanEvent item)
+	{
+		String raw = UiComponents.value(item.getNotes()).trim();
+		if (raw.isEmpty())
+		{
+			return "None";
+		}
+		StringBuilder visible = new StringBuilder();
+		for (String line : raw.split("\\R"))
+		{
+			String trimmed = line.trim();
+			if (isDiscordTagLine(trimmed))
+			{
+				continue;
+			}
+			if (visible.length() > 0)
+			{
+				visible.append('\n');
+			}
+			visible.append(line);
+		}
+		String result = visible.toString().trim();
+		return result.isEmpty() ? "None" : result;
+	}
+
+	private static boolean isDiscordTagLine(String line)
+	{
+		String normalized = UiComponents.value(line).trim().toLowerCase();
+		return normalized.startsWith("tag:")
+			|| normalized.startsWith("tags:")
+			|| normalized.startsWith("event tag:")
+			|| normalized.startsWith("event tags:")
+			|| normalized.startsWith("discord tag:")
+			|| normalized.startsWith("discord tags:");
 	}
 
 	private static Color eventAccent(ClanEvent event)
