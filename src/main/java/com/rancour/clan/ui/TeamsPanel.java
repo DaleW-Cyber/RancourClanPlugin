@@ -43,12 +43,6 @@ final class TeamsPanel extends JPanel
 		{"vetion", "Vet'ion"},
 		{"venenatis", "Venenatis"},
 		{"nightmare", "Nightmare"},
-		{"events", "Events"},
-		{"botw", "Boss of the Week"},
-		{"sotw", "Skill of the Month"},
-		{"ba", "Barb Assault"},
-		{"sanguine", "Sanguine Sunday/Saturday - Learn ToB!"},
-		{"pvp", "PvP"},
 		{"other", "Other"}
 	};
 	private final TeamService service;
