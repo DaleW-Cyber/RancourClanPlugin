@@ -170,7 +170,7 @@ public final class ApiServices
 	{
 		String selected = hasText(activeRsn) ? activeRsn : request.getActiveRsn();
 		return new TeamCreateRequest(request.getActivity(), request.getCapacity(), request.getWorld(),
-			request.isVoiceRequired(), request.getNotes(), selected);
+			request.isVoiceRequired(), request.getNotes(), selected, request.getTags());
 	}
 
 	private static boolean isUnauthorized(Throwable error)

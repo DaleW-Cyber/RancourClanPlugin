@@ -24,13 +24,14 @@ public final class Team
 	private final String fullAt;
 	private final String readyNotifiedAt;
 	private final String closedAt;
+	private final Boolean notifyCurrentUser;
 
 	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
 		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
 		List<String> tags, boolean joined)
 	{
 		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
-			staffHosted, tags, joined, Collections.emptyList(), null, null, null, null, null, "");
+			staffHosted, tags, joined, Collections.emptyList(), null, null, null, null, null, "", null);
 	}
 
 	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
@@ -39,7 +40,7 @@ public final class Team
 		String fullAt, String closedAt)
 	{
 		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
-			staffHosted, tags, joined, joinedMembers, createdAt, expiresAt, fullAt, null, closedAt, "");
+			staffHosted, tags, joined, joinedMembers, createdAt, expiresAt, fullAt, null, closedAt, "", null);
 	}
 
 	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
@@ -48,13 +49,22 @@ public final class Team
 		String fullAt, String closedAt, String notes)
 	{
 		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
-			staffHosted, tags, joined, joinedMembers, createdAt, expiresAt, fullAt, null, closedAt, notes);
+			staffHosted, tags, joined, joinedMembers, createdAt, expiresAt, fullAt, null, closedAt, notes, null);
 	}
 
 	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
 		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
 		List<String> tags, boolean joined, List<String> joinedMembers, String createdAt, String expiresAt,
 		String fullAt, String readyNotifiedAt, String closedAt, String notes)
+	{
+		this(id, activity, host, requiredRoles, currentMembers, capacity, world, voiceRequired, status,
+			staffHosted, tags, joined, joinedMembers, createdAt, expiresAt, fullAt, readyNotifiedAt, closedAt, notes, null);
+	}
+
+	public Team(String id, String activity, String host, List<String> requiredRoles, int currentMembers,
+		int capacity, int world, boolean voiceRequired, String status, boolean staffHosted,
+		List<String> tags, boolean joined, List<String> joinedMembers, String createdAt, String expiresAt,
+		String fullAt, String readyNotifiedAt, String closedAt, String notes, Boolean notifyCurrentUser)
 	{
 		this.id = id;
 		this.activity = activity;
@@ -75,6 +85,7 @@ public final class Team
 		this.fullAt = fullAt;
 		this.readyNotifiedAt = readyNotifiedAt;
 		this.closedAt = closedAt;
+		this.notifyCurrentUser = notifyCurrentUser;
 	}
 
 	public String getId() { return id; }
@@ -96,4 +107,5 @@ public final class Team
 	public String getFullAt() { return fullAt; }
 	public String getReadyNotifiedAt() { return readyNotifiedAt; }
 	public String getClosedAt() { return closedAt; }
+	public boolean shouldNotifyCurrentUser() { return notifyCurrentUser == null || notifyCurrentUser; }
 }

@@ -64,9 +64,10 @@ final class EventsPanel extends JPanel
 			status.setText(items.size() + " event(s)");
 			for (ClanEvent item : items)
 			{
-				JPanel card = UiComponents.detailsCard(item.getName(), item.getDescription(), eventAccent(item),
+				JPanel card = UiComponents.detailsCard(item.getName(), "", eventAccent(item),
 					"Starts", UiComponents.shortDate(item.getStartTime()),
-					"Countdown", countdown(item.getStartTime()));
+					"Countdown", countdown(item.getStartTime()),
+					"Notes", UiComponents.value(item.getNotes()).isEmpty() ? "None" : item.getNotes());
 				JTextArea badge = visibilityBadge(item);
 				if (badge != null)
 				{

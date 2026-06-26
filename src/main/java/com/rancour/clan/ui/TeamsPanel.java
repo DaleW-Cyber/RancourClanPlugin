@@ -4,11 +4,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.JTextArea;
@@ -21,6 +24,15 @@ import com.rancour.clan.services.TeamService;
 
 final class TeamsPanel extends JPanel
 {
+	private static final String[][] CONTENT_OPTIONS = {
+		{"cox", "Chambers of Xeric"},
+		{"tob", "Theatre of Blood"},
+		{"toa", "Tombs of Amascut"},
+		{"nex", "Nex"},
+		{"corp", "Corporeal Beast"},
+		{"nightmare", "Nightmare"},
+		{"other", "Other"}
+	};
 	private final TeamService service;
 	private final Supplier<String> activeRsn;
 	private final JTextArea status = UiComponents.statusLabel("Not loaded");
@@ -67,7 +79,9 @@ final class TeamsPanel extends JPanel
 		content.removeAll();
 		content.add(UiComponents.heading("Create Team"));
 		JPanel card = UiComponents.card("Team", "", "", RancourTheme.INFO);
+		JComboBox<String> contentType = UiComponents.compact(new JComboBox<>(contentLabels()));
 		JTextField activity = UiComponents.compact(new JTextField());
+		activity.setEnabled(false);
 		JTextField capacity = UiComponents.compact(new JTextField("5"));
 		JTextField world = UiComponents.compact(new JTextField("416"));
 		JCheckBox voice = UiComponents.compact(new JCheckBox("Voice required"));
@@ -77,7 +91,9 @@ final class TeamsPanel extends JPanel
 		notes.setAlignmentX(Component.LEFT_ALIGNMENT);
 		JButton create = UiComponents.successButton("Create");
 		JButton back = UiComponents.neutralButton("Back");
-		card.add(UiComponents.fieldRow("Activity", ""));
+		card.add(UiComponents.fieldRow("Content", ""));
+		card.add(contentType);
+		card.add(UiComponents.fieldRow("Other activity", ""));
 		card.add(activity);
 		card.add(UiComponents.fieldRow("Capacity", ""));
 		card.add(capacity);
@@ -89,17 +105,27 @@ final class TeamsPanel extends JPanel
 		card.add(create);
 		card.add(back);
 		content.add(card);
-		create.addActionListener(event -> createTeam(activity, capacity, world, voice, notes, create));
+		contentType.addActionListener(event ->
+		{
+			boolean other = "other".equals(selectedContentKey(contentType));
+			activity.setEnabled(other);
+			if (!other)
+			{
+				activity.setText("");
+			}
+		});
+		create.addActionListener(event -> createTeam(contentType, activity, capacity, world, voice, notes, create));
 		back.addActionListener(event -> refresh());
 		status.setText("Enter team details");
 		content.revalidate();
 		content.repaint();
 	}
 
-	private void createTeam(JTextField activity, JTextField capacity, JTextField world, JCheckBox voice,
+	private void createTeam(JComboBox<String> contentType, JTextField activity, JTextField capacity, JTextField world, JCheckBox voice,
 		JTextArea notes, JButton button)
 	{
-		String activityValue = activity.getText().trim();
+		String contentKey = selectedContentKey(contentType);
+		String activityValue = "other".equals(contentKey) ? activity.getText().trim() : selectedContentName(contentType);
 		if (activityValue.isEmpty())
 		{
 			status.setText("Activity is required");
@@ -131,7 +157,7 @@ final class TeamsPanel extends JPanel
 		button.setEnabled(false);
 		status.setText("Creating team...");
 		TeamCreateRequest request = new TeamCreateRequest(activityValue, capacityValue, worldValue,
-			voice.isSelected(), notesValue, null);
+			voice.isSelected(), notesValue, null, "other".equals(contentKey) ? Collections.emptyList() : Collections.singletonList(contentKey));
 		service.create(request).whenComplete((team, error) -> SwingUtilities.invokeLater(() ->
 		{
 			button.setEnabled(true);
@@ -341,5 +367,22 @@ final class TeamsPanel extends JPanel
 		{
 			return null;
 		}
+	}
+
+	private static String[] contentLabels()
+	{
+		return Arrays.stream(CONTENT_OPTIONS).map(item -> item[1]).toArray(String[]::new);
+	}
+
+	private static String selectedContentKey(JComboBox<String> contentType)
+	{
+		int index = Math.max(0, contentType.getSelectedIndex());
+		return CONTENT_OPTIONS[Math.min(index, CONTENT_OPTIONS.length - 1)][0];
+	}
+
+	private static String selectedContentName(JComboBox<String> contentType)
+	{
+		int index = Math.max(0, contentType.getSelectedIndex());
+		return CONTENT_OPTIONS[Math.min(index, CONTENT_OPTIONS.length - 1)][1];
 	}
 }

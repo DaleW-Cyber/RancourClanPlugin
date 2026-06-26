@@ -1,7 +1,6 @@
 package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +31,6 @@ final class StaffPanel extends JPanel
 	private final JTextArea status = UiComponents.statusLabel("Ready");
 	private final JPanel content = UiComponents.contentPanel();
 	private boolean dropsPanelEnabled = true;
-	private String dropsAccessMode = "members";
 	private int approvedDropCount;
 	private String lastSettingsRefresh = "Not loaded";
 	JButton announcementsButton;
@@ -279,20 +277,12 @@ final class StaffPanel extends JPanel
 		card.add(UiComponents.badge(dropsPanelEnabled ? "ENABLED" : "DISABLED",
 			dropsPanelEnabled ? RancourTheme.SUCCESS : RancourTheme.DANGER));
 		card.add(UiComponents.fieldRow("Approved drops", String.valueOf(approvedDropCount)));
-		card.add(UiComponents.fieldRow("Access mode", modeLabel(dropsAccessMode)));
 		card.add(UiComponents.fieldRow("Last refresh", lastSettingsRefresh));
 		JButton toggle = dropsPanelEnabled
 			? UiComponents.dangerButton("Disable Drops Panel")
 			: UiComponents.successButton("Enable Drops Panel");
 		toggle.addActionListener(event -> toggleDropsPanel(!dropsPanelEnabled));
 		card.add(toggle);
-		card.add(UiComponents.wrapped("Access mode"));
-		JPanel modes = new JPanel(new GridLayout(4, 1, 0, 4));
-		modes.add(modeButton("Off", "off"));
-		modes.add(modeButton("Staff Only", "staff"));
-		modes.add(modeButton("Tester Roles", "roles"));
-		modes.add(modeButton("All Members", "members"));
-		card.add(modes);
 		content.add(card);
 	}
 
@@ -315,51 +305,6 @@ final class StaffPanel extends JPanel
 			dataChanged.run();
 			showDropsPanelPage();
 		}));
-	}
-
-	private JButton modeButton(String label, String mode)
-	{
-		JButton button = mode.equals(dropsAccessMode)
-			? UiComponents.neutralButton(label + " (Current)")
-			: UiComponents.neutralButton(label);
-		button.addActionListener(event -> setDropsAccessMode(mode));
-		return button;
-	}
-
-	private void setDropsAccessMode(String mode)
-	{
-		if (mode.equals(dropsAccessMode))
-		{
-			return;
-		}
-		if ("off".equals(mode) && !confirm("Disable drop submissions for normal users?", true))
-		{
-			return;
-		}
-		status.setText("Saving access mode...");
-		service.setDropsAccessMode(mode).whenComplete((settings, error) -> SwingUtilities.invokeLater(() ->
-		{
-			if (error != null)
-			{
-				status.setText("Error: " + UiComponents.errorMessage(error));
-				return;
-			}
-			applySettings(settings);
-			dataChanged.run();
-			showDropsPanelPage();
-		}));
-	}
-
-	private static String modeLabel(String mode)
-	{
-		switch (UiComponents.value(mode).toLowerCase(java.util.Locale.ROOT))
-		{
-			case "off": return "Off";
-			case "staff": return "Staff only";
-			case "roles": return "Tester roles";
-			case "members": return "All members";
-			default: return mode;
-		}
 	}
 
 	private void showTeamsPage()
@@ -523,7 +468,6 @@ final class StaffPanel extends JPanel
 		if (settings != null)
 		{
 			dropsPanelEnabled = settings.isDropsPanelEnabled();
-			dropsAccessMode = settings.getDropsAccessMode();
 			approvedDropCount = settings.getApprovedDrops().size();
 			lastSettingsRefresh = DateTimeFormatter.ofPattern("HH:mm:ss")
 				.withZone(ZoneId.systemDefault())

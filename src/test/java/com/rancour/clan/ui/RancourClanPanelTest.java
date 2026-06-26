@@ -154,6 +154,7 @@ public class RancourClanPanelTest
 		assertFalse(allText(panel).contains("Host"));
 		assertFalse(allText(panel).contains("Status"));
 		assertFalse(allText(panel).contains("Tags"));
+		assertTrue(allText(panel).contains("Bring supplies"));
 	}
 
 	@Test

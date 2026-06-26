@@ -8,6 +8,7 @@ public final class ClanEvent
 	private final String name;
 	private final String startTime;
 	private final String description;
+	private final String notes;
 	private final String host;
 	private final String status;
 	private final int signupCount;
@@ -20,10 +21,19 @@ public final class ClanEvent
 		String status, int signupCount, boolean joined, String visibility, List<String> requiredRoleIds,
 		String sourceChannelId)
 	{
+		this(id, name, startTime, description, description, host, status, signupCount, joined, visibility,
+			requiredRoleIds, sourceChannelId);
+	}
+
+	public ClanEvent(String id, String name, String startTime, String description, String notes, String host,
+		String status, int signupCount, boolean joined, String visibility, List<String> requiredRoleIds,
+		String sourceChannelId)
+	{
 		this.id = id;
 		this.name = name;
 		this.startTime = startTime;
 		this.description = description;
+		this.notes = notes;
 		this.host = host;
 		this.status = status;
 		this.signupCount = signupCount;
@@ -37,6 +47,7 @@ public final class ClanEvent
 	public String getName() { return name; }
 	public String getStartTime() { return startTime; }
 	public String getDescription() { return description; }
+	public String getNotes() { return notes == null || notes.trim().isEmpty() ? description : notes; }
 	public String getHost() { return host; }
 	public String getStatus() { return status; }
 	public int getSignupCount() { return signupCount; }
