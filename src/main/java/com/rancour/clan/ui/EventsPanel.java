@@ -64,10 +64,7 @@ final class EventsPanel extends JPanel
 			status.setText(items.size() + " event(s)");
 			for (ClanEvent item : items)
 			{
-				JPanel card = UiComponents.detailsCard(item.getName(), "", eventAccent(item),
-					"Starts", UiComponents.shortDate(item.getStartTime()),
-					"Countdown", countdown(item.getStartTime()),
-					"Notes", UiComponents.value(item.getNotes()).isEmpty() ? "None" : item.getNotes());
+				JPanel card = eventCard(item);
 				JTextArea badge = visibilityBadge(item);
 				if (badge != null)
 				{
@@ -79,6 +76,23 @@ final class EventsPanel extends JPanel
 		}
 		content.revalidate();
 		content.repaint();
+	}
+
+	private static JPanel eventCard(ClanEvent item)
+	{
+		String notes = UiComponents.value(item.getNotes()).isEmpty() ? "None" : item.getNotes();
+		if (hasStarted(item))
+		{
+			return UiComponents.detailsCard(item.getName(), "", eventAccent(item),
+				"Event", "EVENT STARTED",
+				"Ends", endCountdown(item.getEndTime()),
+				"Notes", notes);
+		}
+		return UiComponents.detailsCard(item.getName(), "", eventAccent(item),
+			"Starts", UiComponents.shortDate(item.getStartTime()),
+			"Countdown", countdown(item.getStartTime()),
+			"Ends", endCountdown(item.getEndTime()),
+			"Notes", notes);
 	}
 
 	private static Color eventAccent(ClanEvent event)
@@ -145,6 +159,53 @@ final class EventsPanel extends JPanel
 				value = Math.max(0, minutes) + "m";
 			}
 			return past ? "Started " + value + " ago" : "Starts in " + value;
+		}
+		catch (DateTimeParseException ignored)
+		{
+			return "Unknown";
+		}
+	}
+
+	private static boolean hasStarted(ClanEvent event)
+	{
+		try
+		{
+			return !Instant.now().isBefore(Instant.parse(event.getStartTime()));
+		}
+		catch (DateTimeParseException ignored)
+		{
+			return false;
+		}
+	}
+
+	private static String endCountdown(String endTime)
+	{
+		if (UiComponents.value(endTime).isEmpty())
+		{
+			return "Unknown";
+		}
+		try
+		{
+			Duration duration = Duration.between(Instant.now(), Instant.parse(endTime));
+			boolean past = duration.isNegative();
+			Duration absolute = past ? duration.negated() : duration;
+			long days = absolute.toDays();
+			long hours = absolute.minusDays(days).toHours();
+			long minutes = absolute.minusDays(days).minusHours(hours).toMinutes();
+			String value;
+			if (days > 0)
+			{
+				value = days + "d " + hours + "h";
+			}
+			else if (hours > 0)
+			{
+				value = hours + "h " + minutes + "m";
+			}
+			else
+			{
+				value = Math.max(0, minutes) + "m";
+			}
+			return past ? "Ended " + value + " ago" : "Ends in " + value;
 		}
 		catch (DateTimeParseException ignored)
 		{

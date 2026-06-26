@@ -7,6 +7,7 @@ public final class ClanEvent
 	private final String id;
 	private final String name;
 	private final String startTime;
+	private final String endTime;
 	private final String description;
 	private final String notes;
 	private final String host;
@@ -21,7 +22,7 @@ public final class ClanEvent
 		String status, int signupCount, boolean joined, String visibility, List<String> requiredRoleIds,
 		String sourceChannelId)
 	{
-		this(id, name, startTime, description, description, host, status, signupCount, joined, visibility,
+		this(id, name, startTime, null, description, description, host, status, signupCount, joined, visibility,
 			requiredRoleIds, sourceChannelId);
 	}
 
@@ -29,9 +30,18 @@ public final class ClanEvent
 		String status, int signupCount, boolean joined, String visibility, List<String> requiredRoleIds,
 		String sourceChannelId)
 	{
+		this(id, name, startTime, null, description, notes, host, status, signupCount, joined, visibility,
+			requiredRoleIds, sourceChannelId);
+	}
+
+	public ClanEvent(String id, String name, String startTime, String endTime, String description, String notes, String host,
+		String status, int signupCount, boolean joined, String visibility, List<String> requiredRoleIds,
+		String sourceChannelId)
+	{
 		this.id = id;
 		this.name = name;
 		this.startTime = startTime;
+		this.endTime = endTime;
 		this.description = description;
 		this.notes = notes;
 		this.host = host;
@@ -46,6 +56,7 @@ public final class ClanEvent
 	public String getId() { return id; }
 	public String getName() { return name; }
 	public String getStartTime() { return startTime; }
+	public String getEndTime() { return endTime; }
 	public String getDescription() { return description; }
 	public String getNotes() { return notes == null || notes.trim().isEmpty() ? description : notes; }
 	public String getHost() { return host; }

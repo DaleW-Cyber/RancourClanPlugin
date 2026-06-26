@@ -96,6 +96,10 @@ final class DropsPanel extends JPanel
 		{
 			showDisabled();
 		}
+		else if (candidate == null)
+		{
+			showIdle("Drop submissions enabled");
+		}
 	}
 
 	void applySettings(PluginSettings settings)
@@ -113,6 +117,10 @@ final class DropsPanel extends JPanel
 		{
 			showDisabled();
 		}
+		else if (candidate == null)
+		{
+			showIdle("Waiting for a candidate drop");
+		}
 	}
 
 	void showDisabled()
@@ -123,6 +131,18 @@ final class DropsPanel extends JPanel
 		content.add(UiComponents.card("Drops disabled", restrictionMessage, "", RancourTheme.DANGER));
 		status.setText("Disabled");
 		status.setForeground(RancourTheme.DANGER);
+		content.revalidate();
+		content.repaint();
+	}
+
+	private void showIdle(String message)
+	{
+		content.removeAll();
+		content.add(UiComponents.heading("Drops"));
+		content.add(UiComponents.card("No pending drop", "No candidate drop is awaiting confirmation.", "",
+			RancourTheme.INFO));
+		status.setText(message);
+		status.setForeground(RancourTheme.MUTED);
 		content.revalidate();
 		content.repaint();
 	}
@@ -151,13 +171,8 @@ final class DropsPanel extends JPanel
 	private void clear(String message)
 	{
 		candidate = null;
-		content.removeAll();
-		content.add(UiComponents.heading("Drops"));
-		content.add(UiComponents.card("No pending drop", "No candidate drop is awaiting confirmation.", "",
-			message.startsWith("Submitted:") ? RancourTheme.SUCCESS : RancourTheme.DISABLED));
+		showIdle(message);
 		status.setText(message);
 		status.setForeground(message.startsWith("Submitted:") ? RancourTheme.SUCCESS : RancourTheme.MUTED);
-		content.revalidate();
-		content.repaint();
 	}
 }

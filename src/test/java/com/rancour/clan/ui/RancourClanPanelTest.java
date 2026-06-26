@@ -192,6 +192,23 @@ public class RancourClanPanelTest
 		assertFalse(text.contains("RESTRICTED"));
 	}
 
+	@Test
+	public void eventsPanelShowsStartedTagAndEndCountdownAfterStart() throws Exception
+	{
+		ClanEvent started = new ClanEvent("event", "Raid started",
+			java.time.Instant.now().minusSeconds(300).toString(),
+			java.time.Instant.now().plusSeconds(3600).toString(),
+			"Bring supplies", "Bring supplies", "Host", "open", 3, false, "member",
+			java.util.Collections.emptyList(), null);
+		EventsPanel panel = eventsPanelFor(started);
+		SwingUtilities.invokeAndWait(() -> { });
+
+		String text = allText(panel);
+		assertTrue(text.contains("EVENT STARTED"));
+		assertTrue(text.contains("Ends in"));
+		assertFalse(text.contains("Starts\n"));
+	}
+
 	private static RancourClanPanel panelFor(MemberProfile profile) throws Exception
 	{
 		return panelFor(profile, new PluginSettings(true, java.util.Arrays.asList("Twisted bow", "Dexterous prayer scroll")));
