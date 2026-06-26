@@ -224,6 +224,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsAccessMode(String mode, String sessionToken) { return failed(); }
+		@Override public CompletionStage<PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchStaffTeams(String sessionToken) { return failed(); }
 		@Override public CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken) { return failed(); }
@@ -269,6 +270,7 @@ public class VerificationServiceTest
 		@Override public CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken) { return failed(); }
 		@Override public CompletionStage<PluginSettings> setDropsAccessMode(String mode, String sessionToken) { return failed(); }
+		@Override public CompletionStage<PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval, String sessionToken) { return failed(); }
 		@Override public CompletionStage<java.util.List<Team>> fetchStaffTeams(String sessionToken) { return failed(); }
 		@Override public CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken) { return failed(); }
 		@Override public CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken) { return failed(); }

@@ -29,6 +29,7 @@ public final class MockClanApiClient implements ClanApiClient
 		"Mock session", Instant.now().toString());
 	private boolean dropsPanelEnabled = true;
 	private String dropsAccessMode = "members";
+	private boolean pluginDropsRequireStaffApproval = true;
 
 	@Override public CompletionStage<ApiHealth> health() { return done(new ApiHealth("ok (mock)")); }
 	@Override public CompletionStage<VerificationStartResponse> startVerification() { return done(new VerificationStartResponse("MOCK-123", "mock-verification", "10 minutes")); }
@@ -53,6 +54,7 @@ public final class MockClanApiClient implements ClanApiClient
 	@Override public CompletionStage<ActionResult> deleteAnnouncement(String id, String token) { return ok("Announcement deleted"); }
 	@Override public CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String token) { dropsPanelEnabled = enabled; return done(settings()); }
 	@Override public CompletionStage<PluginSettings> setDropsAccessMode(String mode, String token) { dropsAccessMode = mode; return done(settings()); }
+	@Override public CompletionStage<PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval, String token) { pluginDropsRequireStaffApproval = requireApproval; return done(settings()); }
 	@Override public CompletionStage<List<Team>> fetchStaffTeams(String token) { return fetchTeams(token); }
 	@Override public CompletionStage<Team> editStaffTeam(String id, TeamEditRequest request, String token) { return done(new Team(id, request.getActivity(), "Mock Host", Collections.emptyList(), 2, request.getCapacity(), request.getWorld(), Boolean.TRUE.equals(request.getVoiceRequired()), "open", false, request.getTags(), false, Arrays.asList("Mock Host", "Mock RSN"), Instant.now().toString(), Instant.now().plusSeconds(7200).toString(), null, null)); }
 	@Override public CompletionStage<ActionResult> closeStaffTeam(String id, String token) { return ok("Team closed"); }
@@ -61,6 +63,6 @@ public final class MockClanApiClient implements ClanApiClient
 	@Override public CompletionStage<ActionResult> lockTeam(String id, String token) { return ok("Mock team locked"); }
 
 	private static CompletionStage<ActionResult> ok(String message) { return done(new ActionResult(true, message)); }
-	private PluginSettings settings() { return new PluginSettings(dropsPanelEnabled, dropsAccessMode, dropsPanelEnabled, dropsPanelEnabled, null, Arrays.asList("Twisted bow", "Dexterous prayer scroll", "Mock item"), Collections.emptyList()); }
+	private PluginSettings settings() { return new PluginSettings(dropsPanelEnabled, dropsAccessMode, pluginDropsRequireStaffApproval, dropsPanelEnabled, dropsPanelEnabled, null, Arrays.asList("Twisted bow", "Dexterous prayer scroll", "Mock item"), Collections.emptyList()); }
 	private static <T> CompletionStage<T> done(T value) { return CompletableFuture.completedFuture(value); }
 }

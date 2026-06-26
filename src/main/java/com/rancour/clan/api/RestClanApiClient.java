@@ -29,6 +29,7 @@ import com.rancour.clan.models.EditAnnouncementRequest;
 import com.rancour.clan.models.DropsPanelSettingRequest;
 import com.rancour.clan.models.DropsAccessSettingRequest;
 import com.rancour.clan.models.MemberProfile;
+import com.rancour.clan.models.PluginDropsApprovalSettingRequest;
 import com.rancour.clan.models.PluginSettings;
 import com.rancour.clan.models.StaffDropSubmission;
 import com.rancour.clan.models.Team;
@@ -223,6 +224,15 @@ public final class RestClanApiClient implements ClanApiClient
 		log.info("Rancour API staff action request: action=dropsAccessMode endpoint={} hasSessionToken={} mode={}",
 			endpoint, hasText(sessionToken), mode);
 		return protectedPatch(endpoint, new DropsAccessSettingRequest(mode), sessionToken, PluginSettings.class);
+	}
+
+	@Override
+	public CompletionStage<PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval, String sessionToken)
+	{
+		HttpUrl endpoint = url("plugin", "staff", "settings", "plugin-drops-approval");
+		log.info("Rancour API staff action request: action=pluginDropsApproval endpoint={} hasSessionToken={} requireApproval={}",
+			endpoint, hasText(sessionToken), requireApproval);
+		return protectedPatch(endpoint, new PluginDropsApprovalSettingRequest(requireApproval), sessionToken, PluginSettings.class);
 	}
 
 	@Override

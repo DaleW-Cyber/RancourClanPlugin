@@ -99,6 +99,24 @@ public class StaffPanelTest
 	}
 
 	@Test
+	public void dropsPanelShowsPluginApprovalMode() throws Exception
+	{
+		StaffPanel panel = new StaffPanel(new RecordingStaffService());
+		SwingUtilities.invokeAndWait(() ->
+		{
+			panel.applySettings(new PluginSettings(true, "members", true, true, true, null,
+				Collections.emptyList(), Collections.emptyList()));
+			panel.showMenu();
+			panel.dropsPanelButton.doClick();
+		});
+
+		String text = allText(panel);
+		assertTrue(text.contains("Staff approval"));
+		assertTrue(text.contains("Enabled"));
+		assertTrue(text.contains("Auto-log Plugin Drops"));
+	}
+
+	@Test
 	public void staffTeamsPageShowsMembersAndActions() throws Exception
 	{
 		RecordingStaffService service = new RecordingStaffService();
@@ -302,6 +320,13 @@ public class StaffPanelTest
 		{
 			return CompletableFuture.completedFuture(new PluginSettings(true, mode, true, true, null,
 				Collections.emptyList(), Collections.emptyList()));
+		}
+
+		@Override
+		public CompletionStage<PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval)
+		{
+			return CompletableFuture.completedFuture(new PluginSettings(true, "members", requireApproval,
+				true, true, null, Collections.emptyList(), Collections.emptyList()));
 		}
 
 		@Override

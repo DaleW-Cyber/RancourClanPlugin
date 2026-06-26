@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.gson.Gson;
+import com.rancour.clan.models.PluginSettings;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -250,6 +251,25 @@ public class RestClanApiClientTest
 		assertEquals("POST", captured.get().method());
 		assertEquals("https://api.example.test/plugin/staff/settings/drops-panel", captured.get().url().toString());
 		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+	}
+
+	@Test
+	public void staffPluginDropsApprovalToggleSendsBearerAuthorization() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200, "{\"dropsPanelEnabled\":true,\"pluginDropsRequireStaffApproval\":false,\"approvedDrops\":[]}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		PluginSettings settings = api.setPluginDropsRequireStaffApproval(false, "staff-session").toCompletableFuture().get();
+
+		assertFalse(settings.isPluginDropsRequireStaffApproval());
+		assertEquals("PATCH", captured.get().method());
+		assertEquals("https://api.example.test/plugin/staff/settings/plugin-drops-approval", captured.get().url().toString());
+		assertEquals("Bearer staff-session", captured.get().header("Authorization"));
+		assertTrue(requestBody(captured.get()).contains("\"requireApproval\":false"));
 	}
 
 	@Test

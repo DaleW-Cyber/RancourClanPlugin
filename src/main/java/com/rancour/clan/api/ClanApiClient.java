@@ -44,6 +44,7 @@ public interface ClanApiClient
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId, String sessionToken);
 	CompletionStage<PluginSettings> setDropsPanelEnabled(boolean enabled, String sessionToken);
 	CompletionStage<PluginSettings> setDropsAccessMode(String mode, String sessionToken);
+	CompletionStage<PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval, String sessionToken);
 	CompletionStage<List<Team>> fetchStaffTeams(String sessionToken);
 	CompletionStage<Team> editStaffTeam(String teamId, TeamEditRequest request, String sessionToken);
 	CompletionStage<ActionResult> closeStaffTeam(String teamId, String sessionToken);

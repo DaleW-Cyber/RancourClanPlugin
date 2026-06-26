@@ -21,6 +21,7 @@ public interface StaffService
 	CompletionStage<ActionResult> deleteAnnouncement(String announcementId);
 	CompletionStage<com.rancour.clan.models.PluginSettings> setDropsPanelEnabled(boolean enabled);
 	CompletionStage<com.rancour.clan.models.PluginSettings> setDropsAccessMode(String mode);
+	CompletionStage<com.rancour.clan.models.PluginSettings> setPluginDropsRequireStaffApproval(boolean requireApproval);
 	CompletionStage<List<Team>> loadTeams();
 	CompletionStage<Team> editTeam(String teamId, TeamEditRequest request);
 	CompletionStage<ActionResult> closeTeam(String teamId);

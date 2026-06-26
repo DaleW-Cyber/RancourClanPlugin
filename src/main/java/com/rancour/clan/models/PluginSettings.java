@@ -7,6 +7,7 @@ public final class PluginSettings
 {
 	private final boolean dropsPanelEnabled;
 	private final String dropsAccessMode;
+	private final Boolean pluginDropsRequireStaffApproval;
 	private final Boolean dropsVisible;
 	private final Boolean dropsCanSubmit;
 	private final String dropsRestrictionMessage;
@@ -27,8 +28,17 @@ public final class PluginSettings
 		Boolean dropsCanSubmit, String dropsRestrictionMessage, List<String> approvedDrops,
 		List<ApprovedDropSource> approvedDropSources)
 	{
+		this(dropsPanelEnabled, dropsAccessMode, null, dropsVisible, dropsCanSubmit,
+			dropsRestrictionMessage, approvedDrops, approvedDropSources);
+	}
+
+	public PluginSettings(boolean dropsPanelEnabled, String dropsAccessMode, Boolean pluginDropsRequireStaffApproval,
+		Boolean dropsVisible, Boolean dropsCanSubmit, String dropsRestrictionMessage, List<String> approvedDrops,
+		List<ApprovedDropSource> approvedDropSources)
+	{
 		this.dropsPanelEnabled = dropsPanelEnabled;
 		this.dropsAccessMode = dropsAccessMode;
+		this.pluginDropsRequireStaffApproval = pluginDropsRequireStaffApproval;
 		this.dropsVisible = dropsVisible;
 		this.dropsCanSubmit = dropsCanSubmit;
 		this.dropsRestrictionMessage = dropsRestrictionMessage;
@@ -44,6 +54,11 @@ public final class PluginSettings
 	public String getDropsAccessMode()
 	{
 		return dropsAccessMode == null || dropsAccessMode.trim().isEmpty() ? "members" : dropsAccessMode;
+	}
+
+	public boolean isPluginDropsRequireStaffApproval()
+	{
+		return pluginDropsRequireStaffApproval == null || pluginDropsRequireStaffApproval;
 	}
 
 	public boolean isDropsVisible()

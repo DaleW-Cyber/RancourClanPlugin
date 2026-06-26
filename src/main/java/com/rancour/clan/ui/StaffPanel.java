@@ -31,6 +31,7 @@ final class StaffPanel extends JPanel
 	private final JTextArea status = UiComponents.statusLabel("Ready");
 	private final JPanel content = UiComponents.contentPanel();
 	private boolean dropsPanelEnabled = true;
+	private boolean pluginDropsRequireStaffApproval = true;
 	private int approvedDropCount;
 	private String lastSettingsRefresh = "Not loaded";
 	JButton announcementsButton;
@@ -277,12 +278,18 @@ final class StaffPanel extends JPanel
 		card.add(UiComponents.badge(dropsPanelEnabled ? "ENABLED" : "DISABLED",
 			dropsPanelEnabled ? RancourTheme.SUCCESS : RancourTheme.DANGER));
 		card.add(UiComponents.fieldRow("Approved drops", String.valueOf(approvedDropCount)));
+		card.add(UiComponents.fieldRow("Staff approval", pluginDropsRequireStaffApproval ? "Enabled" : "Disabled"));
 		card.add(UiComponents.fieldRow("Last refresh", lastSettingsRefresh));
 		JButton toggle = dropsPanelEnabled
 			? UiComponents.dangerButton("Disable Drops Panel")
 			: UiComponents.successButton("Enable Drops Panel");
 		toggle.addActionListener(event -> toggleDropsPanel(!dropsPanelEnabled));
 		card.add(toggle);
+		JButton approvalToggle = pluginDropsRequireStaffApproval
+			? UiComponents.neutralButton("Auto-log Plugin Drops")
+			: UiComponents.successButton("Require Staff Approval");
+		approvalToggle.addActionListener(event -> togglePluginDropsApproval(!pluginDropsRequireStaffApproval));
+		card.add(approvalToggle);
 		content.add(card);
 	}
 
@@ -295,6 +302,29 @@ final class StaffPanel extends JPanel
 		}
 		status.setText("Saving...");
 		service.setDropsPanelEnabled(enabled).whenComplete((settings, error) -> SwingUtilities.invokeLater(() ->
+		{
+			if (error != null)
+			{
+				status.setText("Error: " + UiComponents.errorMessage(error));
+				return;
+			}
+			applySettings(settings);
+			dataChanged.run();
+			showDropsPanelPage();
+		}));
+	}
+
+	private void togglePluginDropsApproval(boolean requireApproval)
+	{
+		String message = requireApproval
+			? "Require staff approval before plugin drops are logged?"
+			: "Auto-log validated plugin drops without staff review?";
+		if (!confirm(message, !requireApproval))
+		{
+			return;
+		}
+		status.setText("Saving...");
+		service.setPluginDropsRequireStaffApproval(requireApproval).whenComplete((settings, error) -> SwingUtilities.invokeLater(() ->
 		{
 			if (error != null)
 			{
@@ -468,6 +498,7 @@ final class StaffPanel extends JPanel
 		if (settings != null)
 		{
 			dropsPanelEnabled = settings.isDropsPanelEnabled();
+			pluginDropsRequireStaffApproval = settings.isPluginDropsRequireStaffApproval();
 			approvedDropCount = settings.getApprovedDrops().size();
 			lastSettingsRefresh = DateTimeFormatter.ofPattern("HH:mm:ss")
 				.withZone(ZoneId.systemDefault())
