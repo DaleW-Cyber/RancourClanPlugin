@@ -209,6 +209,11 @@ final class TeamsPanel extends JPanel
 					"Joined", item.getJoinedMembers().isEmpty() ? "None" : String.join(", ", item.getJoinedMembers()),
 					"World", String.valueOf(item.getWorld()),
 					"Voice", item.isVoiceRequired() ? "Required" : "Optional");
+				String notes = UiComponents.value(item.getNotes()).trim();
+				if (!notes.isEmpty())
+				{
+					card.add(UiComponents.fieldRow("Notes", notes));
+				}
 				card.add(UiComponents.badge(teamBadge(item), teamAccent(item)));
 				if (item.isStaffHosted())
 				{
