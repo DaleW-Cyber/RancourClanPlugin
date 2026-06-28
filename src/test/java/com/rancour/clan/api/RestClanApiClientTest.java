@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.gson.Gson;
 import com.rancour.clan.models.PluginSettings;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.MediaType;
@@ -150,6 +151,24 @@ public class RestClanApiClientTest
 		String body = requestBody(captured.get());
 		assertTrue(body.contains("\"activeRsn\":\"Mutable\""));
 		assertTrue(body.contains("\"voiceRequired\":true"));
+	}
+
+	@Test
+	public void createTeamSendsContentTags() throws Exception
+	{
+		AtomicReference<Request> captured = new AtomicReference<>();
+		RestClanApiClient api = new RestClanApiClient(
+			responseClient(captured, 200,
+				"{\"id\":\"team-1\",\"activity\":\"Theatre of Blood\",\"host\":\"Mutable\",\"requiredRoles\":[\"555\"],\"currentMembers\":1,\"capacity\":5,\"world\":416,\"voiceRequired\":true,\"status\":\"open\",\"staffHosted\":false,\"tags\":[\"tob\"],\"joined\":true,\"joinedMembers\":[\"Mutable\"],\"notifyCurrentUser\":true}"),
+			new Gson(),
+			"https://api.example.test"
+		);
+
+		api.createTeam(new com.rancour.clan.models.TeamCreateRequest("Theatre of Blood", 5, 416, true, "", "Mutable",
+				Collections.singletonList("tob")), "team-session")
+			.toCompletableFuture().get();
+
+		assertTrue(requestBody(captured.get()).contains("\"tags\":[\"tob\"]"));
 	}
 
 	@Test

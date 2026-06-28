@@ -26,7 +26,7 @@ public class TeamCreatedNotifierTest
 		notifier.notifyNewTeams(java.util.Arrays.asList(hidden, visible));
 
 		assertEquals(1, messages.size());
-		assertEquals("[Rancour] New team: Nex on world 420.", messages.get(0));
+		assertEquals("[Rancour] New team formed: Nex - Host: Mutable", messages.get(0));
 	}
 
 	private static Team team(String id, Boolean notifyCurrentUser)
