@@ -29,6 +29,24 @@ public class TeamCreatedNotifierTest
 		assertEquals("[Rancour] New team formed: Nex - Host: Mutable", messages.get(0));
 	}
 
+	@Test
+	public void ineligiblePayloadDoesNotSuppressLaterEligibleNotification()
+	{
+		MemoryStore store = new MemoryStore();
+		List<String> messages = new ArrayList<>();
+		TeamCreatedNotifier notifier = new TeamCreatedNotifier(store, messages::add, () -> true);
+		Team initial = team("team-1", false);
+		Team hidden = team("team-2", false);
+		Team eligible = team("team-2", true);
+
+		notifier.notifyNewTeams(Collections.singletonList(initial));
+		notifier.notifyNewTeams(Collections.singletonList(hidden));
+		notifier.notifyNewTeams(Collections.singletonList(eligible));
+
+		assertEquals(1, messages.size());
+		assertEquals("[Rancour] New team formed: Nex - Host: Mutable", messages.get(0));
+	}
+
 	private static Team team(String id, Boolean notifyCurrentUser)
 	{
 		return new Team(id, "Nex", "Mutable", Collections.emptyList(), 1, 5, 420,

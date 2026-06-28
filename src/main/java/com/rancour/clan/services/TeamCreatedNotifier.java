@@ -27,10 +27,21 @@ public final class TeamCreatedNotifier
 			{
 				continue;
 			}
-			store.markSeen(team.getId());
-			if (initialised && enabled.getAsBoolean() && team.shouldNotifyCurrentUser())
+			if (!team.shouldNotifyCurrentUser())
 			{
-				chatSink.accept("[Rancour] New team formed: " + team.getActivity() + " - Host: " + team.getHost());
+				continue;
+			}
+			if (initialised)
+			{
+				store.markSeen(team.getId());
+				if (enabled.getAsBoolean())
+				{
+					chatSink.accept("[Rancour] New team formed: " + team.getActivity() + " - Host: " + team.getHost());
+				}
+			}
+			else
+			{
+				store.markSeen(team.getId());
 			}
 		}
 		initialised = true;
