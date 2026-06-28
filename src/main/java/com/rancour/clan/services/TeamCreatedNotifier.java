@@ -1,5 +1,8 @@
 package com.rancour.clan.services;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -7,6 +10,8 @@ import com.rancour.clan.models.Team;
 
 public final class TeamCreatedNotifier
 {
+	private static final Duration INITIAL_NOTIFICATION_GRACE = Duration.ofMinutes(5);
+
 	private final SeenTeamReadyStore store;
 	private final Consumer<String> chatSink;
 	private final BooleanSupplier enabled;
@@ -42,8 +47,25 @@ public final class TeamCreatedNotifier
 			else
 			{
 				store.markSeen(team.getId());
+				if (enabled.getAsBoolean() && isFresh(team))
+				{
+					chatSink.accept("[Rancour] New team formed: " + team.getActivity() + " - Host: " + team.getHost());
+				}
 			}
 		}
 		initialised = true;
+	}
+
+	private static boolean isFresh(Team team)
+	{
+		try
+		{
+			OffsetDateTime createdAt = OffsetDateTime.parse(team.getCreatedAt());
+			return createdAt.plus(INITIAL_NOTIFICATION_GRACE).isAfter(OffsetDateTime.now());
+		}
+		catch (DateTimeParseException | NullPointerException ex)
+		{
+			return false;
+		}
 	}
 }

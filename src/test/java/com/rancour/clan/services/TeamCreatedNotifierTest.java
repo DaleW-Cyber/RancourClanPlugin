@@ -2,6 +2,7 @@ package com.rancour.clan.services;
 
 import static org.junit.Assert.assertEquals;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,6 +31,19 @@ public class TeamCreatedNotifierTest
 	}
 
 	@Test
+	public void freshEligibleTeamNotifiesOnInitialLoad()
+	{
+		MemoryStore store = new MemoryStore();
+		List<String> messages = new ArrayList<>();
+		TeamCreatedNotifier notifier = new TeamCreatedNotifier(store, messages::add, () -> true);
+
+		notifier.notifyNewTeams(Collections.singletonList(team("team-1", true, OffsetDateTime.now().toString())));
+
+		assertEquals(1, messages.size());
+		assertEquals("[Rancour] New team formed: Nex - Host: Mutable", messages.get(0));
+	}
+
+	@Test
 	public void ineligiblePayloadDoesNotSuppressLaterEligibleNotification()
 	{
 		MemoryStore store = new MemoryStore();
@@ -49,9 +63,14 @@ public class TeamCreatedNotifierTest
 
 	private static Team team(String id, Boolean notifyCurrentUser)
 	{
+		return team(id, notifyCurrentUser, "now");
+	}
+
+	private static Team team(String id, Boolean notifyCurrentUser, String createdAt)
+	{
 		return new Team(id, "Nex", "Mutable", Collections.emptyList(), 1, 5, 420,
 			true, "open", false, Collections.emptyList(), false, Collections.singletonList("Mutable"),
-			"now", "later", null, null, null, "", notifyCurrentUser);
+			createdAt, "later", null, null, null, "", notifyCurrentUser);
 	}
 
 	private static final class MemoryStore implements SeenTeamReadyStore
