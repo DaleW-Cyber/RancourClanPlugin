@@ -10,6 +10,7 @@ import javax.swing.JTextArea;
 import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.models.MemberProfile;
 import com.rancour.clan.models.PluginSettings;
+import com.rancour.clan.services.DropChatNotifier;
 import com.rancour.clan.services.DropService;
 
 final class DropsPanel extends JPanel
@@ -49,6 +50,7 @@ final class DropsPanel extends JPanel
 			return;
 		}
 		candidate = newCandidate;
+		DropChatNotifier.notify("Rancour PvM: A drop is ready to submit. Check the Rancour PvM plugin panel.");
 		String currentRsn = UiComponents.value(activeRsn.get()).trim();
 		boolean loggedIn = !currentRsn.isEmpty();
 		boolean linked = loggedIn && profile != null && profile.isLinkedRsn(currentRsn);
@@ -164,6 +166,7 @@ final class DropsPanel extends JPanel
 				status.setForeground(RancourTheme.DANGER);
 				return;
 			}
+			DropChatNotifier.notify("Rancour PvM: Your drop has been submitted successfully.");
 			clear("Submitted: " + result.getStatus() + " - " + result.getMessage());
 		}));
 	}

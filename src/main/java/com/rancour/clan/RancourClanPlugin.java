@@ -34,6 +34,7 @@ import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.services.AnnouncementService;
 import com.rancour.clan.services.AnnouncementNotifier;
 import com.rancour.clan.services.ApiServices;
+import com.rancour.clan.services.DropChatNotifier;
 import com.rancour.clan.services.DropService;
 import com.rancour.clan.services.DropDetector;
 import com.rancour.clan.services.DuplicateDropGuard;
@@ -62,6 +63,9 @@ public class RancourClanPlugin extends Plugin
 {
 	@Inject
 	private Client client;
+
+	@Inject
+	private ClientThread clientThread;
 
 	@Inject
 	private ClientToolbar clientToolbar;
@@ -105,6 +109,8 @@ public class RancourClanPlugin extends Plugin
 	{
 		log.info("Rancour PvM plugin startup requested");
 		activeRsn = currentAccountName();
+		DropChatNotifier.configure(message -> clientThread.invokeLater(() ->
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", message, null)));
 		SwingUtilities.invokeLater(() ->
 		{
 			panel = new RancourClanPanel(
@@ -138,6 +144,7 @@ public class RancourClanPlugin extends Plugin
 	@Override
 	protected void shutDown()
 	{
+		DropChatNotifier.reset();
 		SwingUtilities.invokeLater(() ->
 		{
 			if (navigationButton != null)
