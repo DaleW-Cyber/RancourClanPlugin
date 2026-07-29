@@ -24,6 +24,8 @@ import net.runelite.client.game.ItemStack;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.PluginManager;
+import net.runelite.client.plugins.loottracker.LootReceived;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import okhttp3.OkHttpClient;
@@ -61,6 +63,8 @@ import com.rancour.clan.ui.RancourClanPanel;
 @Slf4j
 public class RancourClanPlugin extends Plugin
 {
+	private static final String LOOT_TRACKER_CLASS = "net.runelite.client.plugins.loottracker.LootTrackerPlugin";
+
 	@Inject
 	private Client client;
 
@@ -72,6 +76,9 @@ public class RancourClanPlugin extends Plugin
 
 	@Inject
 	private ItemManager itemManager;
+
+	@Inject
+	private PluginManager pluginManager;
 
 	@Inject
 	private RancourClanConfig config;
@@ -181,24 +188,61 @@ public class RancourClanPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onLootReceived(LootReceived event)
+	{
+		String rsn = currentAccountName();
+		activeRsn = rsn;
+		if (rsn.isEmpty())
+		{
+			rsn = "Unknown";
+		}
+
+		for (ItemStack item : event.getItems())
+		{
+			String itemName = itemManager.getItemComposition(item.getId()).getName();
+			DropCandidate candidate = dropDetector.fromLootTracker(itemName, event.getName(), rsn);
+			if (duplicateDropGuard.accept(candidate))
+			{
+				offerDropCandidate(candidate);
+			}
+		}
+	}
+
+	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
+		if (isLootTrackerEnabled())
+		{
+			return;
+		}
 		if (event.getType() != ChatMessageType.GAMEMESSAGE && event.getType() != ChatMessageType.SPAM)
 		{
 			return;
 		}
 		String rsn = currentAccountName();
 		activeRsn = rsn;
-		if (rsn.isEmpty()) { rsn = "Unknown"; }
-		dropDetector.fromChatMessage(event.getMessage(), rsn).filter(duplicateDropGuard::accept).ifPresent(this::offerDropCandidate);
+		if (rsn.isEmpty())
+		{
+			rsn = "Unknown";
+		}
+		dropDetector.fromChatMessage(event.getMessage(), rsn)
+			.filter(duplicateDropGuard::accept)
+			.ifPresent(this::offerDropCandidate);
 	}
 
 	@Subscribe
 	public void onNpcLootReceived(NpcLootReceived event)
 	{
+		if (isLootTrackerEnabled())
+		{
+			return;
+		}
 		String rsn = currentAccountName();
 		activeRsn = rsn;
-		if (rsn.isEmpty()) { rsn = "Unknown"; }
+		if (rsn.isEmpty())
+		{
+			rsn = "Unknown";
+		}
 		String source = event.getNpc() == null ? "Unknown NPC" : event.getNpc().getName();
 		for (ItemStack item : event.getItems())
 		{
@@ -209,6 +253,18 @@ public class RancourClanPlugin extends Plugin
 				offerDropCandidate(candidate);
 			}
 		}
+	}
+
+	private boolean isLootTrackerEnabled()
+	{
+		for (Plugin plugin : pluginManager.getPlugins())
+		{
+			if (LOOT_TRACKER_CLASS.equals(plugin.getClass().getName()))
+			{
+				return pluginManager.isPluginEnabled(plugin);
+			}
+		}
+		return false;
 	}
 
 	private void offerDropCandidate(DropCandidate candidate)
