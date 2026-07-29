@@ -21,6 +21,19 @@ public class DropDetectorTest
 	}
 
 	@Test
+	public void detectsChambersSpecialLootChatFallback()
+	{
+		DropDetector detector = new DropDetector();
+		DropCandidate candidate = detector.fromChatMessage(
+			"MX Plaid received special loot from a raid: Dragon claws",
+			"MX Plaid"
+		).orElseThrow(AssertionError::new);
+		assertEquals("Dragon claws", candidate.getItemName());
+		assertEquals("Chambers of Xeric", candidate.getSource());
+		assertEquals("chat_message", candidate.getDetectionMethod());
+	}
+
+	@Test
 	public void ignoresOrdinaryChat()
 	{
 		assertFalse(new DropDetector().fromChatMessage("Welcome to RuneScape.", "Test RSN").isPresent());
@@ -33,6 +46,19 @@ public class DropDetectorTest
 		assertEquals("Scythe of vitur", candidate.getItemName());
 		assertEquals("Verzik Vitur", candidate.getSource());
 		assertEquals("npc_loot", candidate.getDetectionMethod());
+	}
+
+	@Test
+	public void createsLootTrackerCandidate()
+	{
+		DropCandidate candidate = new DropDetector().fromLootTracker(
+			"Dragon claws",
+			"Chambers of Xeric",
+			"MX Plaid"
+		);
+		assertEquals("Dragon claws", candidate.getItemName());
+		assertEquals("Chambers of Xeric", candidate.getSource());
+		assertEquals("loot_tracker", candidate.getDetectionMethod());
 	}
 
 	@Test
