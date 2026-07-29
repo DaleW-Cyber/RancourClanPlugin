@@ -68,7 +68,7 @@ public class DropsPanelTest
 		DropChatNotifier.configure(messages::add);
 		MockClanApiClient api = new MockClanApiClient();
 		VerificationService verification = ApiServices.verification(api, new InMemorySessionStore());
-		verification.refreshProfile().toCompletableFuture().get();
+		verification.refreshStatus().toCompletableFuture().get();
 		DropsPanel panel = new DropsPanel(ApiServices.drops(api, verification), () -> "Linked Alt");
 		panel.setProfile(linkedProfile());
 
