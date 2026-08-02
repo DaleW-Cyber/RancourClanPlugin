@@ -50,6 +50,7 @@ final class TeamsPanel extends JPanel
 	private final JTextArea status = UiComponents.statusLabel("Not loaded");
 	private final JPanel content = UiComponents.contentPanel();
 	private boolean loading;
+	private boolean formOpen;
 
 	TeamsPanel(TeamService service)
 	{
@@ -77,17 +78,34 @@ final class TeamsPanel extends JPanel
 
 	void refresh()
 	{
+		formOpen = false;
+		refresh(false);
+	}
+
+	void refreshIfIdle()
+	{
+		if (formOpen)
+		{
+			return;
+		}
+		refresh(true);
+	}
+
+	private void refresh(boolean preserveInteractiveView)
+	{
 		if (loading)
 		{
 			return;
 		}
 		loading = true;
 		status.setText("Loading teams...");
-		service.loadTeams().whenComplete((items, error) -> SwingUtilities.invokeLater(() -> render(items, error)));
+		service.loadTeams().whenComplete((items, error) -> SwingUtilities.invokeLater(() ->
+			render(items, error, preserveInteractiveView)));
 	}
 
-	private void showCreateForm()
+	void showCreateForm()
 	{
+		formOpen = true;
 		content.removeAll();
 		content.add(UiComponents.heading("Create Team"));
 		JPanel card = UiComponents.card("Team", "", "", RancourTheme.INFO);
@@ -183,9 +201,14 @@ final class TeamsPanel extends JPanel
 		}));
 	}
 
-	private void render(List<Team> items, Throwable error)
+	private void render(List<Team> items, Throwable error, boolean preserveInteractiveView)
 	{
 		loading = false;
+		if (preserveInteractiveView && formOpen)
+		{
+			return;
+		}
+		formOpen = false;
 		content.removeAll();
 		content.add(UiComponents.heading("Teams"));
 		if (error != null)
@@ -244,6 +267,11 @@ final class TeamsPanel extends JPanel
 		content.repaint();
 	}
 
+	boolean isFormOpen()
+	{
+		return formOpen;
+	}
+
 	private boolean canManage(Team team)
 	{
 		String active = UiComponents.value(activeRsn.get()).trim();
@@ -252,6 +280,7 @@ final class TeamsPanel extends JPanel
 
 	private void showEditForm(Team team)
 	{
+		formOpen = true;
 		content.removeAll();
 		content.add(UiComponents.heading("Edit Team"));
 		JPanel card = UiComponents.card("Team", "", "", RancourTheme.INFO);

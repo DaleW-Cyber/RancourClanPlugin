@@ -140,7 +140,7 @@ public final class RancourClanPanel extends PluginPanel
 		verificationPanel.refresh();
 		announcementsPanel.refresh();
 		eventsPanel.refresh();
-		teamsPanel.refresh();
+		teamsPanel.refreshIfIdle();
 		refreshSettings();
 		if (staffButton.isVisible())
 		{
