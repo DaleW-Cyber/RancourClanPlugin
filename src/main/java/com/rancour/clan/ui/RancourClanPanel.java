@@ -45,8 +45,8 @@ public final class RancourClanPanel extends PluginPanel
 	private volatile boolean userSelectedPage;
 	private volatile boolean lastVerifiedWithSession;
 	private volatile boolean dropsPanelEnabled = true;
-	private volatile boolean dropsVisible = true;
-	private volatile boolean dropsCanSubmit = true;
+	private volatile boolean dropsVisible;
+	private volatile boolean dropsCanSubmit;
 	private volatile Set<String> approvedDropKeys = Collections.emptySet();
 	private boolean automaticRefreshScheduled;
 
@@ -113,6 +113,7 @@ public final class RancourClanPanel extends PluginPanel
 		navigation.add(button("News", "announcements"));
 		navigation.add(button("Events", "events"));
 		dropsButton = button("Drops", "drops");
+		dropsButton.setVisible(false);
 		navigation.add(dropsButton);
 		navigation.add(button("Teams", "teams"));
 		staffButton = button("Staff", "staff");
@@ -193,7 +194,7 @@ public final class RancourClanPanel extends PluginPanel
 		boolean staff = profile != null && profile.isStaff() && verifiedWithSession;
 		staffButton.setVisible(staff);
 		staffButton.getParent().revalidate();
-		if (staff)
+		if (staff && !becameVerified)
 		{
 			staffPanel.refreshPending();
 		}
