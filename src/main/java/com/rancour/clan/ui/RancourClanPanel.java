@@ -7,10 +7,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import net.runelite.client.ui.PluginPanel;
 import com.rancour.clan.models.DropCandidate;
 import com.rancour.clan.models.MemberProfile;
@@ -25,6 +27,8 @@ import com.rancour.clan.services.VerificationService;
 
 public final class RancourClanPanel extends PluginPanel
 {
+	private static final int AUTO_REFRESH_JITTER_MAX_MS = 20_000;
+
 	private final DropsPanel dropsPanel;
 	private final VerificationPanel verificationPanel;
 	private final AnnouncementsPanel announcementsPanel;
@@ -44,6 +48,7 @@ public final class RancourClanPanel extends PluginPanel
 	private volatile boolean dropsVisible = true;
 	private volatile boolean dropsCanSubmit = true;
 	private volatile Set<String> approvedDropKeys = Collections.emptySet();
+	private boolean automaticRefreshScheduled;
 
 	public RancourClanPanel(VerificationService verificationService, AnnouncementService announcementService,
 		EventService eventService, DropService dropService, TeamService teamService, StaffService staffService,
@@ -122,7 +127,10 @@ public final class RancourClanPanel extends PluginPanel
 		lastVerifiedWithSession = verifiedWithSession(verificationService.getCurrentProfile());
 		showPage(lastVerifiedWithSession ? "announcements" : "verification", false);
 		verificationPanel.refresh();
-		refreshSettings();
+		if (lastVerifiedWithSession)
+		{
+			refreshVerifiedData();
+		}
 	}
 
 	public boolean acceptsDropCandidate(DropCandidate candidate)
@@ -137,7 +145,34 @@ public final class RancourClanPanel extends PluginPanel
 
 	public void refreshAll()
 	{
+		if (automaticRefreshScheduled)
+		{
+			return;
+		}
+		automaticRefreshScheduled = true;
+		int delay = ThreadLocalRandom.current().nextInt(AUTO_REFRESH_JITTER_MAX_MS + 1);
+		Timer timer = new Timer(delay, event ->
+		{
+			((Timer) event.getSource()).stop();
+			automaticRefreshScheduled = false;
+			performAutomaticRefresh();
+		});
+		timer.setRepeats(false);
+		timer.start();
+	}
+
+	private void performAutomaticRefresh()
+	{
 		verificationPanel.refresh();
+		if (!lastVerifiedWithSession || verificationPanel.hasRefreshFailure())
+		{
+			return;
+		}
+		refreshVerifiedData();
+	}
+
+	private void refreshVerifiedData()
+	{
 		announcementsPanel.refresh();
 		eventsPanel.refresh();
 		teamsPanel.refreshIfIdle();
@@ -166,6 +201,7 @@ public final class RancourClanPanel extends PluginPanel
 		{
 			showPage("announcements", false);
 			userSelectedPage = false;
+			refreshVerifiedData();
 		}
 		else if (lostVerification)
 		{
