@@ -66,6 +66,6 @@ public interface RancourClanConfig extends Config
 	)
 	default int refreshIntervalSeconds()
 	{
-		return 60;
+		return 120;
 	}
 }
