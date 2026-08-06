@@ -22,6 +22,7 @@ final class VerificationPanel extends JPanel
 	private final ClipboardWriter clipboard;
 	private final Supplier<String> activeRsn;
 	private boolean loading;
+	private volatile boolean refreshFailed;
 
 	VerificationPanel(VerificationService service)
 	{
@@ -72,7 +73,7 @@ final class VerificationPanel extends JPanel
 		{
 			if (error != null)
 			{
-			setStatus("API test failed: " + UiComponents.errorMessage(error), RancourTheme.DANGER);
+				setStatus("API test failed: " + UiComponents.errorMessage(error), RancourTheme.DANGER);
 				return;
 			}
 			setStatus("API connection successful: " + UiComponents.value(result.getStatus()), RancourTheme.SUCCESS);
@@ -92,9 +93,11 @@ final class VerificationPanel extends JPanel
 			loading = false;
 			if (error != null)
 			{
-			setStatus("Error: " + UiComponents.errorMessage(error), RancourTheme.DANGER);
+				refreshFailed = true;
+				setStatus("Error: " + UiComponents.errorMessage(error), RancourTheme.DANGER);
 				return;
 			}
+			refreshFailed = false;
 			setStatus(result.isVerified() ? "Verified" : "Status: " + UiComponents.value(result.getState()),
 				statusColor(result.getState(), result.isVerified()));
 			if (result.getProfile() != null)
@@ -102,6 +105,11 @@ final class VerificationPanel extends JPanel
 				showProfile(result.getProfile());
 			}
 		}));
+	}
+
+	boolean hasRefreshFailure()
+	{
+		return refreshFailed;
 	}
 
 	private void generateCode()

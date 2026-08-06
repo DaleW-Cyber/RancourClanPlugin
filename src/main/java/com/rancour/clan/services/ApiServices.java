@@ -220,7 +220,16 @@ public final class ApiServices
 		@Override
 		public CompletionStage<VerificationStatus> refreshStatus()
 		{
-			CompletionStage<VerificationStatus> result = api.fetchVerificationStatus(sessions.getPendingVerificationId(), sessions.getSessionToken())
+			String pendingVerificationId = sessions.getPendingVerificationId();
+			String sessionToken = sessions.getSessionToken();
+			if (!hasText(pendingVerificationId) && !hasText(sessionToken))
+			{
+				return CompletableFuture.completedFuture(
+					new VerificationStatus("unlinked", "", null, null, null)
+				);
+			}
+
+			CompletionStage<VerificationStatus> result = api.fetchVerificationStatus(pendingVerificationId, sessionToken)
 				.thenCompose(status ->
 				{
 					if (hasText(status.getSessionToken()))
