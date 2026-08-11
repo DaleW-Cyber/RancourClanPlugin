@@ -2,6 +2,8 @@ package com.rancour.clan.ui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -19,6 +21,7 @@ final class DropsPanel extends JPanel
 	private final JTextArea status = UiComponents.statusLabel("Waiting for a candidate drop");
 	private final JPanel content = UiComponents.contentPanel();
 	private final Supplier<String> activeRsn;
+	private final Deque<DropCandidate> pendingCandidates = new ArrayDeque<>();
 	private DropCandidate candidate;
 	private MemberProfile profile;
 	private boolean dropsVisible = true;
@@ -49,8 +52,22 @@ final class DropsPanel extends JPanel
 			showDisabled();
 			return;
 		}
+		if (candidate != null)
+		{
+			pendingCandidates.addLast(newCandidate);
+			updateCandidateStatus();
+			return;
+		}
+		showCandidate(newCandidate, true);
+	}
+
+	private void showCandidate(DropCandidate newCandidate, boolean notify)
+	{
 		candidate = newCandidate;
-		DropChatNotifier.notify("Rancour PvM: A drop is ready to submit. Check the Rancour PvM plugin panel.");
+		if (notify)
+		{
+			DropChatNotifier.notify("Rancour PvM: A drop is ready to submit. Check the Rancour PvM plugin panel.");
+		}
 		String currentRsn = UiComponents.value(activeRsn.get()).trim();
 		boolean loggedIn = !currentRsn.isEmpty();
 		boolean linked = loggedIn && profile != null && profile.isLinkedRsn(currentRsn);
@@ -73,16 +90,35 @@ final class DropsPanel extends JPanel
 		JButton confirm = UiComponents.successButton("Confirm Submit");
 		JButton dismiss = UiComponents.neutralButton("Dismiss");
 		confirm.addActionListener(event -> submit());
-		dismiss.addActionListener(event -> clear("Candidate dismissed"));
+		dismiss.addActionListener(event -> advanceCandidate("Candidate dismissed"));
 		actions.add(confirm);
 		actions.add(dismiss);
 		confirm.setEnabled(linked && dropsCanSubmit);
 		card.add(actions);
 		content.add(card);
-		status.setText(linked && dropsCanSubmit ? "Review candidate before submitting" : restrictionMessage);
 		status.setForeground(linked && dropsCanSubmit ? RancourTheme.WARNING : RancourTheme.DANGER);
+		updateCandidateStatus();
 		content.revalidate();
 		content.repaint();
+	}
+
+	private void updateCandidateStatus()
+	{
+		if (candidate == null)
+		{
+			return;
+		}
+		String currentRsn = UiComponents.value(activeRsn.get()).trim();
+		boolean linked = !currentRsn.isEmpty() && profile != null && profile.isLinkedRsn(currentRsn);
+		if (!linked || !dropsCanSubmit)
+		{
+			status.setText(restrictionMessage);
+			return;
+		}
+		int queued = pendingCandidates.size();
+		status.setText(queued == 0
+			? "Review candidate before submitting"
+			: "Review candidate before submitting (" + queued + " more pending)");
 	}
 
 	void setProfile(MemberProfile profile)
@@ -123,11 +159,16 @@ final class DropsPanel extends JPanel
 		{
 			showIdle("Waiting for a candidate drop");
 		}
+		else
+		{
+			updateCandidateStatus();
+		}
 	}
 
 	void showDisabled()
 	{
 		candidate = null;
+		pendingCandidates.clear();
 		content.removeAll();
 		content.add(UiComponents.heading("Drops"));
 		content.add(UiComponents.card("Drops disabled", restrictionMessage, "", RancourTheme.DANGER));
@@ -167,13 +208,19 @@ final class DropsPanel extends JPanel
 				return;
 			}
 			DropChatNotifier.notify("Rancour PvM: Your drop has been submitted successfully.");
-			clear("Submitted: " + result.getStatus() + " - " + result.getMessage());
+			advanceCandidate("Submitted: " + result.getStatus() + " - " + result.getMessage());
 		}));
 	}
 
-	private void clear(String message)
+	private void advanceCandidate(String message)
 	{
 		candidate = null;
+		DropCandidate next = pendingCandidates.pollFirst();
+		if (next != null)
+		{
+			showCandidate(next, false);
+			return;
+		}
 		showIdle(message);
 		status.setText(message);
 		status.setForeground(message.startsWith("Submitted:") ? RancourTheme.SUCCESS : RancourTheme.MUTED);
